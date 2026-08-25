@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vibed — the story, from the person who lived it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,600..900,0..100,0..1&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#FFFFFF;--bg:#F4F4F1;--soft:#F8F8F6;
+  --ink:#0E0E0E;--ink-2:#565656;--ink-3:#8A8A8A;
+  --rule:#E4E4E1;--rule-2:#CFCFCB;
+  --go:#05CE78;--go-deep:#017A4C;--go-tint:#E6F9F0;
+  --heat:#5A2EC4;--heat-tint:#EEE9FB;
+  --warn:#B7791F;--warn-tint:#FBF1DE;
+  --dead:#B03A28;--dead-tint:#FBEAE6;
+  --display:'Fraunces',Georgia,serif;--body:'Inter',system-ui,sans-serif;--mono:'IBM Plex Mono',monospace;
+  --wrap:1180px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);overflow-x:hidden;font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--go-deep);outline-offset:2px}
+h1,h2,h3,h4{font-family:var(--display);font-variation-settings:'SOFT' 60,'WONK' 1;letter-spacing:-.018em;line-height:1.14}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* header */
+header.top{border-bottom:1px solid var(--rule);background:var(--page);position:sticky;top:0;z-index:30}
+.top-in{display:flex;align-items:center;gap:16px;height:68px}
+.mark{font-family:var(--display);font-weight:900;font-variation-settings:'SOFT' 80,'WONK' 1;font-size:23px;letter-spacing:-.03em;display:flex;align-items:center;gap:9px}
+.mk{height:20px;flex:none;overflow:visible}
+.mk rect{fill:var(--ink);transform-origin:bottom;animation:rise .55s cubic-bezier(.2,.9,.3,1) backwards}
+.mk rect.cash{fill:var(--go)}
+.mk rect:nth-child(1){animation-delay:.02s}.mk rect:nth-child(2){animation-delay:.09s}.mk rect:nth-child(3){animation-delay:.16s}
+.mk rect:nth-child(4){animation-delay:.23s}.mk rect:nth-child(5){animation-delay:.30s}.mk rect:nth-child(6){animation-delay:.37s}
+@keyframes rise{from{transform:scaleY(.06)}to{transform:scaleY(1)}}
+.search{flex:1;max-width:330px;position:relative}
+.search input{width:100%;background:var(--bg);border:1px solid var(--rule);border-radius:999px;padding:9px 14px 9px 36px;font:inherit;font-size:14px}
+.search input:focus{outline:none;border-color:var(--ink);background:var(--page)}
+.search .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.45;display:flex}
+.results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--page);border:1px solid var(--rule);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.10);overflow:hidden;z-index:40}
+.results a{display:flex;gap:10px;align-items:center;padding:10px 13px;font-size:14px;border-bottom:1px solid var(--rule)}
+.results a:last-child{border-bottom:none}.results a:hover{background:var(--soft)}
+.results .sub{color:var(--ink-3);font-size:12.5px}
+.results .none{padding:15px 13px;font-size:13.5px;color:var(--ink-3)}
+.res-head{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);padding:10px 13px 5px;background:var(--soft);font-weight:600}
+.actions{display:flex;align-items:center;gap:6px;margin-left:auto}
+.lnk{font-size:14px;font-weight:500;color:var(--ink-2);padding:8px 12px;border-radius:999px;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.lnk:hover{color:var(--ink);background:var(--soft)}
+.count{font-family:var(--mono);font-size:10px;background:var(--go-deep);color:#fff;border-radius:999px;padding:1px 6px}
+.btn{border-radius:999px;font-weight:600;transition:.15s;display:inline-block;text-align:center}
+.btn-go{background:var(--go);color:#00301E}.btn-go:hover{background:#04B76B}
+.btn-ink{background:var(--ink);color:#fff}.btn-ink:hover{background:#333}
+.btn-lg{padding:13px 26px;font-size:15px}.btn-sm{padding:8px 15px;font-size:14px}
+.icon-btn{display:none;padding:8px;border-radius:999px;color:var(--ink-2)}
+.me{width:32px;height:32px;border-radius:50%;background:var(--heat);color:#fff;display:grid;place-items:center;font:600 11px var(--mono)}
+.filters{border-bottom:1px solid var(--rule);background:var(--page);position:sticky;top:68px;z-index:25}
+.filters-in{display:flex;gap:26px;height:50px;align-items:center;overflow-x:auto;scrollbar-width:none}
+.filters-in::-webkit-scrollbar{display:none}
+nav.rungs{display:flex;gap:26px}
+nav.rungs a{font-size:14px;color:var(--ink-2);white-space:nowrap;padding:15px 0;border-bottom:2px solid transparent;font-weight:500}
+nav.rungs a:hover{color:var(--ink)}
+nav.rungs a.on{color:var(--ink);border-bottom-color:var(--go)}
+
+/* video poster */
+.poster{position:relative;overflow:hidden;background:var(--soft)}
+.poster .art{position:absolute;inset:0;width:100%;height:100%;transition:transform .6s cubic-bezier(.2,.8,.3,1)}
+.poster::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.16) 0%,rgba(0,0,0,0) 34%,rgba(0,0,0,.04) 62%,rgba(0,0,0,.42) 100%);pointer-events:none}
+.card:hover .poster .art,.big:hover .poster .art{transform:scale(1.05)}
+.play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.94);display:grid;place-items:center;z-index:3;box-shadow:0 4px 18px rgba(0,0,0,.18);transition:transform .25s cubic-bezier(.2,.8,.3,1)}
+.play svg{margin-left:3px}
+.card:hover .play,.big:hover .play{transform:translate(-50%,-50%) scale(1.1)}
+.dur{position:absolute;right:10px;bottom:10px;z-index:3;background:rgba(0,0,0,.72);color:#fff;font:500 11px var(--mono);padding:3px 8px;border-radius:5px}
+.clip-q{position:absolute;left:12px;right:78px;bottom:10px;z-index:3;color:#fff;font-size:12.5px;font-weight:500;line-height:1.35;text-shadow:0 1px 6px rgba(0,0,0,.5);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.badge{position:absolute;top:12px;left:12px;z-index:3;background:var(--page);border-radius:999px;padding:5px 11px;font-size:11px;font-weight:600;box-shadow:0 1px 5px rgba(0,0,0,.14);display:flex;align-items:center;gap:6px}
+.badge.pick{color:var(--go-deep)}.badge.closed{color:var(--dead)}
+.badge.rank{background:var(--ink);color:#fff;font-family:var(--mono);letter-spacing:.02em;gap:5px}
+.badge.rank em{font-style:normal;color:var(--go)}
+.rung-tag{position:absolute;top:12px;right:12px;z-index:3;background:rgba(255,255,255,.93);backdrop-filter:blur(6px);border-radius:999px;padding:6px 11px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 5px rgba(0,0,0,.10)}
+.rung-tag span{font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2)}
+.ladder{display:flex;gap:3px;align-items:flex-end;height:13px}
+.ladder b{display:block;width:9px;background:var(--rule-2);border-radius:1px}
+.ladder b:nth-child(1){height:4px}.ladder b:nth-child(2){height:6px}.ladder b:nth-child(3){height:8px}
+.ladder b:nth-child(4){height:10px}.ladder b:nth-child(5){height:11.5px}.ladder b:nth-child(6){height:13px}
+.ladder b.fill{background:var(--ink)}.ladder b.fill.cash{background:var(--go)}.ladder.dead b.fill{background:var(--dead)}
+.logo{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;position:absolute;left:12px;bottom:12px;z-index:3;box-shadow:0 2px 10px rgba(0,0,0,.25);transition:transform .28s cubic-bezier(.2,.8,.3,1)}
+.logo svg{width:21px;height:21px;stroke:#fff;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.card:hover .logo{transform:scale(1.08) rotate(-4deg)}
+.logo-xs{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex:none;position:static;box-shadow:none}
+.logo-xs svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.av{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:9.5px;font-weight:600;color:#fff;font-family:var(--mono);flex:none}
+
+/* cards */
+.section{padding:42px 0}
+.section+.section{border-top:1px solid var(--rule)}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;flex-wrap:wrap;animation:fadeIn .5s cubic-bezier(.2,.8,.3,1) backwards}
+.sec-head h2{font-size:27px;font-weight:800}
+.sec-head .note{font-size:14px;color:var(--ink-3)}
+.sec-head .more{margin-left:auto;font-size:14px;font-weight:600;color:var(--go-deep)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.card{background:var(--page);border:1px solid var(--rule);border-radius:14px;overflow:hidden;cursor:pointer;position:relative;
+ box-shadow:0 1px 3px rgba(0,0,0,.045);transition:transform .28s cubic-bezier(.2,.8,.3,1),box-shadow .28s cubic-bezier(.2,.8,.3,1);
+ animation:cardIn .55s cubic-bezier(.2,.8,.3,1) backwards}
+.card:hover{transform:translateY(-5px);box-shadow:0 14px 32px rgba(0,0,0,.11)}
+.card .poster{height:176px}
+.card-body{padding:15px 17px 17px}
+.card h3{font-size:18.5px;font-weight:700}
+.card:hover h3{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
+.card .pitch{font-size:13.5px;color:var(--ink-2);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.creator{font-size:13px;color:var(--ink-3);margin-top:9px;display:flex;align-items:center;gap:7px}
+
+/* promise clock */
+.promise{margin-top:13px;background:var(--soft);border:1px solid var(--rule);border-radius:10px;padding:11px 12px}
+.promise .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.promise .txt{font-size:13px;font-weight:600;line-height:1.35}
+.promise .left{font-family:var(--mono);font-size:11.5px;color:var(--warn);white-space:nowrap;font-weight:500}
+.promise .left.safe{color:var(--go-deep)}
+.promise .eyebrow{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:5px}
+.bar{height:5px;background:#E7E7E3;border-radius:999px;overflow:hidden;margin-top:9px;position:relative}
+.bar i{display:block;height:100%;background:var(--go);border-radius:999px;width:0;transition:width 1.1s cubic-bezier(.2,.9,.3,1);position:relative;overflow:hidden}
+.bar i::after{content:"";position:absolute;inset:0;width:38%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);animation:sheen 2.8s cubic-bezier(.4,0,.2,1) infinite}
+.bar.tight i{background:var(--warn)}.bar.dead i{background:var(--dead)}.bar.done i{background:var(--ink)}
+.kept{display:flex;gap:5px;margin-top:9px;align-items:center}
+.kept b{width:7px;height:7px;border-radius:50%;background:var(--rule-2);display:block}
+.kept b.y{background:var(--go)}.kept b.n{background:var(--dead)}
+.kept span{font-size:11px;color:var(--ink-3);margin-left:4px}
+.metaline{display:flex;gap:14px;margin-top:12px;font-size:12px;color:var(--ink-3);flex-wrap:wrap}
+.metaline b{color:var(--ink);font-weight:600;font-family:var(--mono)}
+.card-actions{display:flex;align-items:center;gap:9px;margin-top:13px}
+.jlink{margin-left:auto;font-size:13px;font-weight:600;color:var(--go-deep);white-space:nowrap;transition:transform .2s}
+.card:hover .jlink{transform:translateX(3px)}
+.clip .cap,.clip .who{cursor:pointer}
+.follow{font-size:13px;font-weight:600;border:1px solid var(--rule-2);padding:6px 15px;border-radius:999px;transition:.15s}
+.follow:hover{border-color:var(--ink);background:var(--soft)}
+.follow.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px}
+.p-go{background:var(--go-tint);color:var(--go-deep)}
+.p-heat{background:var(--heat-tint);color:var(--heat)}
+.p-warn{background:var(--warn-tint);color:var(--warn)}
+.p-dead{background:var(--dead-tint);color:var(--dead)}
+.p-mute{background:var(--soft);color:var(--ink-3)}
+
+/* featured */
+.feature{padding:36px 0 44px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-size:11px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;color:var(--go-deep);margin-bottom:16px}
+.big-in{display:grid;grid-template-columns:1.5fr 1fr;gap:36px;align-items:start;min-width:0}
+.big-in>div{min-width:0}
+.big-in>div{animation:fadeIn .6s cubic-bezier(.2,.8,.3,1) backwards}
+.big-in>div:nth-child(2){animation-delay:.12s}
+.big .poster{height:352px;max-width:100%;border-radius:16px;border:1px solid var(--rule)}
+.big .play{width:74px;height:74px}
+.big h1{font-size:40px;font-weight:900;font-variation-settings:'SOFT' 70,'WONK' 1;letter-spacing:-.03em;margin-top:4px}
+.big .pitch{font-size:16.5px;color:var(--ink-2);margin-top:9px}
+.chips{display:flex;flex-direction:column;gap:7px;margin:18px 0}
+.chip{display:flex;gap:10px;align-items:center;background:var(--page);border:1px solid var(--rule);border-radius:999px;padding:8px 14px;font-size:13.5px;transition:.15s}
+.chip:hover{border-color:var(--ink);transform:translateX(3px)}
+.chip .t{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto}
+.sub-cta{font-size:12.5px;color:var(--ink-3);text-align:center;margin-top:10px}
+
+/* question grid */
+.qgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.q{background:var(--page);border:1px solid var(--rule);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;
+ box-shadow:0 1px 3px rgba(0,0,0,.045);transition:transform .25s cubic-bezier(.2,.8,.3,1),box-shadow .25s;animation:cardIn .5s cubic-bezier(.2,.8,.3,1) backwards}
+.q:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(0,0,0,.10)}
+.q h3{font-size:19px;font-weight:700;line-height:1.25}
+.q .foot{display:flex;align-items:center;gap:10px;margin-top:auto}
+.stack{display:flex}
+.stack .av{margin-right:-7px;border:2px solid var(--page);width:24px;height:24px}
+.q .n{font-size:12.5px;color:var(--ink-3);font-weight:500}
+.q .arrow{margin-left:auto;color:var(--go-deep);font-weight:700}
+
+/* clip rows */
+.cliprow{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.clip{cursor:pointer;animation:cardIn .5s cubic-bezier(.2,.8,.3,1) backwards}
+.clip .poster{height:210px;border-radius:12px;border:1px solid var(--rule)}
+.clip .play{width:44px;height:44px}
+.clip .cap{font-size:13px;font-weight:600;margin-top:9px;line-height:1.35}
+.clip .who{font-size:12px;color:var(--ink-3);margin-top:4px;display:flex;align-items:center;gap:6px}
+
+/* profile */
+.wall-top{border-bottom:1px solid var(--rule);padding-bottom:34px}
+.back{font-size:13.5px;color:var(--ink-3);display:inline-block;margin:20px 0 16px;font-weight:500}
+.back:hover{color:var(--ink)}
+.ask{background:var(--heat-tint);border-radius:12px;padding:15px 17px;margin-top:18px}
+.ask .eyebrow{color:var(--heat);margin-bottom:6px}
+.ask p{font-size:14.5px;line-height:1.5}
+.ask button{margin-top:11px;font-size:13px;font-weight:600;color:var(--heat);border:1px solid var(--heat);padding:6px 14px;border-radius:999px}
+.factline{display:flex;gap:26px;margin-top:18px;flex-wrap:wrap}
+.fact .n{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
+.fact .l{font-size:11.5px;color:var(--ink-3)}
+.jbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:26px 0 0;max-width:760px}
+.jbar .lab{font-family:var(--display);font-size:22px;font-weight:800;margin-right:6px}
+.jbar button{font-size:13px;font-weight:600;border:1px solid var(--rule);background:var(--page);border-radius:999px;padding:6px 14px;color:var(--ink-2);transition:.15s}
+.jbar button:hover{border-color:var(--ink);color:var(--ink)}
+.jbar .done{color:var(--go-deep);border-color:var(--go-tint);background:var(--go-tint)}
+.timeline{padding:22px 0 70px;max-width:760px}
+.chapter{border-top:1px solid var(--rule);padding-top:24px;margin-top:30px}
+.chapter:first-child{border-top:none;margin-top:0;padding-top:0}
+.chap-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.chap-head h3{font-size:21px;font-weight:800}
+.chap-head .dur{font-size:12.5px;color:var(--ink-3)}
+.entry{border-left:2px solid var(--rule);padding:0 0 24px 24px;position:relative;animation:fadeIn .5s cubic-bezier(.2,.8,.3,1) backwards}
+.entry:last-child{padding-bottom:0}
+.entry::before{content:"";position:absolute;left:-5px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--rule-2)}
+.entry.milestone{border-left-color:var(--go)}
+.entry.milestone::before{background:var(--go);width:10px;height:10px;left:-6px}
+.entry.miss{border-left-color:var(--warn)}
+.entry.miss::before{background:var(--warn)}
+.entry .when{font-size:12px;color:var(--ink-3);font-weight:500}
+.entry h4{font-size:17px;font-weight:700;margin-top:3px}
+.entry p{font-size:15px;color:var(--ink-2);margin-top:7px}
+.entry .pill{margin-top:10px;display:inline-block}
+.inline-clip{display:flex;gap:14px;align-items:center;background:var(--page);border:1px solid var(--rule);border-radius:12px;padding:10px;margin-top:12px;cursor:pointer;transition:.2s}
+.inline-clip:hover{border-color:var(--ink);transform:translateX(3px)}
+.inline-clip .poster{width:118px;height:70px;border-radius:8px;flex:none}
+.inline-clip .play{width:30px;height:30px;box-shadow:none}
+.inline-clip .q{font-size:13.5px;font-weight:600;line-height:1.35;border:none;padding:0;background:none;box-shadow:none;animation:none;display:block}
+.inline-clip .m{font-size:11.5px;color:var(--ink-3);margin-top:3px;font-family:var(--mono)}
+.collapsed{font-size:13px;color:var(--ink-3);padding-left:24px;border-left:2px solid var(--rule)}
+
+/* misc */
+.rail-box{background:var(--page);border:1px solid var(--rule);border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.rail-box h4{font-size:16px;font-weight:700}
+.rail-box .sub{font-size:12.5px;color:var(--ink-3);margin:2px 0 10px}
+.rail-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--rule);font-size:14px}
+.rail-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.rail-item .amt{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.tabbar{display:none}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:20px;z-index:60}
+.sheet{background:var(--page);border-radius:16px;width:100%;max-width:400px;padding:30px 28px 24px;position:relative}
+.sheet h2{font-size:26px;font-weight:800}
+.sheet .lede{font-size:14.5px;color:var(--ink-2);margin-top:7px}
+.tabs{display:flex;border-bottom:1px solid var(--rule);margin:22px 0 18px}
+.tabs button{flex:1;font-size:14px;font-weight:600;padding:10px;color:var(--ink-3);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--go)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:5px}
+.field input{width:100%;padding:11px 14px;border:1px solid var(--rule-2);border-radius:10px;font:inherit;font-size:15px}
+.field input:focus{outline:none;border-color:var(--ink)}
+.err{font-size:13px;color:var(--dead);margin-bottom:10px;display:none}.err.show{display:block}
+.sheet .btn{width:100%;padding:12px}
+.fine{font-size:12px;color:var(--ink-3);text-align:center;margin-top:14px;line-height:1.5}
+.close{position:absolute;top:14px;right:16px;color:var(--ink-3);font-size:22px;line-height:1}
+.empty{text-align:center;padding:80px 20px;max-width:440px;margin:0 auto}
+.empty .mk{height:36px;margin:0 auto 22px;opacity:.3}
+.empty h2{font-size:28px;font-weight:800}
+.empty p{color:var(--ink-2);margin-top:10px;font-size:15.5px}
+.empty .btn{margin-top:22px}
+.convert{background:var(--ink);color:#fff;border-radius:16px;padding:40px;text-align:center;margin:0 0 12px}
+.convert h2{font-size:30px;font-weight:800;color:#fff}
+.convert p{color:#BDBDBD;margin-top:10px;max-width:46ch;margin-left:auto;margin-right:auto}
+.convert .btn{margin-top:20px}
+footer{border-top:1px solid var(--rule);padding:28px 0 48px;font-size:13px;color:var(--ink-3)}
+footer .fin{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
+footer button{font-size:13px;color:var(--ink-3);text-decoration:underline;text-underline-offset:3px}
+body.ids [data-id]{outline:1px dashed rgba(90,46,196,.4)}
+body.ids [data-id]::after{content:attr(data-id);position:absolute;top:0;right:0;background:var(--heat);color:#fff;font:600 9px/1.4 var(--mono);padding:1px 4px;z-index:9}
+
+
+
+/* ---------- profile ---------- */
+.pbanner{position:relative;height:300px;overflow:hidden;border-bottom:1px solid var(--rule);background:var(--soft)}
+.pbanner .art{position:absolute;inset:0;width:100%;height:100%}
+.pbanner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,0) 45%,rgba(0,0,0,.06))}
+.pshell{display:grid;grid-template-columns:1fr 344px;gap:44px;align-items:start;padding-bottom:80px}
+.pid{display:flex;gap:18px;align-items:flex-end;margin-top:-40px;position:relative;z-index:4}
+.pid .plogo{width:96px;height:96px;border-radius:24px;display:grid;place-items:center;flex:none;border:4px solid var(--bg);box-shadow:0 4px 18px rgba(0,0,0,.16)}
+.pid .plogo svg{width:46px;height:46px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pid h1{font-size:38px;font-weight:900;font-variation-settings:'SOFT' 70,'WONK' 1;letter-spacing:-.03em;padding-bottom:4px}
+.ptag{font-size:17px;color:var(--ink-2);margin-top:12px;max-width:56ch}
+.pline{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:var(--ink-2);flex-wrap:wrap}
+.ptabs{display:flex;gap:28px;border-bottom:1px solid var(--rule);margin:26px 0 0}
+.ptabs button{font-size:14.5px;font-weight:600;color:var(--ink-3);padding:13px 0;border-bottom:2px solid transparent;margin-bottom:-1px}
+.ptabs button:hover{color:var(--ink)}
+.ptabs button.on{color:var(--ink);border-bottom-color:var(--go)}
+.ptabs .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:5px}
+.blocks{padding-top:28px;max-width:660px}
+.blk{margin-bottom:26px}
+.blk h3{font-size:12px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-family:var(--body);font-weight:700;margin-bottom:7px}
+.blk p{font-size:16.5px;line-height:1.62}
+.hr{height:1px;background:var(--rule);margin:34px 0 0;max-width:660px}
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:660px;padding-top:26px}
+.gal .poster{height:130px;border-radius:10px;border:1px solid var(--rule)}
+.gal .poster.wide{grid-column:span 2;height:130px}
+.side{position:sticky;top:132px;display:flex;flex-direction:column;gap:16px}
+.scard{background:var(--page);border:1px solid var(--rule);border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.scard .promise{margin-top:0;background:none;border:none;padding:0}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;padding-top:16px;border-top:1px solid var(--rule)}
+.fact .n{font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:-.02em}
+.fact .l{font-size:11.5px;color:var(--ink-3)}
+.share{display:flex;gap:8px;margin-top:11px}
+.share button{flex:1;font-size:13px;font-weight:600;border:1px solid var(--rule-2);border-radius:999px;padding:9px;color:var(--ink-2)}
+.share button:hover{border-color:var(--ink);color:var(--ink)}
+.fcard{display:flex;gap:12px;align-items:flex-start}
+.fcard .big-av{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#fff;font:600 15px var(--mono);flex:none}
+.fcard .nm{font-family:var(--display);font-size:17px;font-weight:700}
+.fcard .lo{font-size:12.5px;color:var(--ink-3)}
+.fcard .bio{font-size:13.5px;color:var(--ink-2);margin-top:9px;line-height:1.55}
+.std{border:1px solid var(--go-tint);background:var(--go-tint);border-radius:14px;padding:16px 18px}
+.std .h{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--go-deep)}
+.std ul{list-style:none;margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.std li{font-size:12.5px;color:var(--go-deep);display:flex;gap:8px;opacity:.9}
+.std li em{font-style:normal;flex:none}
+.ownerbar{background:var(--ink);color:#fff;border-radius:14px;padding:18px}
+.ownerbar .h{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:9px}
+.ownerbar .h span{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--go)}
+.ometer{height:6px;background:rgba(255,255,255,.18);border-radius:999px;margin:12px 0 13px;overflow:hidden}
+.ometer i{display:block;height:100%;background:var(--go);border-radius:999px}
+.ownerbar ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+.ownerbar li{font-size:12.5px;color:#B7B7B7;display:flex;gap:9px;align-items:center}
+.ownerbar li.y{color:#fff}
+.ownerbar li em{font-style:normal;flex:none;width:14px}
+.ownerbar li.n em{color:var(--go)}
+.viewtoggle{font-size:12px;color:var(--ink-3);text-decoration:underline;text-underline-offset:3px;margin-top:2px}
+@media(max-width:1000px){
+ .pshell{grid-template-columns:1fr;gap:30px}
+ .side{position:static}
+ .pbanner{height:210px}
+ .gal{max-width:none}
+}
+@media(max-width:680px){
+ .pbanner{height:150px}
+ .pid{flex-direction:column;align-items:flex-start;gap:12px;margin-top:-32px}
+ .pid .plogo{width:74px;height:74px;border-radius:19px}
+ .pid .plogo svg{width:35px;height:35px}
+ .pid h1{font-size:28px}
+ .ptabs{gap:20px;overflow-x:auto}
+ .gal{grid-template-columns:repeat(2,1fr)}
+ .blk p{font-size:15.5px}
+}
+
+
+
+
+
+
+/* ---------- links ---------- */
+.sitecard{display:flex;align-items:center;gap:13px;background:var(--page);border:1px solid var(--ink);border-radius:14px;padding:15px 17px;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sitecard:hover{background:var(--ink);box-shadow:0 8px 22px rgba(0,0,0,.14)}
+.sitecard:hover .u,.sitecard:hover .lb,.sitecard:hover .go{color:#fff}
+.sitecard .fav{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff;font:700 15px var(--display)}
+.sitecard .lb{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.sitecard .u{font-size:15.5px;font-weight:700;font-family:var(--display);letter-spacing:-.01em;margin-top:1px;word-break:break-all}
+.sitecard .go{margin-left:auto;color:var(--ink-3);font-weight:700;flex:none}
+.sitecard.soft{border-color:var(--rule);border-style:dashed;cursor:default}
+.sitecard.soft:hover{background:var(--page);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sitecard.soft .u{color:var(--ink-3);font-size:14px}
+.sitestat{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;margin-top:7px;display:inline-block}
+.socials{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.socials a{display:flex;align-items:center;gap:7px;border:1px solid var(--rule);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--ink-2);transition:.15s}
+.socials a:hover{border-color:var(--ink);color:var(--ink);background:var(--soft)}
+.socials svg{width:14px;height:14px;flex:none}
+.socials .none{font-size:12.5px;color:var(--ink-3);padding:7px 0}
+.socials a svg{width:15px;height:15px;flex:none}
+.clicknote{font-size:11.5px;color:var(--ink-3);margin-top:13px;padding-top:11px;border-top:1px solid var(--rule);display:flex;align-items:center;gap:6px}
+.clicknote b{font-family:var(--mono);color:var(--ink);font-weight:600}
+@media(max-width:680px){.sitecard .u{font-size:14px}}
+
+
+/* ---------- shorts feed ---------- */
+.shortsfeed{max-width:428px;margin:0 auto;padding:24px 0 80px;display:flex;flex-direction:column;gap:26px}
+.sf{background:var(--page);border:1px solid var(--rule);border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);animation:cardIn .5s cubic-bezier(.2,.8,.3,1) backwards}
+.sf .poster{height:520px;border-radius:0;cursor:pointer}
+.sf .play{width:64px;height:64px}
+.sf .hook{font-size:30px;left:18px;bottom:18px}
+.sf-body{padding:15px 17px 16px}
+.sf-body .who{display:flex;align-items:center;gap:10px}
+.sf-body .who .nm{font-family:var(--display);font-size:16px;font-weight:700;line-height:1.2}
+.sf-body .who .lo{font-size:12px;color:var(--ink-3)}
+.sf-body .cap{font-size:14.5px;margin-top:11px;line-height:1.45}
+.sf-body .cap b{font-weight:600}
+.sf-acts{display:flex;align-items:center;gap:8px;margin-top:14px}
+.act{display:flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--ink-2);transition:.15s}
+.act:hover{border-color:var(--ink);color:var(--ink)}
+.act.liked{background:var(--dead-tint);border-color:var(--dead-tint);color:var(--dead)}
+.sf-acts .jr{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--go-deep)}
+
+/* ---------- answers index ---------- */
+.qstage{margin-bottom:34px}
+.qstage h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-family:var(--body);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.qstage h3::after{content:"";flex:1;height:1px;background:var(--rule)}
+.qlist{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.qrow{display:flex;align-items:center;gap:14px;background:var(--page);border:1px solid var(--rule);border-radius:12px;padding:15px 17px;transition:.16s}
+.qrow:hover{border-color:var(--ink);transform:translateX(3px)}
+.qrow .txt{font-family:var(--display);font-size:16px;font-weight:700;line-height:1.3;flex:1}
+.qrow .n{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);white-space:nowrap}
+.qrow .arrow{color:var(--go-deep);font-weight:700}
+
+/* ---------- post-mortems ---------- */
+.pm-hero{background:var(--ink);color:#fff;border-radius:18px;padding:40px;margin-bottom:34px}
+.pm-hero h1{font-size:clamp(27px,4vw,40px);font-weight:900;color:#fff;letter-spacing:-.03em;max-width:20ch}
+.pm-hero p{color:#B4B4B4;margin-top:12px;max-width:56ch;font-size:16px}
+.pm{background:var(--page);border:1px solid var(--rule);border-radius:14px;overflow:hidden;cursor:pointer;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.pm:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(0,0,0,.1)}
+.pm .poster{height:150px;border-radius:0}
+.pm-body{padding:16px 18px 18px}
+.pm-body h3{font-size:19px;font-weight:700}
+.pm-body .lesson{font-size:15px;line-height:1.55;color:var(--ink-2);margin-top:9px;border-left:3px solid var(--dead);padding-left:13px}
+.pm-body .meta{font-size:12px;color:var(--ink-3);margin-top:12px;display:flex;gap:12px;flex-wrap:wrap}
+
+/* ---------- auth pages ---------- */
+.authpage{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;padding:56px 0 80px;max-width:940px;margin:0 auto}
+.authbox{background:var(--page);border:1px solid var(--rule);border-radius:18px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.authbox h1{font-size:29px;font-weight:900;letter-spacing:-.03em}
+.authbox .lede{font-size:14.5px;color:var(--ink-2);margin-top:8px}
+.authside h2{font-size:26px;font-weight:800;letter-spacing:-.025em}
+.authside ul{list-style:none;margin-top:20px;display:flex;flex-direction:column;gap:14px}
+.authside li{display:flex;gap:12px;font-size:15px;color:var(--ink-2);line-height:1.5}
+.authside li em{font-style:normal;color:var(--go-deep);font-weight:700;flex:none}
+.altline{text-align:center;font-size:13px;color:var(--ink-3);margin-top:16px}
+.altline a{color:var(--go-deep);font-weight:600}
+.oauth{display:flex;flex-direction:column;gap:9px;margin-bottom:18px}
+.oauth button{border:1px solid var(--rule-2);border-radius:999px;padding:11px;font-size:14px;font-weight:600;transition:.15s}
+.oauth button:hover{border-color:var(--ink);background:var(--soft)}
+.ordiv{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--ink-3);margin-bottom:16px}
+.ordiv::before,.ordiv::after{content:"";flex:1;height:1px;background:var(--rule)}
+
+/* ---------- start a journey ---------- */
+.wizard{max-width:660px;margin:0 auto;padding:36px 0 80px}
+.steps{display:flex;gap:8px;margin-bottom:26px}
+.steps div{flex:1;height:4px;background:var(--rule);border-radius:999px;overflow:hidden}
+.steps div.on i{display:block;height:100%;background:var(--go);border-radius:999px}
+.wizard h1{font-size:31px;font-weight:900;letter-spacing:-.03em}
+.wizard .lede{font-size:16px;color:var(--ink-2);margin-top:9px}
+.wform{background:var(--page);border:1px solid var(--rule);border-radius:16px;padding:26px;margin-top:24px}
+.wfield{margin-bottom:18px}
+.wfield label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+.wfield .hint{font-size:12.5px;color:var(--ink-3);margin-bottom:8px}
+.wfield input,.wfield textarea{width:100%;padding:11px 14px;border:1px solid var(--rule-2);border-radius:10px;font:inherit;font-size:15px;background:var(--page);color:var(--ink)}
+.wfield textarea{min-height:88px;resize:vertical;line-height:1.55}
+.wfield input:focus,.wfield textarea:focus{outline:none;border-color:var(--ink)}
+.swatches{display:flex;gap:9px;flex-wrap:wrap}
+.swatches button{width:34px;height:34px;border-radius:10px;border:2px solid transparent}
+.swatches button.on{border-color:var(--ink)}
+.wnav{display:flex;gap:11px;margin-top:8px}
+.wnav .btn{flex:1;padding:13px}
+.checklist{margin-top:22px;background:var(--soft);border-radius:14px;padding:18px 20px}
+.checklist .h{font-size:12px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--ink-3);margin-bottom:12px}
+.checklist li{list-style:none;display:flex;gap:10px;font-size:13.5px;color:var(--ink-3);padding:4px 0}
+.checklist li.y{color:var(--ink)}
+.checklist li em{font-style:normal;color:var(--go-deep);flex:none;width:15px}
+
+/* ---------- dashboard ---------- */
+.dash{display:grid;grid-template-columns:1fr 320px;gap:32px;padding:34px 0 80px;align-items:start}
+.dnums{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.dnum{background:var(--page);border:1px solid var(--rule);border-radius:14px;padding:16px}
+.dnum .n{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.025em}
+.dnum .l{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.dnum .d{font-size:11px;color:var(--go-deep);font-weight:600;margin-top:5px;font-family:var(--mono)}
+.todo{background:var(--page);border:1px solid var(--rule);border-radius:14px;padding:20px 22px}
+.todo h3{font-size:18px;font-weight:800;margin-bottom:6px}
+.todo .sub{font-size:13px;color:var(--ink-3);margin-bottom:14px}
+.todo-item{display:flex;align-items:center;gap:13px;padding:13px 0;border-top:1px solid var(--rule)}
+.todo-item .ic{width:30px;height:30px;border-radius:9px;background:var(--soft);display:grid;place-items:center;flex:none;font-size:14px}
+.todo-item .t{flex:1;font-size:14px;font-weight:500}
+.todo-item .t span{display:block;font-size:12px;color:var(--ink-3);font-weight:400;margin-top:1px}
+.todo-item .btn{padding:7px 15px;font-size:13px}
+
+/* ---------- stage filter ---------- */
+.stagebar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.stagebar button{font-size:13px;font-weight:600;border:1px solid var(--rule);background:var(--page);border-radius:999px;padding:7px 15px;color:var(--ink-2);transition:.15s}
+.stagebar button:hover{border-color:var(--ink);color:var(--ink)}
+.stagebar button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.stagebar .ct{font-family:var(--mono);font-size:10.5px;opacity:.6;margin-left:5px}
+
+@media(max-width:1000px){
+ .authpage{grid-template-columns:1fr;gap:32px;padding:32px 0 60px}
+ .authside{order:-1}
+ .dash{grid-template-columns:1fr;gap:26px}
+ .dnums{grid-template-columns:repeat(2,1fr)}
+ .qlist{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+ .filters{position:static}
+ .shortsfeed{max-width:none;padding:16px 0 70px;gap:18px}
+ .sf .poster{height:440px}.sf .hook{font-size:23px}
+ .pm-hero{padding:24px 20px}
+ .wizard{padding:24px 0 60px}.wizard h1{font-size:25px}
+ .wform{padding:18px}
+ .authbox{padding:22px}
+}
+
+/* ---------- landing tagline ---------- */
+.tagline{padding:44px 0 30px;animation:fadeIn .6s cubic-bezier(.2,.8,.3,1) backwards}
+.tagline h1{font-size:clamp(30px,4.4vw,50px);font-weight:900;font-variation-settings:'SOFT' 70,'WONK' 1;
+ letter-spacing:-.033em;line-height:1.04;max-width:19ch}
+.tagline h1 em{font-style:normal;color:var(--go-deep)}
+.tagline p{font-size:17px;color:var(--ink-2);margin-top:14px;max-width:52ch}
+.path{display:flex;align-items:center;gap:9px;margin-top:22px;flex-wrap:wrap}
+.path b{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+ background:var(--page);border:1px solid var(--rule);border-radius:999px;padding:6px 13px;white-space:nowrap}
+.path b.cash{color:var(--go-deep);border-color:var(--go-tint);background:var(--go-tint)}
+.path i{font-style:normal;color:var(--rule-2);font-size:13px}
+@media(max-width:680px){
+ .tagline{padding:26px 0 20px}
+ .tagline p{font-size:15px;margin-top:11px}
+ .path{gap:6px;margin-top:16px}
+ .path b{font-size:10px;padding:5px 10px}
+}
+
+/* ---------- hero card ---------- */
+.herocard{background:var(--page);border:1px solid var(--rule);border-radius:18px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.herocard .shorts{margin-top:24px;padding-top:22px;border-top:1px solid var(--rule);grid-template-columns:repeat(4,1fr)}
+.herocard .shorts-head{margin-bottom:14px}
+.herocard .big-in{gap:30px}
+.herocard .big .poster{height:326px}
+
+/* ---------- horizontal rails ---------- */
+.railh{display:flex;gap:18px;overflow-x:auto;padding:2px 2px 12px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.railh::-webkit-scrollbar{height:6px}
+.railh::-webkit-scrollbar-thumb{background:var(--rule-2);border-radius:999px}
+.railh>*{scroll-snap-align:start;flex:none}
+.railh .card{width:328px}
+.pitchcard{width:196px;cursor:pointer;animation:cardIn .5s cubic-bezier(.2,.8,.3,1) backwards}
+.pitchcard .poster{height:300px;border-radius:14px;border:1px solid var(--rule)}
+.pitchcard .play{width:44px;height:44px}
+.pitchcard .hook{font-size:21px}
+.pitchcard .nm{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;font-weight:700;font-family:var(--display)}
+.pitchcard .sub{font-size:12.5px;color:var(--ink-2);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pitchcard .eng{display:flex;gap:12px;margin-top:6px;font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+.pitchcard:hover .nm{text-decoration:underline;text-underline-offset:3px}
+.stagetag{position:absolute;left:12px;top:12px;z-index:3;background:rgba(255,255,255,.94);border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+@media(max-width:680px){
+ .herocard{padding:14px;border-radius:14px}
+ .herocard .shorts{grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;padding-top:18px}
+ .railh .card{width:268px}
+ .pitchcard{width:158px}.pitchcard .poster{height:248px}.pitchcard .hook{font-size:16px}
+}
+
+
+
+
+/* ---------- links ---------- */
+.sitecard{display:flex;align-items:center;gap:13px;background:var(--page);border:1px solid var(--ink);border-radius:14px;padding:15px 17px;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sitecard:hover{background:var(--ink);box-shadow:0 8px 22px rgba(0,0,0,.14)}
+.sitecard:hover .u,.sitecard:hover .lb,.sitecard:hover .go{color:#fff}
+.sitecard .fav{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff;font:700 15px var(--display)}
+.sitecard .lb{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.sitecard .u{font-size:15.5px;font-weight:700;font-family:var(--display);letter-spacing:-.01em;margin-top:1px;word-break:break-all}
+.sitecard .go{margin-left:auto;color:var(--ink-3);font-weight:700;flex:none}
+.sitecard.soft{border-color:var(--rule);border-style:dashed;cursor:default}
+.sitecard.soft:hover{background:var(--page);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sitecard.soft .u{color:var(--ink-3);font-size:14px}
+.sitestat{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;margin-top:7px;display:inline-block}
+.socials{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.socials a{display:flex;align-items:center;gap:7px;border:1px solid var(--rule);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--ink-2);transition:.15s}
+.socials a:hover{border-color:var(--ink);color:var(--ink);background:var(--soft)}
+.socials svg{width:14px;height:14px;flex:none}
+.socials .none{font-size:12.5px;color:var(--ink-3);padding:7px 0}
+@media(max-width:680px){.sitecard .u{font-size:14px}}
+
+
+/* ---------- shorts feed ---------- */
+.shortsfeed{max-width:428px;margin:0 auto;padding:24px 0 80px;display:flex;flex-direction:column;gap:26px}
+.sf{background:var(--page);border:1px solid var(--rule);border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);animation:cardIn .5s cubic-bezier(.2,.8,.3,1) backwards}
+.sf .poster{height:520px;border-radius:0;cursor:pointer}
+.sf .play{width:64px;height:64px}
+.sf .hook{font-size:30px;left:18px;bottom:18px}
+.sf-body{padding:15px 17px 16px}
+.sf-body .who{display:flex;align-items:center;gap:10px}
+.sf-body .who .nm{font-family:var(--display);font-size:16px;font-weight:700;line-height:1.2}
+.sf-body .who .lo{font-size:12px;color:var(--ink-3)}
+.sf-body .cap{font-size:14.5px;margin-top:11px;line-height:1.45}
+.sf-body .cap b{font-weight:600}
+.sf-acts{display:flex;align-items:center;gap:8px;margin-top:14px}
+.act{display:flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--ink-2);transition:.15s}
+.act:hover{border-color:var(--ink);color:var(--ink)}
+.act.liked{background:var(--dead-tint);border-color:var(--dead-tint);color:var(--dead)}
+.sf-acts .jr{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--go-deep)}
+
+/* ---------- answers index ---------- */
+.qstage{margin-bottom:34px}
+.qstage h3{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-family:var(--body);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.qstage h3::after{content:"";flex:1;height:1px;background:var(--rule)}
+.qlist{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.qrow{display:flex;align-items:center;gap:14px;background:var(--page);border:1px solid var(--rule);border-radius:12px;padding:15px 17px;transition:.16s}
+.qrow:hover{border-color:var(--ink);transform:translateX(3px)}
+.qrow .txt{font-family:var(--display);font-size:16px;font-weight:700;line-height:1.3;flex:1}
+.qrow .n{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);white-space:nowrap}
+.qrow .arrow{color:var(--go-deep);font-weight:700}
+
+/* ---------- post-mortems ---------- */
+.pm-hero{background:var(--ink);color:#fff;border-radius:18px;padding:40px;margin-bottom:34px}
+.pm-hero h1{font-size:clamp(27px,4vw,40px);font-weight:900;color:#fff;letter-spacing:-.03em;max-width:20ch}
+.pm-hero p{color:#B4B4B4;margin-top:12px;max-width:56ch;font-size:16px}
+.pm{background:var(--page);border:1px solid var(--rule);border-radius:14px;overflow:hidden;cursor:pointer;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.pm:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(0,0,0,.1)}
+.pm .poster{height:150px;border-radius:0}
+.pm-body{padding:16px 18px 18px}
+.pm-body h3{font-size:19px;font-weight:700}
+.pm-body .lesson{font-size:15px;line-height:1.55;color:var(--ink-2);margin-top:9px;border-left:3px solid var(--dead);padding-left:13px}
+.pm-body .meta{font-size:12px;color:var(--ink-3);margin-top:12px;display:flex;gap:12px;flex-wrap:wrap}
+
+/* ---------- auth pages ---------- */
+.authpage{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;padding:56px 0 80px;max-width:940px;margin:0 auto}
+.authbox{background:var(--page);border:1px solid var(--rule);border-radius:18px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.authbox h1{font-size:29px;font-weight:900;letter-spacing:-.03em}
+.authbox .lede{font-size:14.5px;color:var(--ink-2);margin-top:8px}
+.authside h2{font-size:26px;font-weight:800;letter-spacing:-.025em}
+.authside ul{list-style:none;margin-top:20px;display:flex;flex-direction:column;gap:14px}
+.authside li{display:flex;gap:12px;font-size:15px;color:var(--ink-2);line-height:1.5}
+.authside li em{font-style:normal;color:var(--go-deep);font-weight:700;flex:none}
+.altline{text-align:center;font-size:13px;color:var(--ink-3);margin-top:16px}
+.altline a{color:var(--go-deep);font-weight:600}
+.oauth{display:flex;flex-direction:column;gap:9px;margin-bottom:18px}
+.oauth button{border:1px solid var(--rule-2);border-radius:999px;padding:11px;font-size:14px;font-weight:600;transition:.15s}
+.oauth button:hover{border-color:var(--ink);background:var(--soft)}
+.ordiv{display:flex;align-items:center;gap:12px;font-size:11.5px;color:var(--ink-3);margin-bottom:16px}
+.ordiv::before,.ordiv::after{content:"";flex:1;height:1px;background:var(--rule)}
+
+/* ---------- start a journey ---------- */
+.wizard{max-width:660px;margin:0 auto;padding:36px 0 80px}
+.steps{display:flex;gap:8px;margin-bottom:26px}
+.steps div{flex:1;height:4px;background:var(--rule);border-radius:999px;overflow:hidden}
+.steps div.on i{display:block;height:100%;background:var(--go);border-radius:999px}
+.wizard h1{font-size:31px;font-weight:900;letter-spacing:-.03em}
+.wizard .lede{font-size:16px;color:var(--ink-2);margin-top:9px}
+.wform{background:var(--page);border:1px solid var(--rule);border-radius:16px;padding:26px;margin-top:24px}
+.wfield{margin-bottom:18px}
+.wfield label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+.wfield .hint{font-size:12.5px;color:var(--ink-3);margin-bottom:8px}
+.wfield input,.wfield textarea{width:100%;padding:11px 14px;border:1px solid var(--rule-2);border-radius:10px;font:inherit;font-size:15px;background:var(--page);color:var(--ink)}
+.wfield textarea{min-height:88px;resize:vertical;line-height:1.55}
+.wfield input:focus,.wfield textarea:focus{outline:none;border-color:var(--ink)}
+.swatches{display:flex;gap:9px;flex-wrap:wrap}
+.swatches button{width:34px;height:34px;border-radius:10px;border:2px solid transparent}
+.swatches button.on{border-color:var(--ink)}
+.wnav{display:flex;gap:11px;margin-top:8px}
+.wnav .btn{flex:1;padding:13px}
+.checklist{margin-top:22px;background:var(--soft);border-radius:14px;padding:18px 20px}
+.checklist .h{font-size:12px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--ink-3);margin-bottom:12px}
+.checklist li{list-style:none;display:flex;gap:10px;font-size:13.5px;color:var(--ink-3);padding:4px 0}
+.checklist li.y{color:var(--ink)}
+.checklist li em{font-style:normal;color:var(--go-deep);flex:none;width:15px}
+
+/* ---------- dashboard ---------- */
+.dash{display:grid;grid-template-columns:1fr 320px;gap:32px;padding:34px 0 80px;align-items:start}
+.dnums{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.dnum{background:var(--page);border:1px solid var(--rule);border-radius:14px;padding:16px}
+.dnum .n{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.025em}
+.dnum .l{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.dnum .d{font-size:11px;color:var(--go-deep);font-weight:600;margin-top:5px;font-family:var(--mono)}
+.todo{background:var(--page);border:1px solid var(--rule);border-radius:14px;padding:20px 22px}
+.todo h3{font-size:18px;font-weight:800;margin-bottom:6px}
+.todo .sub{font-size:13px;color:var(--ink-3);margin-bottom:14px}
+.todo-item{display:flex;align-items:center;gap:13px;padding:13px 0;border-top:1px solid var(--rule)}
+.todo-item .ic{width:30px;height:30px;border-radius:9px;background:var(--soft);display:grid;place-items:center;flex:none;font-size:14px}
+.todo-item .t{flex:1;font-size:14px;font-weight:500}
+.todo-item .t span{display:block;font-size:12px;color:var(--ink-3);font-weight:400;margin-top:1px}
+.todo-item .btn{padding:7px 15px;font-size:13px}
+
+/* ---------- stage filter ---------- */
+.stagebar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.stagebar button{font-size:13px;font-weight:600;border:1px solid var(--rule);background:var(--page);border-radius:999px;padding:7px 15px;color:var(--ink-2);transition:.15s}
+.stagebar button:hover{border-color:var(--ink);color:var(--ink)}
+.stagebar button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.stagebar .ct{font-family:var(--mono);font-size:10.5px;opacity:.6;margin-left:5px}
+
+@media(max-width:1000px){
+ .authpage{grid-template-columns:1fr;gap:32px;padding:32px 0 60px}
+ .authside{order:-1}
+ .dash{grid-template-columns:1fr;gap:26px}
+ .dnums{grid-template-columns:repeat(2,1fr)}
+ .qlist{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+ .filters{position:static}
+ .shortsfeed{max-width:none;padding:16px 0 70px;gap:18px}
+ .sf .poster{height:440px}.sf .hook{font-size:23px}
+ .pm-hero{padding:24px 20px}
+ .wizard{padding:24px 0 60px}.wizard h1{font-size:25px}
+ .wform{padding:18px}
+ .authbox{padding:22px}
+}
+
+/* ---------- landing tagline ---------- */
+.tagline{padding:44px 0 30px;animation:fadeIn .6s cubic-bezier(.2,.8,.3,1) backwards}
+.tagline h1{font-size:clamp(30px,4.4vw,50px);font-weight:900;font-variation-settings:'SOFT' 70,'WONK' 1;
+ letter-spacing:-.033em;line-height:1.04;max-width:19ch}
+.tagline h1 em{font-style:normal;color:var(--go-deep)}
+.tagline p{font-size:17px;color:var(--ink-2);margin-top:14px;max-width:52ch}
+.path{display:flex;align-items:center;gap:9px;margin-top:22px;flex-wrap:wrap}
+.path b{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+ background:var(--page);border:1px solid var(--rule);border-radius:999px;padding:6px 13px;white-space:nowrap}
+.path b.cash{color:var(--go-deep);border-color:var(--go-tint);background:var(--go-tint)}
+.path i{font-style:normal;color:var(--rule-2);font-size:13px}
+@media(max-width:680px){
+ .tagline{padding:26px 0 20px}
+ .tagline p{font-size:15px;margin-top:11px}
+ .path{gap:6px;margin-top:16px}
+ .path b{font-size:10px;padding:5px 10px}
+}
+
+/* ---------- hero card ---------- */
+.herocard{background:var(--page);border:1px solid var(--rule);border-radius:18px;padding:22px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.herocard .big-in{gap:30px;align-items:start}
+.herocard .poster{border-radius:13px}
+.slabel{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:18px 0 10px;display:flex;align-items:center;gap:9px}
+.slabel::after{content:"";flex:1;height:1px;background:var(--rule)}
+.herocard .shorts{grid-template-columns:repeat(4,1fr);gap:12px;margin:0;padding:0;border:none}
+.herocard .short .poster{height:98px;border-radius:10px}
+.herocard .short .play{width:32px;height:32px}
+.herocard .hook{font-size:13.5px;left:9px;bottom:9px}
+.herocard .short .t{font-size:12.5px;margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.herocard .short .m{font-size:10.5px;margin-top:4px;gap:9px}
+.herocard .dur{font-size:10px;padding:2px 6px;right:7px;bottom:7px}
+
+/* ---------- horizontal rails ---------- */
+.hrail{display:flex;gap:20px;max-width:100%;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.hrail::-webkit-scrollbar{height:6px}
+.hrail::-webkit-scrollbar-thumb{background:var(--rule-2);border-radius:999px}
+.hrail>*{scroll-snap-align:start}
+.hrail .card{width:326px;flex:none}
+.pitchrail .reel{width:198px}
+.pitchrail .reel .poster{height:304px;border-radius:14px}
+.pitchrail .hook{font-size:19px}
+.pitchrail .reel .nm{font-family:var(--display);font-size:15.5px;font-weight:700;margin-top:10px}
+.pitchrail .reel .sub{margin-top:3px}
+.pitchrail .reel .by{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-3);margin-top:6px}
+.rank-chip{position:absolute;top:10px;left:10px;z-index:3;background:rgba(0,0,0,.72);color:#fff;font:600 11px var(--mono);padding:3px 9px;border-radius:999px}
+.happening{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:22px 14px 11px;color:#fff;font-size:12.5px;font-weight:600;
+ background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.72));text-shadow:0 1px 4px rgba(0,0,0,.5)}
+@media(max-width:1000px){.herocard .shorts{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:680px){
+ .herocard{padding:14px;border-radius:14px}
+ /* shorts become a swipeable rail so they cost ~120px of height, not ~300px */
+ .herocard .shorts{display:flex;gap:10px;overflow-x:auto;padding:0 14px 8px 0;margin-right:-14px;
+   scroll-snap-type:x mandatory;scrollbar-width:none}
+ .herocard .shorts::-webkit-scrollbar{display:none}
+ .herocard .short{width:126px;flex:none;scroll-snap-align:start}
+ .herocard .short .poster{height:74px;border-radius:9px}
+ .herocard .short .play{width:26px;height:26px}
+ .herocard .short .play svg{width:13px;height:13px}
+ .herocard .hook{font-size:10.5px;left:7px;bottom:6px;line-height:1.05}
+ .herocard .short .t{font-size:11.5px;margin-top:6px;-webkit-line-clamp:2}
+ .herocard .short .m{font-size:9.5px;margin-top:3px;gap:8px}
+ .herocard .dur{font-size:9px;padding:1px 5px;right:5px;bottom:5px}
+ .slabel{margin:14px 0 9px;font-size:9.5px}
+ .hrail .card{width:280px}
+ .pitchrail .reel{width:164px}.pitchrail .reel .poster{height:256px}.pitchrail .hook{font-size:16px}
+}
+
+/* ---------- shorts strip ---------- */
+.hook{position:absolute;left:14px;bottom:14px;z-index:3;color:#fff;font-family:var(--display);font-weight:900;
+ font-variation-settings:'SOFT' 40,'WONK' 0;font-size:20px;line-height:1.06;letter-spacing:-.025em;
+ text-shadow:0 2px 14px rgba(0,0,0,.65),0 1px 3px rgba(0,0,0,.5);pointer-events:none;text-transform:uppercase}
+.shorts{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:30px;padding-top:28px;border-top:1px solid var(--rule)}
+.shorts-head{display:flex;align-items:baseline;gap:12px;margin-bottom:2px}
+.shorts-head h3{font-size:19px;font-weight:800}
+.shorts-head .note{font-size:12.5px;color:var(--ink-3)}
+.short{cursor:pointer;animation:cardIn .5s cubic-bezier(.2,.8,.3,1) backwards}
+.short .poster{height:132px;border-radius:12px;border:1px solid var(--rule)}
+.short .play{width:40px;height:40px}
+.short .t{font-size:14px;font-weight:600;margin-top:10px;line-height:1.35}
+.short:hover .t{text-decoration:underline;text-underline-offset:3px}
+.short .m{font-size:11.5px;color:var(--ink-3);margin-top:5px;font-family:var(--mono);display:flex;gap:11px}
+@media(max-width:1000px){.shorts{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){
+ .shorts{grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;padding-top:20px}
+ .short .poster{height:108px}.hook{font-size:15px;left:10px;bottom:10px}
+}
+
+/* ---------- segments ---------- */
+.segs{max-width:680px;padding-top:24px}
+.seg{border-top:1px solid var(--rule);padding:20px 0;display:grid;grid-template-columns:34px 1fr;gap:16px}
+.seg:first-child{border-top:none}
+.seg .no{font-family:var(--mono);font-size:12px;color:var(--ink-3);padding-top:5px;font-weight:500}
+.seg h4{font-size:19px;font-weight:700}
+.seg .prompt{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.seg .when{font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-top:7px}
+.seg .body{font-size:16px;line-height:1.62;color:var(--ink-2);margin-top:9px}
+.seg .body .rest{display:none}
+.seg.open .body .rest{display:inline}
+.seg .more{font-size:13.5px;font-weight:600;color:var(--go-deep);margin-top:8px;display:inline-flex;gap:6px;align-items:center}
+.seg .more em{font-style:normal;transition:transform .2s}
+.seg.open .more em{transform:rotate(180deg)}
+.seg .segreel{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:var(--soft);border:1px solid var(--rule);border-radius:999px;padding:6px 13px 6px 8px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s}
+.seg .segreel:hover{border-color:var(--ink)}
+.seg .segreel i{width:20px;height:20px;border-radius:50%;background:var(--ink);display:grid;place-items:center;flex:none}
+.seg .segreel i svg{width:9px;height:9px;margin-left:1px}
+.seg .segreel span{color:var(--ink-3);font-family:var(--mono);font-size:11px;font-weight:500}
+.seg.locked{opacity:.45}
+.seg.locked h4{font-weight:600}
+.seg.locked .no{color:var(--rule-2)}
+.seg.locked .body{font-style:italic;font-size:14.5px}
+.seg-ahead{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:26px 0 4px;border-top:1px solid var(--rule);margin-top:8px}
+
+/* ---------- reels rail ---------- */
+.reels-wrap{margin-top:34px;max-width:680px}
+.reels-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.reels-head h3{font-size:20px;font-weight:800}
+.reels-head .note{font-size:12.5px;color:var(--ink-3)}
+.reels{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.reels::-webkit-scrollbar{height:6px}
+.reels::-webkit-scrollbar-thumb{background:var(--rule-2);border-radius:999px}
+.reel{width:172px;flex:none;scroll-snap-align:start;cursor:pointer}
+.reel .poster{height:268px;border-radius:12px;border:1px solid var(--rule)}
+.reel .play{width:40px;height:40px}
+.reel .tag{font-size:13px;font-weight:600;line-height:1.35;margin-top:9px}
+.reel .sub{font-size:12px;color:var(--ink-3);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.reel .eng{display:flex;gap:12px;margin-top:7px;font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+.reel .eng span{display:flex;align-items:center;gap:4px}
+.reel:hover .tag{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:680px){.reels-wrap,.segs{max-width:none}.reel{width:148px}.reel .poster{height:232px}}
+
+
+/* ---------- links card ---------- */
+.linkcard .eyebrow{color:var(--ink-3);margin-bottom:11px}
+.sitebtn{display:flex;align-items:center;gap:12px;width:100%;background:var(--ink);color:#fff;border-radius:12px;padding:14px 15px;transition:.18s;text-align:left}
+.sitebtn:hover{background:var(--go-deep);transform:translateY(-1px)}
+.sitebtn .glob{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.14);display:grid;place-items:center;flex:none}
+.sitebtn .glob svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:1.8}
+.sitebtn .d{min-width:0}
+.sitebtn .d b{display:block;font-size:15px;font-weight:600;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sitebtn .d span{display:block;font-size:11.5px;color:#A9A9A9;margin-top:1px}
+.sitebtn .go{margin-left:auto;font-size:16px;opacity:.7;flex:none}
+.nosite{display:flex;align-items:center;gap:12px;border:1px dashed var(--rule-2);border-radius:12px;padding:13px 15px;color:var(--ink-3)}
+.nosite b{font-size:13.5px;font-weight:600;color:var(--ink-2);display:block}
+.nosite span{font-size:11.5px}
+.socials{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.soc{display:flex;align-items:center;gap:7px;border:1px solid var(--rule);border-radius:999px;padding:7px 12px 7px 9px;font-size:12px;color:var(--ink-2);font-weight:500;transition:.15s;max-width:100%}
+.soc:hover{border-color:var(--ink);color:var(--ink);background:var(--soft)}
+.soc svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.soc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clicknote{font-size:11.5px;color:var(--ink-3);margin-top:11px;padding-top:11px;border-top:1px solid var(--rule);display:flex;align-items:center;gap:6px}
+.clicknote b{font-family:var(--mono);color:var(--ink);font-weight:600}
+
+/* ---------- video player ---------- */
+.pscrim{position:fixed;inset:0;background:rgba(8,8,8,.86);backdrop-filter:blur(6px);z-index:80;display:grid;place-items:center;padding:24px;animation:fadeIn .25s ease backwards}
+.player{width:100%;max-width:860px;max-height:92vh;overflow-y:auto;background:#111;border-radius:16px;position:relative;color:#fff}
+.pclose{position:absolute;top:12px;right:14px;z-index:6;color:#fff;font-size:26px;line-height:1;opacity:.75}
+.pclose:hover{opacity:1}
+.stage{position:relative;height:400px;background:#0B0B0B;border-radius:16px 16px 0 0;overflow:hidden;cursor:pointer}
+.stage .art{position:absolute;inset:0;width:100%;height:100%;opacity:.55}
+.stage::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 30%,rgba(0,0,0,.55) 100%)}
+.bigbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.95);display:grid;place-items:center;z-index:4;transition:transform .25s,opacity .25s;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.stage:hover .bigbtn{transform:translate(-50%,-50%) scale(1.07)}
+.bigbtn.hidden{opacity:0;transform:translate(-50%,-50%) scale(.7)}
+.livecap{position:absolute;left:0;right:0;bottom:26px;z-index:4;text-align:center;padding:0 40px}
+.livecap span{background:rgba(0,0,0,.72);padding:7px 14px;border-radius:6px;font-size:16px;line-height:1.5;display:inline;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.pctrl{padding:14px 20px 4px}
+.pbar{height:5px;background:rgba(255,255,255,.2);border-radius:999px;position:relative;cursor:pointer}
+.pbar i{display:block;height:100%;background:var(--go);border-radius:999px;width:0;transition:width .2s linear}
+.pbar .mk-ch{position:absolute;top:-3px;width:2px;height:11px;background:rgba(255,255,255,.55);border-radius:1px}
+.pmeta{display:flex;align-items:center;gap:14px;padding:11px 20px 16px;font-size:13px;color:#9C9C9C}
+.pmeta button{color:#fff}
+.pmeta .t{font-family:var(--mono);font-size:12px}
+.pmeta .jr{margin-left:auto;color:var(--go);font-weight:600;font-size:13.5px}
+.phead{padding:0 20px 16px;border-bottom:1px solid #222}
+.phead h3{font-size:22px;font-weight:800;color:#fff;line-height:1.25}
+.phead .who{display:flex;align-items:center;gap:8px;font-size:13px;color:#9C9C9C;margin-top:9px}
+.tx{padding:16px 20px 24px}
+.tx .lab{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:#7A7A7A;font-weight:600;margin-bottom:10px}
+.tx p{display:flex;gap:14px;padding:7px 0;font-size:14.5px;color:#B9B9B9;line-height:1.55;cursor:pointer;border-radius:6px}
+.tx p:hover{color:#fff}
+.tx p.on{color:#fff}
+.tx p.on b{color:var(--go)}
+.tx b{font-family:var(--mono);font-size:11.5px;color:#6E6E6E;flex:none;padding-top:3px;font-weight:500}
+.chip{cursor:pointer}
+@media(max-width:680px){
+ .pscrim{padding:0}
+ .player{max-width:none;max-height:100vh;height:100vh;border-radius:0}
+ .stage{height:44vh;border-radius:0}
+ .bigbtn{width:62px;height:62px}
+ .livecap span{font-size:14px}
+}
+
+/* motion */
+@keyframes cardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes fl{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.05)}}
+@keyframes dash{to{stroke-dashoffset:-50}}
+@keyframes sheen{0%{transform:translateX(-120%)}60%,100%{transform:translateX(320%)}}
+.art .bob{animation:bob 3.4s ease-in-out infinite}
+.art .fl{animation:fl 5s ease-in-out infinite;transform-origin:center;transform-box:fill-box}
+.art .dash{animation:dash 3s linear infinite}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* responsive */
+@media(max-width:1000px){
+ .cards,.qgrid{grid-template-columns:repeat(2,1fr);gap:22px}
+ .cliprow{grid-template-columns:repeat(2,1fr)}
+ .big-in{grid-template-columns:1fr;gap:24px}
+ .big .poster{height:280px}
+ .big h1{font-size:32px}
+ .search{max-width:none}
+ .two{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+ .wrap{padding:0 16px}
+ .top-in{height:58px;gap:8px}
+ .search{position:static;flex:0}
+ .search input,.search .ico{display:none}
+ .search.open{position:fixed;inset:0;background:var(--page);z-index:70;padding:14px 16px;display:block}
+ .search.open input{display:block;padding:13px 16px 13px 42px;font-size:16px}
+ .search.open .ico{display:flex;left:30px;top:30px}
+ .search.open .results{position:static;margin-top:12px;box-shadow:none;max-height:calc(100vh - 92px);overflow-y:auto}
+ .icon-btn{display:flex}
+ .lnk-following,.btn-login{display:none}
+ .filters{top:58px}.filters-in{gap:20px;height:46px}nav.rungs{gap:20px}
+ .cards,.qgrid,.cliprow{grid-template-columns:1fr;gap:24px}
+ .card .poster{height:200px}
+ .big .poster{height:208px}.big h1{font-size:27px}.big .play{width:58px;height:58px}
+ .section{padding:30px 0}.sec-head h2{font-size:22px}
+ .feature{padding:24px 0 30px}
+ .convert{padding:28px 20px}.convert h2{font-size:24px}
+ .timeline{padding:28px 0 40px}
+ .inline-clip .poster{width:92px;height:58px}
+ .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--page);border-top:1px solid var(--rule);z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+ .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;font-size:10px;color:var(--ink-3);font-weight:500}
+ .tabbar a.on{color:var(--go-deep)}
+ body{padding-bottom:62px}
+}
+</style>
+</head>
+<body>
+<header class="top" data-id="nav">
+  <div class="wrap top-in">
+    <a href="#/" class="mark" aria-label="Vibed, home">
+      <svg class="mk" viewBox="0 0 44 32" aria-hidden="true">
+       <rect x="0" y="24" width="5" height="8" rx="1.5"/><rect x="7.8" y="20" width="5" height="12" rx="1.5"/>
+       <rect x="15.6" y="16" width="5" height="16" rx="1.5"/><rect x="23.4" y="12" width="5" height="20" rx="1.5" class="cash"/>
+       <rect x="31.2" y="6" width="5" height="26" rx="1.5" class="cash"/><rect x="39" y="0" width="5" height="32" rx="1.5" class="cash"/>
+      </svg>vibed</a>
+    <div class="search" id="search" data-id="search">
+      <span class="ico" id="searchIco"></span>
+      <input id="q" type="search" autocomplete="off" placeholder="Search ventures, founders, questions" aria-label="Search" oninput="onSearch(this.value)" onfocus="onSearch(this.value)">
+      <div id="results"></div>
+    </div>
+    <div class="actions">
+      <button class="icon-btn" id="searchBtn" aria-label="Search" onclick="openSearch()"></button>
+      <a href="#/following" class="lnk lnk-following" id="followLink"></a>
+      <span id="authArea"></span>
+      <a class="btn btn-go btn-sm" href="#/start">Tell your story</a>
+    </div>
+  </div>
+  <div class="filters"><div class="wrap filters-in"><nav class="rungs" id="rungnav"></nav></div></div>
+</header>
+<main id="app"></main>
+<nav class="tabbar" id="tabbar" data-id="tabbar"></nav>
+<div id="modal"></div>
+<footer><div class="wrap fin">
+  <span>Vibed — MVP prototype, mock data</span>
+  <button onclick="document.body.classList.toggle('ids')">toggle dev IDs</button>
+  <span class="mono" style="margin-left:auto">v0.4</span>
+</div></footer>
+
+<script>
+/* ===================== DATA ===================== */
+const RUNGS=[{key:'idea',label:'Idea',cash:false},{key:'building',label:'Building',cash:false},
+ {key:'live',label:'Live',cash:false},{key:'first',label:'First dollar',cash:true},
+ {key:'growing',label:'Growing',cash:true},{key:'alumni',label:'Alumni',cash:true}];
+const rungIndex=k=>RUNGS.findIndex(r=>r.key===k);
+
+const QUESTIONS=[
+ {slug:'pitch',seg:'pitch',stage:'Starting out',q:'What is it, in thirty seconds?',n:52},
+ {slug:'quit',seg:'spark',stage:'Starting out',q:'What made you finally start?',n:41},
+ {slug:'first-users',seg:'validation',stage:'Starting out',q:'How did you get your first ten users?',n:34},
+ {slug:'audience',seg:'audience',stage:'Starting out',q:'How did you build an audience before you had a product?',n:22},
+ {slug:'wrong',seg:'proto',stage:'Building',q:'What did you build first that turned out to be wrong?',n:28},
+ {slug:'longest',seg:'build',stage:'Building',q:'What took far longer than you expected?',n:25},
+ {slug:'beta',seg:'beta',stage:'Building',q:'What did your first testers break?',n:17},
+ {slug:'gtm',seg:'gtm',stage:'Launching',q:'How did you actually take it to market?',n:23},
+ {slug:'launch-day',seg:'launch',stage:'Launching',q:'What happened on launch day?',n:29},
+ {slug:'first-dollar',seg:'first',stage:'Launching',q:'Tell me about the first time someone paid you.',n:19},
+ {slug:'channel',seg:'channel',stage:'Growing',q:'What was the first thing that worked repeatedly?',n:16},
+ {slug:'lowest',seg:'trouble',stage:'Growing',q:'What was the lowest point, and what got you past it?',n:31},
+ {slug:'money',seg:'money',stage:'Growing',q:'How are you paying rent while you build this?',n:26},
+ {slug:'help',seg:'team',stage:'Growing',q:'Who was the first person you brought in?',n:12},
+ {slug:'scale',seg:'scale',stage:'The other side',q:'What broke when it got bigger?',n:9},
+ {slug:'next',seg:'next',stage:'The other side',q:'What does the next year look like?',n:14}];
+
+
+const FOUNDERS={
+ maya:{name:'Maya Okonkwo',loc:'Lisbon',hue:'#1F6F5C',bio:'Freelance agency producer for nine years. Building the thing that used to eat her Sunday nights.',also:['Two side projects, both abandoned']},
+ tom:{name:'Tom Reilly',loc:'Cork',hue:'#B4621A',bio:'Weekday nurse, weekend builder. First time making anything.',also:[]},
+ priya:{name:'Priya Raman',loc:'Melbourne',hue:'#5A2EC4',bio:'Ran a café in Brunswick for six years. Sold it in 2024.',also:[]},
+ dane:{name:'Dane Wexler',loc:'Denver',hue:'#1A5C8A',bio:'Two years in a van. Was a backend engineer before that.',also:[]},
+ elena:{name:'Elena Marsh',loc:'Auckland',hue:'#9A2A55',bio:'Eleven years skippering charter boats. Learning to code in the evenings.',also:[]},
+ sam:{name:'Sam Idris',loc:'Manchester',hue:'#3D5A2B',bio:'Built and sold Pocket Ledger. Still posts about what came after.',also:[]},
+ noor:{name:'Noor Haddad',loc:'Toronto',hue:'#8A5A1A',bio:'Closed Tallow in June. Writing up everything that went wrong.',also:[]}};
+
+const V=[
+ {slug:'slate',name:'Slate',pitch:'Turns voice notes into client-ready briefs',founder:'maya',rung:'first',
+  brand:'#1F6F5C',glyph:'wave',art:'wave',pick:true,week:27,streak:9,clips:6,followers:1284,delta:210,
+  promise:{txt:'Twenty paying users by 30 September',days:39,span:60},kept:['y','y','n','y'],
+  hero:{q:'The first time someone paid me, I was in bed at 11pm',dur:'0:58'},updated:'2 days ago'},
+ {slug:'kettle',name:'Kettle',pitch:'Recipe costing for cafés that moves with supplier prices',founder:'priya',rung:'growing',
+  brand:'#B4451A',glyph:'cup',art:'steam',week:44,streak:14,clips:9,followers:2910,delta:118,
+  promise:{txt:'Hire my first contractor by 15 October',days:54,span:75},kept:['y','y','y','y','n'],
+  hero:{q:'I ran a café for six years and still got the pricing wrong',dur:'1:12'},updated:'5 hours ago'},
+ {slug:'northbound',name:'Northbound',pitch:'Route planner that knows where you can legally sleep',founder:'dane',rung:'live',
+  brand:'#1A5C8A',glyph:'peak',art:'range',week:16,streak:5,clips:4,followers:642,delta:340,heat:true,
+  promise:{txt:'One hundred trips planned by 12 September',days:21,span:45},kept:['y','n','y'],
+  hero:{q:'I am building this from the van it is for',dur:'0:44'},updated:'yesterday'},
+ {slug:'fernpost',name:'Fernpost',pitch:'Plant care reminders that arrive as physical postcards',founder:'tom',rung:'building',
+  brand:'#3D6B24',glyph:'leaf',art:'leaves',week:9,streak:7,clips:3,followers:188,delta:44,
+  promise:{txt:'Post the first fifty cards by 5 September',days:14,span:30},kept:['y','y'],
+  hero:{q:'Everyone told me physical mail was a stupid idea',dur:'1:03'},updated:'4 days ago'},
+ {slug:'halyard',name:'Halyard',pitch:'Crew rostering for charter boat operators',founder:'elena',rung:'idea',
+  brand:'#9A2A55',glyph:'sail',art:null,week:2,streak:2,clips:3,followers:57,delta:57,
+  promise:{txt:'Talk to ten skippers by 1 September',days:10,span:21},kept:[],
+  hero:{q:'I skippered for eleven years and rostered crew on paper',dur:'0:51'},updated:'today'},
+ {slug:'tallow',name:'Tallow',pitch:'Refillable skincare on subscription',founder:'noor',rung:'live',
+  brand:'#8A5A1A',glyph:'drop',art:'drops',dead:true,closed:'June 2026',week:71,streak:0,clips:11,followers:934,delta:9,
+  promise:null,kept:['y','n','n','y','n'],
+  hero:{q:'What I would tell myself before I spent $40,000 on stock',dur:'2:07'},updated:'closed June 2026'},
+ {slug:'pocket-ledger',name:'Pocket Ledger',pitch:'Receipt capture for sole traders who hate receipts',founder:'sam',rung:'alumni',
+  brand:'#4A4A8A',glyph:'receipt',art:'ledger',graduated:'March 2026',week:96,streak:0,clips:14,followers:8830,delta:12,
+  promise:null,kept:['y','y','y','y','y','n','y'],
+  hero:{q:'Two years from a spreadsheet to something I could hand over',dur:'1:44'},updated:'graduated'}];
+
+const CLIPS=[
+ {v:'slate',q:'How did you get your first ten users?',dur:'1:22',qs:'first-users'},
+ {v:'kettle',q:'What did you build first that turned out to be wrong?',dur:'0:56',qs:'wrong'},
+ {v:'northbound',q:'What was the lowest point, and what got you past it?',dur:'1:38',qs:'lowest'},
+ {v:'tallow',q:'Tell me about the day you decided to close it',dur:'2:07',qs:'lowest'}];
+
+
+const DETAIL={
+ slate:{media:'video',photos:11,
+  problem:'Freelance producers record client calls and then lose two hours turning them into a written brief. Every project, every time.',
+  who:'Freelance and small-studio producers who take verbal briefs and have to write them up. Roughly forty thousand of them in the UK and US.',
+  why:'I did this job for nine years. I have written about six hundred of these briefs by hand.'},
+ kettle:{media:'video',photos:14,
+  problem:'Cafés set menu prices once and never revisit them, while supplier costs move every quarter. Most owners are selling at least one item at a loss without knowing.',
+  who:'Independent cafés with one to three sites. Owner-operators, not chains.',
+  why:'I ran one for six years and got this wrong for five months straight.'},
+ northbound:{media:'photo',photos:23,
+  problem:'Every van app shows where the campgrounds are. None of them show where you will actually be left alone overnight, which is what matters.',
+  who:'Full-time and long-trip van travellers in North America and Europe.',
+  why:'I live in the van. I have been fined twice for getting this wrong.'},
+ fernpost:{media:'photo',photos:9,
+  problem:'Plant care apps send notifications that everyone swipes away. Nobody ignores something that arrives in the post.',
+  who:'People who kill houseplants and feel bad about it. Gift buyers, mostly.',
+  why:'I have killed eleven plants. This is a selfish product.'},
+ halyard:{media:'photo',photos:4,
+  problem:'Charter boat crew rostering runs on paper and group chats because every tool built for it is really a restaurant tool. Boats have tides, licences, sea time and weather cancellations.',
+  who:'Small charter operators running two to eight boats with casual crew.',
+  why:'Eleven years skippering. I made every one of those rosters by hand.'},
+ tallow:{media:'video',photos:31,
+  problem:'Skincare packaging is thrown away after one use. Refills existed but nobody made them convenient enough to switch.',
+  who:'It turned out to be nobody, which is the point of the post-mortem.',
+  why:'I cared about the waste. I did not check whether anyone else cared enough to pay.'},
+ 'pocket-ledger':{media:'video',photos:19,
+  problem:'Sole traders lose receipts and then lose deductions. Existing tools were built for bookkeepers, not for people doing it in a van at 9pm.',
+  who:'UK sole traders filing their own self-assessment.',
+  why:'I was one, and I was terrible at it.'}};
+V.forEach(v=>Object.assign(v,DETAIL[v.slug]||{}));
+
+
+/* Canonical journey segments — same order for every venture, so stories compare */
+const SEGMENTS=[
+ {k:'pitch',t:'The elevator pitch',p:'What it is, in thirty seconds.'},
+ {k:'spark',t:'The spark',p:'The moment the problem became worth solving.'},
+ {k:'validation',t:'Validation',p:'Who you talked to before building anything.'},
+ {k:'audience',t:'Building an audience',p:'The waitlist, the shortlist, the first people watching.'},
+ {k:'proto',t:'Prototype',p:'The first ugly version.'},
+ {k:'build',t:'Development',p:'Building the real thing.'},
+ {k:'beta',t:'Private beta',p:'First testers and what they broke.'},
+ {k:'gtm',t:'Go to market',p:'Kickstarter, pre-orders, launch strategy.'},
+ {k:'launch',t:'Launch day',p:'What actually happened.'},
+ {k:'first',t:'First sale',p:'The first time a stranger paid.'},
+ {k:'channel',t:'Finding a channel',p:'The thing that started working repeatedly.'},
+ {k:'trouble',t:'What nearly killed it',p:'The setback you did not see coming.'},
+ {k:'money',t:'Money and runway',p:'How you are paying for this.'},
+ {k:'team',t:'Getting help',p:'First hire, contractor or co-founder.'},
+ {k:'scale',t:'Small to big',p:'What broke when it grew.'},
+ {k:'next',t:'What is next',p:'The part not written yet.'}];
+
+const SEG={slate:{
+ pitch:{when:'Updated 14 Aug',body:'Slate turns a recorded client call into a written brief in about ninety seconds. You talk, it listens, and you get the deliverables list, the dates and the scope in the format producers actually use. It is not a summariser and it is not a note app. It is the two hours between the call and the brief, deleted.'},
+ spark:{when:'12 Feb 2026',body:'I recorded forty minutes of client notes on my phone and then spent two hours typing them into a brief. It was the third time that month. I remember sitting there thinking that this is not a hard problem, it is just that nobody has bothered. So I wrote the problem down properly instead of complaining about it for a fourth time. There was no lightning bolt and I think people wait for a better reason than the one they already have.'},
+ validation:{when:'28 Feb 2026',body:'I posted the problem, not the product, in two producer Slack groups I had been in for four years. Nine people replied and two asked when it would ship. I did not treat that as demand, because replies are not money, but it was enough to justify six weeks. I also called four people who said no, and those calls were more useful than the nine yeses.'},
+ audience:{when:'Mar 2026',body:'I started posting a Friday update in both groups whether or not anything had happened. Some weeks the update was that nothing worked. By the time I had something to show, forty people had been reading those updates for a month and eight volunteered to test it. Building the audience cost nothing and took longer than building the product.'},
+ proto:{when:'09 Mar 2026',body:'The first version was a form, a text area and one prompt. It took a weekend. It was genuinely embarrassing and I showed it to people anyway, which is the only reason the second version was any good.'},
+ build:{when:'Mar – May 2026',body:'Whisper for transcription, one prompt for structure, and then three months of getting the output format wrong. I built a summary first. It was accurate, well written and completely useless, because producers do not want a summary, they want the deliverables list first, then dates, then everything else. Rebuilding that template three times cost me about six weeks and it was the only work that mattered.'},
+ beta:{when:'19 May 2026',body:'Eight people testing free, with a Loom from me every Friday. Two stopped replying, which is its own kind of feedback and worth more than the polite ones who kept saying it was great.'},
+ gtm:{when:'Jun 2026',body:'No Kickstarter, no Product Hunt, no launch video. I decided the entire go-to-market was the two Slack groups plus whoever those people told. That is a small strategy and I keep being told it is not enough, which is probably true, but it got me to twelve customers without spending anything.'},
+ launch:{when:'04 Jun 2026',body:'I turned the free tier off for new signups and put a nineteen dollar price on it. Billing was not wired up because I did not think anyone would click it. Someone clicked it.'},
+ first:{when:'11 Jun 2026',body:'Rachel, one of the original nine. She messaged asking how to pay and I did not have a checkout page, so I sat up in bed at eleven at night and made a payment link on my phone. Nineteen dollars. Everything before that was me deciding it was worth doing. That was someone else deciding.'},
+ channel:{when:'14 Aug 2026',body:'Twelve paying and all of them from the same two rooms. I have not found a second channel and that is the entire problem right now. I have tried cold email, a directory listing and one guest post, and none of them produced a single signup.'}
+}};
+V.forEach(v=>{v.seg=SEG[v.slug]||{}});
+
+/* Every venture ships one elevator-pitch short — the minimum video standard */
+const PITCH={
+ slate:{hook:'TWO HOURS,<br>DELETED',dur:'0:38',likes:412,comments:23},
+ kettle:{hook:'I SOLD IT<br>AT A LOSS<br>FOR 5 MONTHS',dur:'0:44',likes:889,comments:64},
+ northbound:{hook:'FINED TWICE<br>FOR SLEEPING',dur:'0:31',likes:1530,comments:142},
+ fernpost:{hook:'NOBODY IGNORES<br>A POSTCARD',dur:'0:36',likes:604,comments:71},
+ halyard:{hook:'ROSTERS ON PAPER<br>FOR 11 YEARS',dur:'0:29',likes:318,comments:44},
+ tallow:{hook:'$40,000 OF STOCK<br>NOBODY WANTED',dur:'0:52',likes:2140,comments:207},
+ 'pocket-ledger':{hook:'A SPREADSHEET<br>I MADE<br>FOR MYSELF',dur:'0:41',likes:766,comments:52}};
+V.forEach(v=>v.pitchReel=PITCH[v.slug]);
+
+
+
+const LINKS={
+ slate:{site:'useslate.com',status:'live',clicks:1840,x:'mayaokonkwo',ig:'slate.brief',tiktok:'slatebrief'},
+ kettle:{site:'kettlecosting.com',status:'live',clicks:2960,x:'priyaraman',ig:'kettle.costing',yt:'kettlecosting'},
+ northbound:{site:'northbound.trip',status:'live',clicks:5410,ig:'northbound.trip',tiktok:'northbound.trip',yt:'northboundvan'},
+ fernpost:{site:'fernpost.cards',status:'waitlist',clicks:1120,ig:'fernpost.cards',tiktok:'fernpost'},
+ halyard:{site:null,status:'none',clicks:210,ig:'halyard.crew'},
+ tallow:{site:'tallow.co',status:'closed',clicks:640,x:'noorhaddad',ig:'tallow.refill'},
+ 'pocket-ledger':{site:'pocketledger.app',status:'live',clicks:9800,x:'samidris'}};
+
+/* Elevator pitch shorts — the discovery surface */
+const ELEVATOR={
+ halyard:{hook:'ELEVEN YEARS<br>OF PAPER<br>ROSTERS',dur:'0:34',likes:892,comments:64,line:'Crew rostering built for boats, not restaurants'},
+ fernpost:{hook:'PLANT<br>REMINDERS<br>BY POST',dur:'0:41',likes:1340,comments:118,line:'Nobody ignores a postcard. Everybody ignores a notification.'},
+ northbound:{hook:'WHERE YOU<br>WON\'T GET<br>WOKEN UP',dur:'0:47',likes:2210,comments:187,line:'Route planning for people sleeping in the van'},
+ slate:{hook:'90 SECONDS,<br>NOT TWO<br>HOURS',dur:'0:38',likes:412,comments:23,line:'Voice notes in, client brief out'},
+ kettle:{hook:'SELLING AT<br>A LOSS FOR<br>5 MONTHS',dur:'0:44',likes:770,comments:59,line:'Recipe costing that moves with supplier prices'},
+ tallow:{hook:'$40,000<br>OF STOCK<br>I DIDN\'T NEED',dur:'0:52',likes:3105,comments:402,line:'The post-mortem everyone shares'}};
+
+const LATEST={slate:'Crossed to First dollar · 12 paying',kettle:'Kept a promise: first contractor brief sent',
+ northbound:'Went Live on Tuesday · 100-trip goal running',fernpost:'50 postcards printed, posting on the 5th',
+ halyard:'Week 2 · 6 of 10 skipper calls done',tallow:'Closed · full post-mortem published',
+ 'pocket-ledger':'Graduated in March · story archived'};
+
+/* Reels — short vertical clips, one minute max */
+const REELS={slate:[
+ {q:'The elevator pitch',hook:'90 SECONDS,<br>NOT TWO HOURS',tag:'What Slate actually does in thirty seconds',dur:'0:38',likes:412,comments:23,seg:'pitch'},
+ {q:'How I knew it was worth building',hook:'NINE REPLIES<br>IS NOT DEMAND',tag:'Nine replies bought six weeks, nothing more',dur:'0:52',likes:388,comments:31,seg:'validation'},
+ {q:'The first ten users',hook:'TWO SLACK<br>GROUPS',tag:'And four years of being in them first',dur:'0:47',likes:640,comments:57,seg:'channel'},
+ {q:'The night someone first paid me',hook:'$19,<br>11PM,<br>IN BED',tag:'I did not have a checkout page yet',dur:'0:58',likes:1204,comments:96,seg:'first'},
+ {q:'The thing I built first that was wrong',hook:'I BUILT THE<br>WRONG THING',tag:'A summary. Nobody wanted a summary.',dur:'0:44',likes:503,comments:41,seg:'build'},
+ {q:'Why I did not do a Kickstarter',hook:'NO KICKSTARTER.<br>NO LAUNCH.',tag:'A small go-to-market I keep defending',dur:'0:55',likes:276,comments:38,seg:'gtm'}]};
+
+const STORY={slate:[
+ {rung:'idea',dur:'Feb – Mar 2026',entries:[
+  {when:'12 Feb 2026',title:'The thing that annoyed me enough to start',body:'I recorded 40 minutes of client notes and then spent two hours typing them into a brief. Third time that month. Wrote the problem down properly today.',
+   clip:{q:'What made you finally start?',dur:'1:09'}},
+  {when:'28 Feb 2026',title:'Nine people said they would pay',body:'Posted the idea in two producer Slack groups. Nine replies, two asked when it ships. Nobody has paid anything, so I am counting this as zero.'}]},
+ {rung:'building',dur:'Mar – May 2026',entries:[
+  {when:'09 Mar 2026',title:'Started building',body:'Whisper for transcription, one prompt for structure. The whole thing is a form and a text area.',ms:true},
+  {when:'02 Apr 2026',title:'Promised a beta by the end of March. Missed it by three weeks.',body:'I underestimated how long the output format would take. Rebuilt the brief template three times before it stopped being useless.',miss:true,
+   clip:{q:'What did you build first that turned out to be wrong?',dur:'0:56'}},
+  {when:'19 May 2026',title:'Eight people testing it free',body:'Sending them a Loom every Friday. Two stopped replying, which is its own kind of feedback.'}]},
+ {rung:'live',dur:'Jun 2026',entries:[
+  {when:'04 Jun 2026',title:'Launched publicly',body:'Free tier, paid tier, no billing wired up because I did not think anyone would click it. Someone clicked it.',ms:true,
+   clip:{q:'How did you get your first ten users?',dur:'1:22'}}]},
+ {rung:'first',dur:'Jun 2026 – now',entries:[
+  {when:'11 Jun 2026',title:'First dollar',body:'Rachel, one of the original nine. She paid before I had a checkout page — I sent her a payment link at 11pm from my phone.',ms:true,first:true,
+   clip:{q:'The first time someone paid me, I was in bed at 11pm',dur:'0:58'}},
+  {when:'14 Aug 2026',title:'Twelve paying, and one channel',body:'Growth is entirely from the two Slack groups. I have not found a second channel and that is the whole problem right now.'}]}]};
+
+const RECENT=[
+ {f:'maya',v:'Slate',text:'crossed to <b>First dollar</b>',when:'2 days ago'},
+ {f:'dane',v:'Northbound',text:'went <b>Live</b>',when:'yesterday'},
+ {f:'tom',v:'Fernpost',text:'kept a promise: <b>50 cards posted</b>',when:'3 days ago'},
+ {f:'elena',v:'Halyard',text:'posted a new <b>Idea</b>',when:'today'}];
+
+/* ===================== HELPERS ===================== */
+const TRANSCRIPT={
+ 'The elevator pitch':[[0,'Slate turns a recorded client call into a written brief.'],[6,'You talk for forty minutes, and about ninety seconds later you have the deliverables, the dates and the scope.'],[18,'It is not a summariser. Producers do not want a summary.'],[26,'It is the two hours between the call and the brief, deleted.']],
+ 'How I knew it was worth building':[[0,'Nine people replied to a post. That is not demand.'],[7,'Replies are free. I have given plenty of encouraging replies to things I never paid for.'],[17,'But it was enough to justify six weeks, and that is all I was asking of it.'],[28,'The more useful calls were the four people who said no.'],[38,'They told me exactly which part of the problem they did not have.']],
+ 'The first ten users':[[0,'Two Slack groups. That is the whole answer and it is embarrassing.'],[8,'But I had been in them for four years, so I was not a stranger showing up to sell something.'],[20,'The channel mattered less than the four years.'],[30,'I could not have done that in a group I joined last week.']],
+ 'The thing I built first that was wrong':[[0,'I built a summary.'],[3,'It was accurate, it was well written, and it was completely useless.'],[12,'Producers want the deliverables list first. Then dates. Then everything else.'],[24,'Three rebuilds and about six weeks to learn that.']],
+ 'Why I did not do a Kickstarter':[[0,'No Kickstarter. No Product Hunt. No launch video.'],[8,'The entire go-to-market was two Slack groups and whoever those people told.'],[19,'People keep telling me that is not enough, and they are probably right.'],[31,'But it got me twelve customers without spending anything.']],
+ 'What made you finally start?':[[0,'I had recorded forty minutes of client notes on my phone.'],[6,'Then I sat down and spent two hours turning them into a brief.'],[14,'That was the third time that month, and I remember thinking — this is not a hard problem, it is just nobody has bothered.'],[27,'So I wrote the problem down properly instead of complaining about it again.'],[38,'That is the entire origin story. There was no lightning bolt.'],[52,'I think people wait for a better reason than the one they already have.']],
+ 'How did you get your first ten users?':[[0,'Two Slack groups. That is the whole answer and it is embarrassing.'],[8,'I had been in them for four years, so I was not a stranger showing up to sell something.'],[19,'I posted the problem, not the product. Nine people replied.'],[31,'Six of those nine became my first users. The other four came from those six telling someone.'],[46,'What I would say is that the channel mattered less than the four years.'],[58,'I could not have done that in a group I joined last week.']],
+ 'The first time someone paid me, I was in bed at 11pm':[[0,'It was Rachel. One of the original nine.'],[5,'She messaged and asked how she could pay for it, and I did not have a checkout page.'],[13,'So I sat up in bed and made a payment link on my phone and sent it to her.'],[24,'Nineteen dollars. I watched the notification come through and I did not sleep for about two hours.'],[36,'People ask if it felt like a big moment. It felt like proof.'],[46,'Everything before that was me deciding it was worth doing. That was someone else deciding.']],
+ 'What did you build first that turned out to be wrong?':[[0,'The output format. I built a summary.'],[6,'It was accurate, it was well written, and it was completely useless.'],[15,'Producers do not want a summary. They want the deliverables list first, then dates, then everything else.'],[28,'I rebuilt that template three times before I stopped guessing and just asked them.'],[41,'That cost me about six weeks.']],
+ 'I skippered for eleven years and rostered crew on paper':[[0,'Eleven years running charter boats, and every roster I ever made was on paper.'],[9,'Not because we liked paper. Because everything built for this is built for restaurants.'],[20,'Boats have tides, licences, sea time, weather cancellations.'],[32,'I have not written a line of code. I have talked to four skippers so far.']],
+ 'I am building this from the van it is for':[[0,'I am sitting in it right now.'],[4,'The problem I am solving is that I have been fined twice for sleeping somewhere I thought was legal.'],[16,'Every app tells you where the campgrounds are. None of them tell you where you will not get woken up at 2am.']],
+ 'I ran a café for six years and still got the pricing wrong':[[0,'Six years. And I still could not tell you what a flat white actually cost me.'],[9,'Because the milk price moved every quarter and the spreadsheet did not.'],[20,'By the time I noticed, I had been selling one of my best sellers at a loss for five months.']],
+ 'Everyone told me physical mail was a stupid idea':[[0,'Everyone said it. Physical mail, in this economy, for plant reminders.'],[9,'And they might be right. But nobody ignores a postcard, and everybody ignores a notification.'],[21,'Fifty cards go out on the fifth. Then I will know.']],
+ 'What I would tell myself before I spent $40,000 on stock':[[0,'Do not order the stock.'],[3,'That is it. That is the whole lesson and it cost forty thousand dollars.'],[10,'I had four hundred people on a waitlist and I read that as demand. A waitlist is not demand.'],[23,'Demand is people who have already paid you.'],[32,'I could have found that out with a pre-order page and eleven dollars of ads.'],[44,'I am not sad about the business closing. I am sad about how avoidable it was.']],
+ 'Two years from a spreadsheet to something I could hand over':[[0,'It started as a spreadsheet I made for myself because I hate receipts.'],[10,'Two years later there were four hundred people paying for it every month.'],[21,'The hardest part was not building it. It was accepting that it had outgrown the way I worked.']],
+ 'The full interview':[[0,'So take me right back. Before any of this existed.'],[8,'I was producing for agencies. Freelance, so every project started with a brief.'],[20,'And the brief was always the bottleneck?'],[26,'Always. Forty minutes of talking turns into two hours of typing.'],[69,'What made you finally start?'],[82,'I wrote the problem down instead of complaining about it for a fourth time.'],[145,'Tell me about the building. What did you get wrong?'],[160,'The output format. I built a summary and it was useless.'],[290,'How did you get your first ten users?'],[305,'Two Slack groups I had been in for four years.'],[420,'And the first time someone paid you?'],[433,'Eleven at night, in bed, making a payment link on my phone.']]};
+
+const CHAPTERS={'The full interview':[[0,'Before it started'],[69,'Why now'],[145,'What I got wrong'],[290,'First ten users'],[420,'First dollar'],[900,'What is next']]};
+const secs=t=>String(t).split(':').reduce((a,b)=>a*60+ +b,0);
+const clock=n=>Math.floor(n/60)+':'+String(Math.floor(n%60)).padStart(2,'0');
+const jsq=t=>String(t).replace(/'/g,"\\'");
+
+const $=(s,el=document)=>el.querySelector(s);
+const initials=n=>n.split(' ').map(w=>w[0]).join('');
+const state={user:null,follows:new Set(),owner:false};
+const ven=s=>V.find(x=>x.slug===s);
+
+const GLYPH={
+ wave:'<path d="M4 10v4M8.5 6.5v11M13 3v18M17.5 7.5v9M21 10.5v3"/>',
+ cup:'<path d="M4.5 9h13v5a6.5 6.5 0 01-13 0z"/><path d="M17.5 10.5h1.6a2.4 2.4 0 010 4.8h-1.6"/><path d="M8 5.5c0-1 1.5-1 1.5-2M13 5.5c0-1 1.5-1 1.5-2"/>',
+ peak:'<path d="M2.5 19l6-11 4 6.5 2.5-4 6.5 8.5z"/>',
+ leaf:'<path d="M20 4c0 9-5.5 15-14 15C6 10 11.5 4 20 4z"/><path d="M6 19c3.5-4 6.5-6.5 11-9"/>',
+ sail:'<path d="M12 3v14M12 4.5L4.5 17H12M13.5 8.5L19 17h-5.5"/><path d="M3 20.5h18"/>',
+ receipt:'<path d="M5.5 3h13v18l-2.2-1.6-2.2 1.6-2.1-1.6-2.2 1.6-2.1-1.6-2.2 1.6z"/><path d="M9 8h6M9 12h6"/>',
+ drop:'<path d="M12 3.5c4 4.8 6 7.9 6 10.2a6 6 0 01-12 0c0-2.3 2-5.4 6-10.2z"/>'};
+const Logo=(v,c='logo')=>`<span class="${c}" style="background:${v.brand}" aria-hidden="true"><svg viewBox="0 0 24 24">${GLYPH[v.glyph]}</svg></span>`;
+const PLAY='<svg width="20" height="20" viewBox="0 0 24 24" fill="#0E0E0E"><path d="M7 4.5l13 7.5-13 7.5z"/></svg>';
+
+function Art(v,seed){
+  const c=v.brand;
+  const sx=seed!==undefined?` style="transform:scale(${(1.18+seed*0.07).toFixed(2)}) translate(${(seed*-9)}%,${(seed%2?4:-4)}%)"`:'';
+  if(!v.art) return `<span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--display);font-weight:900;font-size:52px;opacity:.16;color:${c}">${v.name[0]}</span>`;
+  const S={
+   wave:[18,34,50,66,82,98,114,130,146,162,178,194,210,226,242,258,274,290,306,322,338,354,370,386]
+    .map((x,i)=>{const h=[16,30,52,72,44,86,58,34,66,92,48,26,70,54,80,38,62,88,42,30,58,74,36,20][i];
+    return `<rect class="bob" style="animation-delay:${(i*.11).toFixed(2)}s" x="${x}" y="${(112-h)/2}" width="7" height="${h}" rx="3.5" fill="${c}" fill-opacity="${(.055+(h/112)*.115).toFixed(3)}"/>`}).join(''),
+   steam:`<path d="M-10 84c40 0 40-26 80-26s40 26 80 26 40-26 80-26 40 26 80 26 40-26 80-26" fill="none" stroke="${c}" stroke-opacity=".10" stroke-width="9" stroke-linecap="round"/>
+     <path d="M-10 108c40 0 40-26 80-26s40 26 80 26 40-26 80-26 40 26 80 26 40-26 80-26" fill="none" stroke="${c}" stroke-opacity=".14" stroke-width="9" stroke-linecap="round"/>
+     <circle class="fl" cx="318" cy="34" r="15" fill="${c}" fill-opacity=".09"/>`,
+   range:`<path d="M0 112L74 34l46 46 40-30 58 62z" fill="${c}" fill-opacity=".12"/>
+     <path d="M138 112l72-58 50 40 44-32 96 50z" fill="${c}" fill-opacity=".08"/>
+     <circle class="fl" cx="330" cy="30" r="13" fill="${c}" fill-opacity=".14"/>
+     <path class="dash" d="M0 96h400" stroke="${c}" stroke-opacity=".16" stroke-width="2" stroke-dasharray="14 11"/>`,
+   leaves:[[46,30,1.5,-22],[128,72,1.1,14],[214,26,1.3,32],[292,66,1.6,-8],[358,28,1,22]]
+    .map(([x,y,s,r],i)=>`<g class="fl" style="animation-delay:${(i*.55).toFixed(2)}s"><g transform="translate(${x} ${y}) rotate(${r}) scale(${s})">
+     <path d="M18 0c0 10-6 16-16 16C2 6 8 0 18 0z" fill="${c}" fill-opacity="${(.075+i*.022).toFixed(3)}"/></g></g>`).join(''),
+   ledger:[0,1,2,3,4,5,6].map(i=>`<rect x="26" y="${12+i*14}" width="${[300,220,268,180,310,150,240][i]}" height="5" rx="2.5" fill="${c}" fill-opacity="${(.05+i*.014).toFixed(3)}"/>`).join('')+`<rect x="26" y="12" width="4" height="89" fill="${c}" fill-opacity=".16"/>`,
+   drops:[[54,40,20],[146,68,13],[228,32,25],[310,72,16],[372,38,11]]
+    .map(([x,y,r],i)=>`<circle class="fl" style="animation-delay:${(i*.6).toFixed(2)}s" cx="${x}" cy="${y}" r="${r}" fill="${c}" fill-opacity="${(.06+i*.02).toFixed(3)}"/>`).join('')};
+  return `<svg class="art"${sx} viewBox="0 0 400 112" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${S[v.art]||''}</svg>`;
+}
+const Ladder=v=>{const i=rungIndex(v.rung);return `<span class="ladder ${v.dead?'dead':''}" role="img" aria-label="Rung: ${RUNGS[i].label}">`+
+  RUNGS.map((r,n)=>`<b class="${n<=i?'fill':''} ${n<=i&&r.cash?'cash':''}"></b>`).join('')+`</span>`};
+
+function Poster(v,o={}){
+  return `<div class="poster" style="background:${v.brand}0D"
+    ${o.onplay?`role="button" tabindex="0" aria-label="Play clip"
+      onclick="event.preventDefault();event.stopPropagation();${o.onplay}"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();${o.onplay}}"`:''}>
+    ${Art(v,o.seed)}
+    ${o.hook?`<span class="hook">${o.hook}</span>`:''}
+    ${(o.onplay||o.chrome)?`<span class="play">${PLAY}</span>`:''}
+    ${o.dur&&(o.onplay||o.chrome)?`<span class="dur">${o.dur}</span>`:''}
+    ${o.q&&(o.onplay||o.chrome)?`<span class="clip-q">“${o.q}”</span>`:''}
+    ${o.rank?`<span class="rank-chip">▲ #${o.rank}</span>`:''}
+    ${o.happening?`<span class="happening">${o.happening}</span>`:''}
+    ${!o.rank&&o.badges!==false&&v.pick?`<span class="badge pick">★ Vibed pick</span>`:''}
+    ${o.badges!==false&&v.dead?`<span class="badge closed">Post-mortem</span>`:''}
+    ${o.rung!==false?`<span class="rung-tag">${Ladder(v)}<span>${v.dead?'Closed':RUNGS[rungIndex(v.rung)].label}</span></span>`:''}
+    ${o.logo!==false?Logo(v):''}
+  </div>`;
+}
+
+function Promise(v){
+  if(v.dead) return `<div class="promise"><div class="eyebrow">Final entry</div>
+    <div class="txt">Closed ${v.closed} — the founder recorded why.</div>
+    <div class="bar dead"><i style="width:100%"></i></div></div>`;
+  if(v.rung==='alumni') return `<div class="promise"><div class="eyebrow">Graduated</div>
+    <div class="txt">Outgrew the site in ${v.graduated}. The whole story stays up.</div>
+    <div class="bar done"><i style="width:100%"></i></div></div>`;
+  const p=v.promise, pct=Math.max(4,Math.min(100,(1-p.days/p.span)*100)), tight=p.days<=14;
+  return `<div class="promise">
+    <div class="eyebrow">Promised, publicly</div>
+    <div class="top"><span class="txt">${p.txt}</span><span class="left ${tight?'':'safe'}">${p.days} days</span></div>
+    <div class="bar ${tight?'tight':''}"><i style="width:${pct.toFixed(0)}%"></i></div>
+    ${v.kept.length?`<div class="kept">${v.kept.map(k=>`<b class="${k}"></b>`).join('')}<span>${v.kept.filter(k=>k==='y').length} of ${v.kept.length} promises kept</span></div>`:
+      `<div class="kept"><span>First promise — nothing to judge yet</span></div>`}
+  </div>`;
+}
+
+function Card(v,i=0,rank){
+  const f=FOUNDERS[v.founder],on=state.follows.has(v.slug);
+  return `<div class="card" data-id="card" role="link" tabindex="0" data-href="#/v/${v.slug}" style="animation-delay:${(i*.07).toFixed(2)}s"
+    onclick="go(event)" onkeydown="if(event.key==='Enter')go(event)">
+    ${Poster(v,{rank,happening:LATEST[v.slug]})}
+    <div class="card-body">
+      <h3>${v.name}</h3>
+      <div class="pitch">${v.pitch}</div>
+      <div class="creator"><span class="av" style="background:${f.hue}">${initials(f.name)}</span>${f.name} · ${f.loc}</div>
+      ${Promise(v)}
+      <div class="metaline"><span>Week <b>${v.week}</b></span>
+        ${v.streak?`<span><b>${v.streak}</b>-week streak</span>`:''}
+        <span>${v.media==='video'?`▶ <b>${v.clips}</b> clips`:`<b>${v.photos}</b> photos`}</span></div>
+      <div class="card-actions">
+        <button class="follow ${on?'on':''}" onclick="event.stopPropagation();toggleFollow('${v.slug}',this)">${on?'Following':'Follow'}</button>
+        ${v.heat?`<span class="pill p-heat">+${v.delta} this week</span>`:''}
+        ${v.rung==='first'?`<span class="pill p-go">Made their first dollar</span>`:''}
+        <span class="jlink">View journey →</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ===================== VIEWS ===================== */
+function Home(filter){
+  const live=V.filter(v=>v.rung!=='alumni'&&!v.dead);
+  if(filter){const list=V.filter(v=>v.rung===filter);
+    return `<div class="wrap section"><div class="sec-head"><h2>${RUNGS[rungIndex(filter)].label}</h2>
+      <span class="note">${list.length} ${list.length===1?'story':'stories'} at this stage</span></div>
+      <div class="stagebar">
+        <button onclick="navigate('/')">All<span class="ct">${live.length}</span></button>
+        ${RUNGS.map(r=>{const n=V.filter(x=>x.rung===r.key).length;
+          return n?`<button class="${filter===r.key?'on':''}" onclick="navigate('/rung/${r.key}')">${r.label}<span class="ct">${n}</span></button>`:''}).join('')}
+      </div>
+      <div class="cards">${list.map(Card).join('')||'<p style="color:var(--ink-3)">Nobody here yet.</p>'}</div></div>`}
+
+  const feat=ven('slate'),f=FOUNDERS[feat.founder];
+  const pitches=['northbound','tallow','fernpost','kettle','halyard','slate'];
+  const journeys=[...live].sort((a,b)=>b.delta-a.delta);
+
+  return `
+  <div class="wrap"><div class="tagline" data-id="tagline">
+    <h1>The overnight success, <em>filmed daily</em>.</h1>
+    <p>Real entrepreneurs at every stage, every triumph, every mistake. Support them, learn from them, be inspired by them...</p>
+    <div class="path">
+      <b>Idea</b><i>→</i><b>Building</b><i>→</i><b>Launch day</b><i>→</i><b class="cash">First sale</b><i>→</i><b class="cash">Whatever happens next</b>
+    </div>
+  </div></div>
+
+  <section class="feature big" data-id="feature"><div class="wrap">
+    <div class="eyebrow">This week's interview</div>
+    <div class="herocard">
+      <div class="big-in">
+        <div>
+          ${Poster(feat,{dur:'24:10',logo:false,rung:false,onplay:`openPlayer('slate','The full interview','24:10')`})}
+          <div class="slabel">Cut into shorts · none over a minute</div>
+          <div class="shorts">
+            ${REELS.slate.slice(0,4).map((r,i)=>`
+              <div class="short" style="animation-delay:${(i*.06).toFixed(2)}s" onclick="openPlayer('slate','${jsq(r.q)}','${r.dur}')">
+                ${Poster(feat,{logo:false,rung:false,badges:false,chrome:true,dur:r.dur,hook:r.hook,seed:i})}
+                <div class="t">${r.q}</div>
+                <div class="m"><span>♥ ${r.likes}</span><span>💬 ${r.comments}</span></div>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;gap:11px;align-items:center">${Logo(feat,'logo-xs')}
+            <span style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)">Week ${feat.week} · ${RUNGS[rungIndex(feat.rung)].label}</span></div>
+          <h1>${feat.name}</h1>
+          <div class="pitch">${feat.pitch}</div>
+          <div class="creator"><span class="av" style="background:${f.hue}">${initials(f.name)}</span>${f.name} · ${f.loc}</div>
+          <a class="btn btn-go btn-lg" style="width:100%;margin-top:20px" href="#/v/slate">View Slate's journey</a>
+          <div class="sub-cta">Eleven chapters written out, six shorts, all transcribed.</div>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="section" data-id="pitches"><div class="wrap">
+    <div class="sec-head"><h2>Trending elevator pitches</h2>
+      <span class="note">Under a minute each · ideas at the very start</span>
+      <a class="more" href="#/rung/idea">All new ideas →</a></div>
+    <div class="hrail pitchrail">
+      ${pitches.map((slug,i)=>{const v=ven(slug),e=ELEVATOR[slug],ff=FOUNDERS[v.founder];
+        return `<div class="reel" style="animation-delay:${(i*.06).toFixed(2)}s" onclick="openPlayer('${slug}','The elevator pitch','${e.dur}')">
+          ${Poster(v,{logo:false,rung:false,badges:false,chrome:true,dur:e.dur,hook:e.hook,seed:i})}
+          <div class="nm">${v.name}</div>
+          <div class="sub">${e.line}</div>
+          <div class="by"><span class="av" style="background:${ff.hue};width:16px;height:16px;font-size:8px">${initials(ff.name)}</span>${ff.name}</div>
+          <div class="eng"><span>♥ ${e.likes}</span><span>💬 ${e.comments}</span></div>
+        </div>`}).join('')}
+    </div>
+  </div></section>
+
+  <section class="section" data-id="journeys"><div class="wrap">
+    <div class="sec-head"><h2>Trending journeys</h2>
+      <span class="note">Companies mid-climb · what moved this week</span></div>
+    <div class="stagebar" data-id="stagebar">
+      <button class="on" onclick="navigate('/')">All<span class="ct">${live.length}</span></button>
+      ${RUNGS.map(r=>{const n=V.filter(x=>x.rung===r.key).length;
+        return n?`<button onclick="navigate('/rung/${r.key}')">${r.label}<span class="ct">${n}</span></button>`:''}).join('')}
+    </div>
+    <div class="hrail">${journeys.map((v,i)=>Card(v,i,i+1)).join('')}</div>
+  </div></section>
+
+  <section class="section" data-id="questions"><div class="wrap">
+    <div class="sec-head"><h2>Same question, forty answers</h2>
+      <span class="note">Every interview follows the same questions, so you can compare</span></div>
+    <div class="qgrid">${QUESTIONS.filter(q=>['quit','first-users','wrong','first-dollar','lowest','money'].includes(q.slug)).map((q,i)=>`
+      <a class="q" href="#/q/${q.slug}" style="animation-delay:${(i*.06).toFixed(2)}s">
+        <h3>${q.q}</h3>
+        <div class="foot">
+          <span class="stack">${['maya','priya','dane','tom'].map(k=>`<span class="av" style="background:${FOUNDERS[k].hue}">${initials(FOUNDERS[k].name)}</span>`).join('')}</span>
+          <span class="n">${q.n} answers</span><span class="arrow">→</span>
+        </div></a>`).join('')}</div>
+  </div></section>
+
+  <section class="section"><div class="wrap"><div class="two">
+    <div class="rail-box"><h4>Happening now</h4><div class="sub">Latest moves</div>
+      ${RECENT.map(r=>{const ff=FOUNDERS[r.f];return `<div class="rail-item">
+        <span class="av" style="background:${ff.hue}">${initials(ff.name)}</span>
+        <span class="nm" style="font-weight:400">${ff.name.split(' ')[0]}'s <b>${r.v}</b> ${r.text}</span>
+        <span class="amt">${r.when}</span></div>`}).join('')}
+    </div>
+    <div class="rail-box"><h4>Endings</h4><div class="sub">Closed and graduated — the two ways a story finishes</div>
+      ${V.filter(v=>v.dead||v.rung==='alumni').map(v=>`<a class="rail-item" href="#/v/${v.slug}">
+        ${Logo(v,'logo-xs')}<span class="nm">${v.name}</span>
+        <span class="pill ${v.dead?'p-dead':'p-mute'}">${v.dead?'Post-mortem':'Graduated'}</span></a>`).join('')}
+    </div>
+  </div></div></section>
+
+  <section class="section"><div class="wrap"><div class="convert" data-id="convert">
+    <h2>Elena started two weeks ago.</h2>
+    <p>Three clips, one promise and fifty-seven people watching. That is all it takes to be on here.</p>
+    <button class="btn btn-go btn-lg" onclick="openAuth('signup')">Tell your story</button>
+  </div></div></section>`;
+}
+
+function Question(slug){
+  const q=QUESTIONS.find(x=>x.slug===slug); if(!q) return Home();
+  const answers=V.filter(v=>!v.dead).slice(0,6);
+  return `<div class="wrap section">
+    <a class="back" href="#/">← all questions</a>
+    <div class="sec-head"><h2 style="max-width:20ch">${q.q}</h2><span class="note">${q.n} founders answered · newest first</span></div>
+    <div class="cliprow">${answers.map((v,i)=>{const ff=FOUNDERS[v.founder];
+      return `<a class="clip" href="#/v/${v.slug}" style="animation-delay:${(i*.06).toFixed(2)}s">
+        ${Poster(v,{dur:v.hero.dur,logo:false,badges:false,onplay:`openPlayer('${v.slug}','${jsq(v.hero.q)}','${v.hero.dur}')`})}
+        <div class="cap">“${v.hero.q}”</div>
+        <div class="who"><span class="av" style="background:${ff.hue}">${initials(ff.name)}</span>${ff.name} · ${v.name}</div></a>`}).join('')}</div>
+  </div>`;
+}
+
+
+function Links(v){
+  const L=LINKS[v.slug]||{};
+  const stat={live:['p-go','Live'],waitlist:['p-warn','Waitlist only'],closed:['p-dead','Taken down'],none:['p-mute','Not built yet']}[L.status||'none'];
+  const socials=['x','ig','yt','tiktok'].filter(k=>L[k]);
+  return `<div class="scard" data-id="links" style="padding:16px">
+    <div class="lb" style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:10px">Where to find it</div>
+    ${L.site?`<a class="sitecard" href="https://${L.site}" target="_blank" rel="noopener">
+        <span class="fav" style="background:${v.brand}">${v.name[0]}</span>
+        <span><span class="lb">The website</span><span class="u">${L.site}</span></span>
+        <span class="go">↗</span></a>
+      <span class="sitestat pill ${stat[0]}">${stat[1]}</span>`
+     :`<div class="sitecard soft">
+        <span class="fav" style="background:${v.brand}22;color:${v.brand}">${v.name[0]}</span>
+        <span><span class="lb">The website</span><span class="u">No site yet — week ${v.week}</span></span></div>`}
+    <div class="socials">
+      ${socials.length?socials.map(k=>`<a href="#" onclick="event.preventDefault()" title="${k}">${SOCIAL[k]}@${L[k]}</a>`).join('')
+        :`<span class="none">No social accounts yet.</span>`}
+    </div>
+    <div class="clicknote">↗ <b>${(L.clicks||0).toLocaleString()}</b> visits sent from Vibed this month</div>
+  </div>`;
+}
+
+function Wall(slug,tab){
+  const v=ven(slug); if(!v) return Home();
+  tab=tab||'story';
+  const f=FOUNDERS[v.founder],st=STORY[slug],on=state.follows.has(v.slug);
+  const hasVideo=v.media==='video';
+  const L=LINKS[v.slug]||{};
+  const std=[['A problem, in plain words',!!v.problem],['Who it is for',!!v.who],['Why this founder',!!v.why],
+    [hasVideo?`${v.clips} clips uploaded`:`${v.photos} photos uploaded`,true],
+    ['An open promise with a date',!!v.promise||!!v.dead||v.rung==='alumni'],
+    ['A link people can visit',!!L.site],
+    ['Posted in the last 14 days',v.streak>0]];
+  const met=std.filter(x=>x[1]).length;
+
+  return `<div data-id="profile">
+  <div class="pbanner">${Art(v)}</div>
+  <div class="wrap">
+    <a class="back" href="#/">← all stories</a>
+    <div class="pshell">
+      <div>
+        <div class="pid">${Logo(v,'plogo')}<h1>${v.name}</h1></div>
+        <div class="ptag">${v.pitch}</div>
+        <div class="pline">${Ladder(v)}
+          <span style="font-weight:600">${v.dead?'Closed '+v.closed:RUNGS[rungIndex(v.rung)].label}</span>
+          <span style="color:var(--rule-2)">·</span><span>Week ${v.week}</span>
+          <span style="color:var(--rule-2)">·</span>
+          <span>${hasVideo?`▶ ${v.clips} clips`:`${v.photos} photos`}</span>
+          ${LINKS[v.slug]&&LINKS[v.slug].site?`<span style="color:var(--rule-2)">·</span>
+            <a href="https://${LINKS[v.slug].site}" target="_blank" rel="noopener"
+               style="font-weight:700;color:var(--go-deep);border-bottom:2px solid var(--go-tint)">${LINKS[v.slug].site} ↗</a>`:''}
+        </div>
+
+        <div class="ptabs">
+          <button class="${tab==='story'?'on':''}" onclick="navigate('/v/${v.slug}')">The pitch</button>
+          <button class="${tab==='journey'?'on':''}" onclick="navigate('/v/${v.slug}/journey')">The journey<span class="n">${Object.keys(v.seg||{}).length}</span></button>
+          <button class="${tab==='media'?'on':''}" onclick="navigate('/v/${v.slug}/media')">${hasVideo?'Clips':'Photos'}<span class="n">${hasVideo?v.clips:v.photos}</span></button>
+        </div>
+
+        ${tab==='story'?`<div class="blocks">
+          <div class="blk"><h3>The problem</h3><p>${v.problem}</p></div>
+          <div class="blk"><h3>Who it is for</h3><p>${v.who}</p></div>
+          <div class="blk"><h3>Why me</h3><p>${v.why}</p></div>
+          ${hasVideo?`<div class="hr"></div>
+          <div class="blk" style="margin-top:28px"><h3>In their words</h3></div>
+          <div class="inline-clip" style="max-width:660px" onclick="openPlayer('${v.slug}','${jsq(v.hero.q)}','${v.hero.dur}')">
+            ${Poster(v,{logo:false,rung:false,badges:false,chrome:true})}
+            <div><div class="q">“${v.hero.q}”</div><div class="m">${v.hero.dur} · with transcript</div></div>
+          </div>`:`<div class="hr"></div>
+          <div class="blk" style="margin-top:28px"><h3>No clips yet</h3>
+            <p style="font-size:15px;color:var(--ink-2)">${f.name.split(' ')[0]} is writing and posting photos for now. Interviews are booked once a venture has posted four weeks running.</p></div>`}
+        </div>`:''}
+
+        ${tab==='journey'?`
+          <div class="segs" data-id="segs">
+          ${SEGMENTS.map((sg,i)=>{
+            const d=v.seg[sg.k], reels=(REELS[v.slug]||[]).filter(r=>r.seg===sg.k);
+            if(!d) return '';
+            const bits=d.body.split(/(?<=\.)\s+/), head=bits.slice(0,1).join(' '), rest=bits.slice(1).join(' ');
+            return `<div class="seg" id="seg-${sg.k}">
+              <div class="no">${String(i+1).padStart(2,'0')}</div>
+              <div>
+                <h4>${sg.t}</h4><div class="prompt">${sg.p}</div>
+                <div class="when">${d.when}</div>
+                <div class="body">${head}<span class="rest"> ${rest}</span></div>
+                ${rest?`<button class="more" onclick="this.closest('.seg').classList.toggle('open');this.querySelector('u').textContent=this.closest('.seg').classList.contains('open')?'Show less':'Read the rest'"><u style="text-decoration:none">Read the rest</u><em>▾</em></button>`:''}
+                ${reels.map(r=>`<div class="segreel" onclick="openPlayer('${v.slug}','${jsq(r.q)}','${r.dur}')">
+                  <i>${PLAY.replace('#0E0E0E','#fff')}</i>${r.q}<span>${r.dur}</span></div>`).join('')}
+              </div></div>`}).join('')}
+          ${(()=>{const ahead=SEGMENTS.filter(sg=>!v.seg[sg.k]);
+            return ahead.length?`<div class="seg-ahead">Not there yet — ${ahead.length} chapters ahead</div>`+
+              ahead.map((sg,i)=>`<div class="seg locked"><div class="no">${String(SEGMENTS.indexOf(sg)+1).padStart(2,'0')}</div>
+                <div><h4>${sg.t}</h4><div class="body">${sg.p}</div></div></div>`).join(''):''})()}
+          </div>
+
+          ${(REELS[v.slug]||[]).length?`<div class="reels-wrap" data-id="reels">
+            <div class="reels-head"><h3>All shorts</h3><span class="note">${REELS[v.slug].length} clips · none over a minute</span></div>
+            <div class="reels">${REELS[v.slug].map((r,i)=>`
+              <div class="reel" onclick="openPlayer('${v.slug}','${jsq(r.q)}','${r.dur}')">
+                ${Poster(v,{logo:false,rung:false,badges:false,chrome:true,dur:r.dur,hook:r.hook,seed:i})}
+                <div class="tag">${r.q}</div>
+                <div class="sub">${r.tag}</div>
+                <div class="eng"><span>♥ ${r.likes}</span><span>💬 ${r.comments}</span></div>
+              </div>`).join('')}</div>
+          </div>`:''}
+        `:''}
+
+        ${tab==='media'?`<div class="gal">
+          ${Array.from({length:hasVideo?v.clips:9}).map((_,i)=>`
+            <div class="poster ${i===0?'wide':''}" style="background:${v.brand}0D;height:130px;border-radius:10px;border:1px solid var(--rule)"
+              ${hasVideo?`role="button" tabindex="0" onclick="openPlayer('${v.slug}','${jsq(v.hero.q)}','${v.hero.dur}')"`:''}>
+              ${Art(v)}${hasVideo?`<span class="play" style="width:38px;height:38px">${PLAY}</span><span class="dur">${v.hero.dur}</span>`:''}
+            </div>`).join('')}
+        </div>`:''}
+      </div>
+
+      <aside class="side" data-id="side">
+        ${Links(v)}
+        <div class="scard">${Promise(v)}
+          <div class="facts">
+            <div class="fact"><div class="n mono">${v.week}</div><div class="l">weeks in</div></div>
+            <div class="fact"><div class="n mono">${v.streak||'—'}</div><div class="l">week streak</div></div>
+            <div class="fact"><div class="n mono">${v.followers.toLocaleString()}</div><div class="l">following</div></div>
+            <div class="fact"><div class="n mono">${hasVideo?v.clips:v.photos}</div><div class="l">${hasVideo?'clips':'photos'}</div></div>
+          </div>
+          <button class="btn ${on?'btn-ink':'btn-go'}" style="width:100%;padding:12px;margin-top:15px"
+            onclick="toggleFollow('${v.slug}',this)">${on?'Following':'Follow this build'}</button>
+          <div class="share"><button>Share</button><button>Copy link</button></div>
+        </div>
+
+        <div class="scard ask" style="border:none"><div class="eyebrow">The ask</div>
+          <p>“I need someone who has sold into agencies before. Twenty minutes on a call would change my month.”</p>
+          <button onclick="openAuth('signup')">I can help</button></div>
+
+        <div class="scard fcard">
+          <span class="big-av" style="background:${f.hue}">${initials(f.name)}</span>
+          <div><div class="nm">${f.name}</div><div class="lo">${f.loc}</div>
+            <div class="bio">${f.bio}</div></div>
+        </div>
+
+        ${state.owner?`<div class="ownerbar" data-id="owner">
+          <div class="h">Your profile<span>${met} of 7</span></div>
+          <div class="ometer"><i style="width:${(met/7*100).toFixed(0)}%"></i></div>
+          <ul>${std.map(([t,ok])=>`<li class="${ok?'y':'n'}"><em>${ok?'✓':'+'}</em>${t}</li>`).join('')}</ul>
+          <button class="viewtoggle" style="color:#8A8A8A" onclick="state.owner=false;route()">View as a visitor</button>
+        </div>`:`<div class="std">
+          <div class="h">✓ Meets Vibed standards</div>
+          <ul>${std.filter(x=>x[1]).map(([t])=>`<li><em>✓</em>${t}</li>`).join('')}</ul>
+          <button class="viewtoggle" onclick="state.owner=true;route()">View as the founder</button>
+        </div>`}
+      </aside>
+    </div>
+  </div></div>`;
+}
+
+function Following(){
+  const bars=`<svg class="mk" viewBox="0 0 44 32"><rect x="0" y="24" width="5" height="8" rx="1.5"/><rect x="7.8" y="20" width="5" height="12" rx="1.5"/><rect x="15.6" y="16" width="5" height="16" rx="1.5"/><rect x="23.4" y="12" width="5" height="20" rx="1.5" class="cash"/><rect x="31.2" y="6" width="5" height="26" rx="1.5" class="cash"/><rect x="39" y="0" width="5" height="32" rx="1.5" class="cash"/></svg>`;
+  if(!state.user) return `<div class="wrap"><div class="empty">${bars}<h2>Your list starts here.</h2>
+    <p>Follow a few founders. When one of them keeps a promise, breaks one, or crosses a rung, you hear about it that day.</p>
+    <button class="btn btn-go btn-lg" onclick="openAuth('signup')">Sign up</button></div></div>`;
+  const list=V.filter(v=>state.follows.has(v.slug));
+  if(!list.length) return `<div class="wrap"><div class="empty">${bars}<h2>Nobody yet, ${state.user.split(' ')[0]}.</h2>
+    <p>Follow a story and it lands here, with everything that happens to it next.</p>
+    <a class="btn btn-go btn-lg" href="#/rung/idea">Find someone at day one</a></div></div>`;
+  return `<div class="wrap section"><div class="sec-head"><h2>Following</h2><span class="note">${list.length} ${list.length===1?'story':'stories'}</span></div>
+    <div class="cards">${list.map(Card).join('')}</div></div>`;
+}
+
+
+/* ===================== SHORTS FEED ===================== */
+function allShorts(){
+  const out=[];
+  Object.entries(ELEVATOR).forEach(([slug,e])=>out.push({slug,q:'The elevator pitch',hook:e.hook,tag:e.line,dur:e.dur,likes:e.likes,comments:e.comments}));
+  Object.entries(REELS).forEach(([slug,rs])=>rs.slice(1).forEach(r=>out.push({slug,...r})));
+  return out.sort((a,b)=>b.likes-a.likes);
+}
+function Shorts(){
+  const list=allShorts();
+  return `<div class="wrap"><div class="shortsfeed" data-id="shortsfeed">
+    <div class="sec-head" style="margin-bottom:0"><h2>Shorts</h2>
+      <span class="note">${list.length} clips · none over a minute</span></div>
+    ${list.map((r,i)=>{const v=ven(r.slug),f=FOUNDERS[v.founder];
+      return `<div class="sf" style="animation-delay:${(i*.05).toFixed(2)}s">
+        ${Poster(v,{logo:false,rung:false,badges:false,chrome:true,dur:r.dur,hook:r.hook,seed:i,
+          onplay:`openPlayer('${r.slug}','${jsq(r.q)}','${r.dur}')`})}
+        <div class="sf-body">
+          <div class="who">${Logo(v,'logo-xs')}
+            <div style="flex:1"><div class="nm">${v.name}</div><div class="lo">${f.name} · ${RUNGS[rungIndex(v.rung)].label}</div></div>
+            <button class="follow ${state.follows.has(v.slug)?'on':''}" onclick="toggleFollow('${v.slug}',this)">${state.follows.has(v.slug)?'Following':'Follow'}</button>
+          </div>
+          <div class="cap"><b>${r.q}</b> — ${r.tag}</div>
+          <div class="sf-acts">
+            <button class="act" onclick="this.classList.toggle('liked')">♥ ${r.likes}</button>
+            <button class="act">💬 ${r.comments}</button>
+            <button class="act">↗ Share</button>
+            <a class="jr" href="#/v/${r.slug}">Journey →</a>
+          </div>
+        </div>
+      </div>`}).join('')}
+  </div></div>`;
+}
+
+/* ===================== ANSWERS INDEX ===================== */
+function Answers(){
+  const stages=[...new Set(QUESTIONS.map(q=>q.stage))];
+  return `<div class="wrap section" data-id="answers">
+    <div class="sec-head"><h2>Every founder, same sixteen questions</h2>
+      <span class="note">So you can read forty answers to the one you care about</span></div>
+    ${stages.map(st=>`<div class="qstage">
+      <h3>${st}</h3>
+      <div class="qlist">${QUESTIONS.filter(q=>q.stage===st).map(q=>`
+        <a class="qrow" href="#/q/${q.slug}">
+          <span class="txt">${q.q}</span>
+          <span class="n">${q.n}</span><span class="arrow">→</span></a>`).join('')}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+/* ===================== POST-MORTEMS ===================== */
+const LESSONS={tallow:'A waitlist is not demand. Demand is people who have already paid you. I could have found that out with a pre-order page and eleven dollars of ads.'};
+function PostMortems(){
+  const dead=V.filter(v=>v.dead);
+  return `<div class="wrap section" data-id="postmortems">
+    <div class="pm-hero">
+      <h1>The ones that didn't work.</h1>
+      <p>Most of what gets written about building a company is written by people it worked out for. These founders shut theirs down and wrote up why — in full, with the numbers and the decisions they'd take back.</p>
+    </div>
+    <div class="cards">${dead.map((v,i)=>{const f=FOUNDERS[v.founder];
+      return `<div class="pm" style="animation-delay:${(i*.07).toFixed(2)}s" onclick="navigate('/v/${v.slug}')">
+        ${Poster(v,{logo:false,rung:false,badges:false})}
+        <div class="pm-body">
+          <h3>${v.name}</h3>
+          <div class="lesson">${LESSONS[v.slug]||v.why}</div>
+          <div class="meta"><span>${f.name}</span><span>·</span><span>Ran ${v.week} weeks</span><span>·</span><span>Closed ${v.closed}</span></div>
+        </div></div>`}).join('')}
+    </div>
+    <div class="convert" style="margin-top:34px">
+      <h2>Closing something?</h2>
+      <p>Write it up here. It is the most useful thing you can leave behind, and the only version of the story nobody else will tell.</p>
+      <button class="btn btn-go btn-lg" onclick="navigate('/start')">Publish a post-mortem</button>
+    </div>
+  </div>`;
+}
+
+/* ===================== AUTH PAGES ===================== */
+function AuthPage(mode){
+  const s=mode==='signup';
+  return `<div class="wrap"><div class="authpage" data-id="authpage">
+    <div class="authside">
+      <h2>${s?'Two minutes to set up. One post a week to stay.':'Welcome back.'}</h2>
+      <ul>
+        <li><em>1</em><span>${s?'Follow founders and get told the day they keep or break a promise.':'Your founders have been busy — three of them moved this week.'}</span></li>
+        <li><em>2</em><span>${s?'Comment, back an idea, answer an Ask when you can help.':'Pick up the shorts you have not watched.'}</span></li>
+        <li><em>3</em><span>${s?'Start your own journey whenever you are ready. No revenue required.':'Your own journey is still there, waiting for an update.'}</span></li>
+      </ul>
+    </div>
+    <div class="authbox">
+      <h1>${s?'Create an account':'Log in'}</h1>
+      <div class="lede">${s?'Free, and you never need to post anything to use it.':'Good to see you.'}</div>
+      <div class="oauth" style="margin-top:22px">
+        <button onclick="quickAuth('Jordan Lee')">Continue with Google</button>
+        <button onclick="quickAuth('Jordan Lee')">Continue with Apple</button>
+      </div>
+      <div class="ordiv">or with email</div>
+      ${s?`<div class="field"><label for="name">Your name</label><input id="name" placeholder="Jordan Lee"></div>`:''}
+      <div class="field"><label for="email">Email</label><input id="email" type="email" placeholder="you@example.com"></div>
+      <div class="field"><label for="pw">Password</label><input id="pw" type="password" placeholder="At least 8 characters"></div>
+      <div class="err" id="authErr"></div>
+      <button class="btn btn-go" style="width:100%;padding:12px" onclick="submitAuth(${s})">${s?'Create account':'Log in'}</button>
+      <div class="altline">${s?`Already have one? <a href="#/login">Log in</a>`:`No account? <a href="#/signup">Sign up</a>`}</div>
+    </div>
+  </div></div>`;
+}
+function quickAuth(name){state.user=name;renderChrome();navigate('/dashboard')}
+
+/* ===================== START A JOURNEY ===================== */
+const draft={name:'',pitch:'',problem:'',who:'',why:'',brand:'#1F6F5C',promise:'',due:''};
+function setDraft(k,val){draft[k]=val;if(k==='brand')route()}
+function StartJourney(step){
+  step=+(step||1);
+  const done=[!!draft.name&&!!draft.pitch,!!draft.problem&&!!draft.who&&!!draft.why,!!draft.promise&&!!draft.due];
+  const chk=[['A name and a one-line pitch',done[0]],['The problem, in plain words',done[1]],['Who it is for',!!draft.who],
+    ['Why you',!!draft.why],['A first promise with a date',done[2]],['Three clips or nine photos',false],['A link people can visit',false]];
+  return `<div class="wrap"><div class="wizard" data-id="wizard">
+    <div class="steps">${[1,2,3].map(n=>`<div class="${n<=step?'on':''}"><i></i></div>`).join('')}</div>
+    ${step===1?`
+      <h1>Start with the idea.</h1>
+      <div class="lede">No revenue needed, no product needed. Week one counts here.</div>
+      <div class="wform">
+        <div class="wfield"><label>What are you calling it?</label>
+          <input value="${draft.name}" oninput="setDraft('name',this.value)" placeholder="Halyard"></div>
+        <div class="wfield"><label>One line — what does it do?</label>
+          <div class="hint">Plain English. No mission statements.</div>
+          <input value="${draft.pitch}" oninput="setDraft('pitch',this.value)" placeholder="Crew rostering for charter boat operators"></div>
+        <div class="wfield"><label>Pick a colour</label>
+          <div class="swatches">${['#1F6F5C','#B4451A','#1A5C8A','#3D6B24','#9A2A55','#4A4A8A','#8A5A1A'].map(c=>
+            `<button style="background:${c}" class="${draft.brand===c?'on':''}" onclick="setDraft('brand','${c}')"></button>`).join('')}</div></div>
+        <div class="wnav"><a class="btn btn-go" href="#/start/2">Next — the pitch</a></div>
+      </div>`
+    :step===2?`
+      <h1>Three questions everyone answers.</h1>
+      <div class="lede">Same three on every profile, so people can compare yours to the rest.</div>
+      <div class="wform">
+        <div class="wfield"><label>The problem</label>
+          <div class="hint">What is broken, and for whom. Two or three sentences.</div>
+          <textarea oninput="setDraft('problem',this.value)" placeholder="Charter crew rostering runs on paper and group chats because every tool built for it is really a restaurant tool...">${draft.problem}</textarea></div>
+        <div class="wfield"><label>Who it is for</label>
+          <textarea oninput="setDraft('who',this.value)" placeholder="Small charter operators running two to eight boats with casual crew.">${draft.who}</textarea></div>
+        <div class="wfield"><label>Why you</label>
+          <div class="hint">The bit people actually remember.</div>
+          <textarea oninput="setDraft('why',this.value)" placeholder="Eleven years skippering. I made every one of those rosters by hand.">${draft.why}</textarea></div>
+        <div class="wnav"><a class="btn btn-line" href="#/start/1" style="flex:0 0 110px">Back</a>
+          <a class="btn btn-go" href="#/start/3">Next — your promise</a></div>
+      </div>`
+    :`
+      <h1>Make one promise.</h1>
+      <div class="lede">Something you will have done by a date. We show the clock, and we show whether you made it.</div>
+      <div class="wform">
+        <div class="wfield"><label>What will you have done?</label>
+          <input value="${draft.promise}" oninput="setDraft('promise',this.value)" placeholder="Talk to ten skippers"></div>
+        <div class="wfield"><label>By when?</label>
+          <input type="date" value="${draft.due}" oninput="setDraft('due',this.value)"></div>
+        <div class="wfield" style="margin-bottom:0">
+          <div class="hint">Missing it is fine — plenty of people here have. Explaining why is the interesting part.</div></div>
+        <div class="wnav"><a class="btn btn-line" href="#/start/2" style="flex:0 0 110px">Back</a>
+          <button class="btn btn-go" onclick="navigate('/dashboard')">Create my journey</button></div>
+      </div>`}
+    <div class="checklist">
+      <div class="h">Before it goes public</div>
+      <ul>${chk.map(([t,ok])=>`<li class="${ok?'y':''}"><em>${ok?'✓':'○'}</em>${t}</li>`).join('')}</ul>
+    </div>
+  </div></div>`;
+}
+
+/* ===================== FOUNDER DASHBOARD ===================== */
+function Dashboard(){
+  if(!state.user) return AuthPage('login');
+  const v=ven('halyard'),f=FOUNDERS[v.founder];
+  return `<div class="wrap"><div class="dash" data-id="dashboard">
+    <div>
+      <div class="sec-head" style="margin-bottom:18px"><h2>Hello, ${state.user.split(' ')[0]}</h2>
+        <span class="note">Week ${v.week} of your journey</span></div>
+      <div class="dnums">
+        <div class="dnum"><div class="n mono">${v.followers}</div><div class="l">followers</div><div class="d">+${v.delta} this week</div></div>
+        <div class="dnum"><div class="n mono">210</div><div class="l">site clicks</div><div class="d">+64 this week</div></div>
+        <div class="dnum"><div class="n mono">1,480</div><div class="l">clip views</div><div class="d">+390 this week</div></div>
+        <div class="dnum"><div class="n mono">${v.streak}</div><div class="l">week streak</div><div class="d">keep it going</div></div>
+      </div>
+      <div class="todo">
+        <h3>What to do next</h3>
+        <div class="sub">Ordered by what actually moves your followers.</div>
+        <div class="todo-item"><span class="ic">✍</span>
+          <span class="t">Write your Validation chapter<span>You have talked to six skippers — that is the chapter</span></span>
+          <button class="btn btn-ink btn-sm">Write</button></div>
+        <div class="todo-item"><span class="ic">⏱</span>
+          <span class="t">Your promise is due in 10 days<span>Talk to ten skippers by 1 September</span></span>
+          <button class="btn btn-line btn-sm">Update</button></div>
+        <div class="todo-item"><span class="ic">▶</span>
+          <span class="t">Post four weeks running to unlock an interview<span>Two more weeks to go</span></span>
+          <button class="btn btn-line btn-sm">Details</button></div>
+        <div class="todo-item"><span class="ic">🔗</span>
+          <span class="t">Add a link people can visit<span>Even a landing page counts</span></span>
+          <button class="btn btn-line btn-sm">Add</button></div>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="scard">
+        <div class="eyebrow" style="font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:11px">Your profile</div>
+        <div style="display:flex;gap:12px;align-items:center">${Logo(v,'logo-xs')}
+          <div><div style="font-family:var(--display);font-size:17px;font-weight:700">${v.name}</div>
+            <div style="font-size:12px;color:var(--ink-3)">${RUNGS[rungIndex(v.rung)].label}</div></div></div>
+        <a class="btn btn-go" style="width:100%;padding:11px;margin-top:14px" href="#/v/${v.slug}">View public page</a>
+        <div class="share"><button>Edit</button><button>Share</button></div>
+      </div>
+      <div class="ownerbar">
+        <div class="h">Standards<span>5 of 7</span></div>
+        <div class="ometer"><i style="width:71%"></i></div>
+        <ul>
+          <li class="y"><em>✓</em>A problem, in plain words</li>
+          <li class="y"><em>✓</em>Who it is for</li>
+          <li class="y"><em>✓</em>Why this founder</li>
+          <li class="y"><em>✓</em>4 photos uploaded</li>
+          <li class="y"><em>✓</em>An open promise with a date</li>
+          <li class="n"><em>+</em>A link people can visit</li>
+          <li class="n"><em>+</em>Three clips uploaded</li>
+        </ul>
+      </div>
+    </aside>
+  </div></div>`;
+}
+
+
+/* ===================== CHROME ===================== */
+const SOCIAL={
+ x:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.7 3h3.3l-7.2 8.2L22 21h-6l-4.7-6.1L5.9 21H2.6l7.7-8.8L2.3 3h6.1l4.4 5.8zM16.5 19h1.8L7.6 4.9H5.7z"/></svg>',
+ ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="5.2"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>',
+ yt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.3-.4-4.9a2.6 2.6 0 00-1.8-1.8C18.2 4.9 12 4.9 12 4.9s-6.2 0-7.8.4A2.6 2.6 0 002.4 7.1C2 8.7 2 12 2 12s0 3.3.4 4.9a2.6 2.6 0 001.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.6 2.6 0 001.8-1.8C22 15.3 22 12 22 12zM10 15.3V8.7l5.5 3.3z"/></svg>',
+ tiktok:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.3 2h-3.1v13.1a2.6 2.6 0 11-2.6-2.6c.3 0 .5 0 .8.1V9.4a5.9 5.9 0 00-.8-.1 5.8 5.8 0 105.8 5.8V8.4a6.6 6.6 0 003.9 1.3V6.6a3.7 3.7 0 01-3.9-3.7z"/></svg>'};
+
+const ICONS={
+ search:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+ home:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 01-1 1h-5v-7h-6v7H4a1 1 0 01-1-1z"/></svg>',
+ heart:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.6a5.2 5.2 0 00-7.4 0L12 7l-1.4-1.4a5.2 5.2 0 00-7.4 7.4L12 21l8.8-8a5.2 5.2 0 000-7.4z"/></svg>',
+ chat:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20.5l1.4-5.4A8 8 0 1121 12z"/></svg>',
+ play:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8 5.5l10 6.5-10 6.5z"/></svg>',
+ user:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg>'};
+
+function renderChrome(){
+  $('#searchIco').innerHTML=ICONS.search; $('#searchBtn').innerHTML=ICONS.search;
+  const n=state.follows.size;
+  $('#followLink').innerHTML=ICONS.heart.replace(/20/g,'17')+`<span>Following</span>${n?`<span class="count">${n}</span>`:''}`;
+  $('#authArea').innerHTML=state.user?`<a href="#/following" class="me">${initials(state.user)}</a>`
+    :`<button class="lnk btn-login" onclick="openAuth('login')">Log in</button>`;
+  const h='#'+ROUTE;
+  $('#tabbar').innerHTML=[['#/','Home','home'],['#/shorts','Shorts','play'],['#/following','Following','heart'],
+   [state.user?'#/dashboard':'#/login','Account','user']]
+   .map(([href,label,ic])=>{const on=href==='#/'?(h==='#/'||h===''||h.startsWith('#/rung/')):h.startsWith(href);
+    return `<a href="${href}" class="${on?'on':''}">${ICONS[ic]}<span>${label}</span></a>`}).join('');
+}
+let ROUTE='/';
+function navigate(path){
+  ROUTE=path||'/';
+  try{history.replaceState(null,'','#'+ROUTE)}catch(e){}
+  route();
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#"]');
+  if(!a) return;
+  e.preventDefault();
+  const h=a.getAttribute('href');
+  if(h==='#'||h==='#/'){navigate('/');return}
+  navigate(h.slice(1)||'/');
+});
+function go(e){navigate((e.currentTarget.dataset.href||'#/').slice(1))}
+function jump(k){const el=document.getElementById('seg-'+k)||document.getElementById('ch-'+k);
+  if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-130,behavior:'smooth'})}
+function toggleFollow(slug,btn){
+  if(!state.user){openAuth('signup',slug);return}
+  state.follows.has(slug)?state.follows.delete(slug):state.follows.add(slug);
+  const on=state.follows.has(slug);
+  if(btn.classList.contains('btn')){btn.classList.toggle('btn-go',!on);btn.classList.toggle('btn-ink',on);btn.textContent=on?'Following':'Follow this build'}
+  else{btn.classList.toggle('on',on);btn.textContent=on?'Following':'Follow'}
+  renderChrome();
+}
+function openSearch(){$('#search').classList.add('open');$('#q').focus()}
+function closeSearch(){$('#search').classList.remove('open');$('#results').innerHTML=''}
+function onSearch(term){
+  const t=term.trim().toLowerCase(),box=$('#results');
+  if(!t){box.innerHTML='';return}
+  const vs=V.filter(v=>(v.name+' '+v.pitch).toLowerCase().includes(t));
+  const qs=QUESTIONS.filter(q=>q.q.toLowerCase().includes(t));
+  const fs=Object.values(FOUNDERS).filter(f=>(f.name+' '+f.loc).toLowerCase().includes(t));
+  if(!vs.length&&!fs.length&&!qs.length){box.innerHTML=`<div class="results"><div class="none">Nothing matches “${term}”. Try <a href="#/rung/idea" onclick="closeSearch()" style="color:var(--go-deep);font-weight:600">the Idea rung</a>.</div></div>`;return}
+  box.innerHTML=`<div class="results">
+   ${qs.length?`<div class="res-head">Questions</div>`+qs.slice(0,3).map(q=>`<a href="#/q/${q.slug}" onclick="closeSearch()"><span><b>${q.q}</b><br><span class="sub">${q.n} answers</span></span></a>`).join(''):''}
+   ${vs.length?`<div class="res-head">Stories</div>`+vs.slice(0,4).map(v=>`<a href="#/v/${v.slug}" onclick="closeSearch()">${Logo(v,'logo-xs')}<span><b>${v.name}</b> <span class="sub">· ${RUNGS[rungIndex(v.rung)].label}</span><br><span class="sub">${v.pitch}</span></span></a>`).join(''):''}
+   ${fs.length?`<div class="res-head">Founders</div>`+fs.slice(0,3).map(f=>`<a href="#/" onclick="closeSearch()"><span class="av" style="background:${f.hue}">${initials(f.name)}</span><span><b>${f.name}</b><br><span class="sub">${f.loc}</span></span></a>`).join(''):''}
+  </div>`;
+}
+let pendingFollow=null;
+function openAuth(mode,follow){pendingFollow=follow||null;$('#modal').innerHTML=AuthSheet(mode);setTimeout(()=>$('#email')&&$('#email').focus(),40)}
+function closeModal(){$('#modal').innerHTML='';pendingFollow=null}
+function AuthSheet(mode){const s=mode==='signup';
+ return `<div class="scrim" onclick="if(event.target===this)closeModal()"><div class="sheet" role="dialog" aria-modal="true">
+  <button class="close" aria-label="Close" onclick="closeModal()">×</button>
+  <h2>${s?'Back somebody early.':'Welcome back.'}</h2>
+  <div class="lede">${s?(pendingFollow?`Create an account to follow ${ven(pendingFollow).name} and hear it the day they keep or break a promise.`:'Follow founders from the first sentence onward.'):'Pick up where your founders left off.'}</div>
+  <div class="tabs"><button class="${!s?'on':''}" onclick="openAuth('login')">Log in</button><button class="${s?'on':''}" onclick="openAuth('signup')">Sign up</button></div>
+  ${s?`<div class="field"><label for="name">Your name</label><input id="name" placeholder="Jordan Lee"></div>`:''}
+  <div class="field"><label for="email">Email</label><input id="email" type="email" placeholder="you@example.com"></div>
+  <div class="field"><label for="pw">Password</label><input id="pw" type="password" placeholder="••••••••"></div>
+  <div class="err" id="authErr"></div>
+  <button class="btn btn-go" onclick="submitAuth(${s})">${s?'Create account':'Log in'}</button>
+  <div class="fine">Prototype — nothing is sent anywhere.<br>Founders book an interview after signing up.</div>
+ </div></div>`}
+function submitAuth(s){
+  const email=$('#email').value.trim(),pw=$('#pw').value,name=s?$('#name').value.trim():'',err=$('#authErr');
+  const fail=m=>{err.textContent=m;err.classList.add('show')};
+  if(!email.includes('@'))return fail('Enter an email address that includes an @.');
+  if(pw.length<8)return fail('Passwords need at least 8 characters.');
+  if(s&&!name)return fail('Add a name so founders know who is following them.');
+  state.user=s?name:email.split('@')[0].replace(/[._]/g,' ');
+  if(pendingFollow)state.follows.add(pendingFollow);
+  closeModal();renderChrome();route();
+}
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
+  if(P.slug&&$('#modal').innerHTML){closePlayer();return}
+  if($('#modal').innerHTML)closeModal();else if($('#search').classList.contains('open'))closeSearch();else $('#results').innerHTML=''});
+document.addEventListener('click',e=>{if(!e.target.closest('#search')&&!$('#search').classList.contains('open'))$('#results').innerHTML=''});
+
+
+/* ===================== PLAYER ===================== */
+const P={slug:null,title:'',dur:0,t:0,playing:false,timer:null};
+function openPlayer(slug,title,dur,start=0){
+  clearInterval(P.timer);
+  P.slug=slug;P.title=title;P.dur=secs(dur);P.t=start;P.playing=true;
+  $('#modal').innerHTML=PlayerUI();
+  P.timer=setInterval(tick,200);
+  paint();
+}
+function closePlayer(){clearInterval(P.timer);P.playing=false;$('#modal').innerHTML=''}
+function togglePlay(){P.playing=!P.playing;paint()}
+function tick(){if(!P.playing)return;P.t=Math.min(P.dur,P.t+.2);if(P.t>=P.dur){P.playing=false}paint()}
+function seekBar(e){const r=e.currentTarget.getBoundingClientRect();P.t=Math.max(0,Math.min(P.dur,(e.clientX-r.left)/r.width*P.dur));paint()}
+function seekTo(n){P.t=n;P.playing=true;paint()}
+
+function PlayerUI(){
+  const v=ven(P.slug),f=FOUNDERS[v.founder];
+  const tx=TRANSCRIPT[P.title]||[],ch=CHAPTERS[P.title]||[];
+  return `<div class="pscrim" onclick="if(event.target===this)closePlayer()">
+   <div class="player" role="dialog" aria-modal="true" aria-label="Video player">
+    <button class="pclose" aria-label="Close" onclick="closePlayer()">×</button>
+    <div class="stage" onclick="togglePlay()">
+      ${Art(v)}
+      <span class="bigbtn" id="bigbtn">${PLAY}</span>
+      <div class="livecap"><span id="livecap"></span></div>
+    </div>
+    <div class="pctrl"><div class="pbar" onclick="seekBar(event)">
+      <i id="pfill"></i>
+      ${ch.map(([t])=>`<span class="mk-ch" style="left:${(t/P.dur*100).toFixed(1)}%"></span>`).join('')}
+    </div></div>
+    <div class="pmeta">
+      <button onclick="togglePlay()" id="ppbtn" aria-label="Play or pause">❚❚</button>
+      <span class="t"><span id="pnow">0:00</span> / ${clock(P.dur)}</span>
+      ${ch.length?`<span id="pch"></span>`:''}
+      <a class="jr" href="#/v/${v.slug}" onclick="closePlayer()">View ${v.name}'s journey →</a>
+    </div>
+    <div class="phead"><h3>${P.title}</h3>
+      <div class="who"><span class="av" style="background:${f.hue}">${initials(f.name)}</span>${f.name} · ${v.name}</div></div>
+    <div class="tx"><div class="lab">Transcript</div>
+      ${tx.length?tx.map(([t,line])=>`<p data-t="${t}" onclick="seekTo(${t})"><b>${clock(t)}</b><span>${line}</span></p>`).join('')
+        :`<p style="color:#7A7A7A;cursor:default"><span>Transcript is still processing — it usually lands within an hour of upload.</span></p>`}
+    </div>
+   </div></div>`;
+}
+
+function paint(){
+  const fill=$('#pfill'); if(!fill) return;
+  fill.style.width=(P.t/P.dur*100)+'%';
+  $('#pnow').textContent=clock(P.t);
+  $('#ppbtn').textContent=P.playing?'❚❚':'▶';
+  $('#bigbtn').classList.toggle('hidden',P.playing);
+  const tx=TRANSCRIPT[P.title]||[];
+  let cur=null;
+  document.querySelectorAll('.tx p[data-t]').forEach(el=>{
+    const t=+el.dataset.t, on=P.t>=t;
+    el.classList.remove('on');
+    if(on) cur=el;
+  });
+  if(cur){cur.classList.add('on'); $('#livecap').textContent=cur.querySelector('span').textContent}
+  else if($('#livecap')) $('#livecap').textContent='';
+  const ch=CHAPTERS[P.title]||[],box=$('#pch');
+  if(box){const c=[...ch].reverse().find(([t])=>P.t>=t); box.textContent=c?'· '+c[1]:''}
+}
+
+/* ===================== ROUTER ===================== */
+function nav(){
+  const h='#'+ROUTE;
+  const is=(pre)=>pre==='#/'?(h==='#/'||h===''||h.startsWith('#/rung/')):h.startsWith(pre);
+  $('#rungnav').innerHTML=[['#/','Discover'],['#/shorts','Shorts'],['#/answers','Answers'],['#/postmortems','Post-mortems']]
+    .map(([href,label])=>`<a href="${href}" class="${is(href)?'on':''}">${label}</a>`).join('');
+  $('#followLink').classList.toggle('on', ROUTE.startsWith('/following'));
+}
+function route(){
+  const p=(ROUTE||'/').split('/').filter(Boolean);
+  let html,active=null;
+  switch(p[0]){
+    case 'v':            html=Wall(p[1],p[2]); break;
+    case 'q':            html=Question(p[1]); break;
+    case 'rung':         active=p[1]; html=Home(p[1]); break;
+    case 'shorts':       html=Shorts(); break;
+    case 'answers':      html=Answers(); break;
+    case 'postmortems':  html=PostMortems(); break;
+    case 'following':    html=Following(); break;
+    case 'login':        html=AuthPage('login'); break;
+    case 'signup':       html=AuthPage('signup'); break;
+    case 'start':        html=StartJourney(p[1]); break;
+    case 'dashboard':    html=Dashboard(); break;
+    default:             html=Home();
+  }
+  clearInterval(P.timer); P.slug=null;
+  $('#app').innerHTML=html; renderChrome(); nav(); closeSearch(); window.scrollTo(0,0);
+  document.querySelectorAll('.entry').forEach((e,i)=>e.style.animationDelay=(i*.05).toFixed(2)+'s');
+  requestAnimationFrame(()=>document.querySelectorAll('.bar i').forEach(b=>{const w=b.style.width;b.style.width='0';requestAnimationFrame(()=>b.style.width=w)}));
+}
+addEventListener('hashchange',()=>{const h=location.hash.slice(1)||'/';if(h!==ROUTE)navigate(h)});
+ROUTE=(location.hash.slice(1)||'/');
+route();
+</script>
+</body>
+</html>
