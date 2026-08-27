@@ -45,6 +45,12 @@ export function Header() {
             Following
           </Link>
           <Link
+            href="/login"
+            className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
+          >
+            Log in
+          </Link>
+          <Link
             href="/start"
             className="bg-go text-[#00301E] font-semibold px-[15px] py-2 rounded-full text-[14px] hover:bg-[#04B76B] transition-colors"
           >
