@@ -55,35 +55,38 @@ function LoginForm() {
     try {
       const supabase = createClient();
 
-      // In dev mode, use Supabase's signInWithPassword with a test password
-      // or use OTP with auto-confirm if configured
-      const { error: authError } = await supabase.auth.signInWithOtp({
+      // Try signing in with password first (no email needed)
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        options: {
-          // For dev, this will auto-confirm if "Enable automatic confirmation" is on
-          emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/dashboard`,
-        },
+        password: 'dev-password-123',
       });
 
-      if (authError) {
-        // Try creating the user if they don't exist
-        const { error: signUpError } = await supabase.auth.signUp({
+      if (signInError) {
+        // User doesn't exist or wrong password - try creating them
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password: 'dev-password-123',
           options: {
-            emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/dashboard`,
+            // Skip email confirmation for dev
+            data: { dev_user: true },
           },
         });
 
         if (signUpError) {
-          // User exists, try signing in with password
-          const { error: signInError } = await supabase.auth.signInWithPassword({
+          setError(signUpError.message);
+          setIsLoading(false);
+          return;
+        }
+
+        // If user was created but needs confirmation, try password login anyway
+        // (works if email confirmation is disabled in Supabase)
+        if (data.user && !data.session) {
+          const { error: retryError } = await supabase.auth.signInWithPassword({
             email,
             password: 'dev-password-123',
           });
-
-          if (signInError) {
-            setError(signInError.message);
+          if (retryError) {
+            setError('Account created but email confirmation required. Disable it in Supabase dashboard.');
             setIsLoading(false);
             return;
           }
