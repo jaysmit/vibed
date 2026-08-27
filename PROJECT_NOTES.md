@@ -81,6 +81,7 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
     index.ts                    # barrel export
   /domain
     questions.ts                # 16 fixed questions definition
+    rungs.ts                    # RUNGS + SEGMENT_KEYS constants (client-safe)
   /validation
     schemas.ts                  # Zod schemas (slug, email, ulid)
 
@@ -125,11 +126,19 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
 - [x] **Slice 3 - Events**: Event service, /api/track endpoint, impression tracking on landing page
 - [x] **Slice 4 - Auth + Follow**: Auth.js with Resend magic link, /login pages, /following page, follow service with counter updates
 
-### Blockers Before Testing
-1. **MongoDB Atlas not set up** - Need to create cluster and get connection string
-2. **No `.env.local`** - Need to add `MONGODB_URI` environment variable
-3. **Resend API key needed** - Add `AUTH_RESEND_KEY` for magic link emails
-4. **Auth secret needed** - Add `AUTH_SECRET` (run `npx auth secret` to generate)
+### Production Environment
+- **Live URL**: https://vibed-hazel.vercel.app
+- **MongoDB**: Railway managed (shared with GameHub)
+- **Vercel env vars configured**: MONGODB_URI, AUTH_SECRET, AUTH_URL
+
+### Known Issues
+- `/start` returns 404 - not built yet (Slice 5)
+- Magic link emails won't send until `AUTH_RESEND_KEY` is added to Vercel
+
+### Local Development
+- `.env.local` configured with Railway MongoDB connection
+- Run `npm run dev` to start local server
+- Run `npm run seed` to populate test data
 
 ### What Works Without MongoDB
 - Dev server runs (`npm run dev`)
@@ -176,3 +185,4 @@ Can create a venture, edit segments, and publish.
 - **2026-08-26**: Built all public read paths - landing page with venture grid, venture profile with segments/promise/sidebar, question pages, answers index, rung filter, postmortems. Created 6 UI components (Header, VentureCard, VentureLogo, RungLadder, PromiseClock, Avatar).
 - **2026-08-27**: Built events tracking system - event service with rate limiting, /api/track endpoint (single + batch), TrackImpression component with IntersectionObserver, VentureRail component. Landing page now tracks rail impressions with position.
 - **2026-08-27**: Built auth + follow system - Auth.js v5 with Resend magic link provider, MongoDB adapter, /login with check-email and error pages, /following protected page, FollowButton component, /api/follow endpoint, follows service with counter denormalisation, follows repo.
+- **2026-08-27**: Deployed to Vercel production. Fixed framework preset (was "Other", needed "Next.js"). Fixed client-side Mongoose bundling by moving RUNGS/SEGMENT_KEYS to lib/domain/rungs.ts. Seeded 7 test ventures via Railway MongoDB. Site live at https://vibed-hazel.vercel.app
