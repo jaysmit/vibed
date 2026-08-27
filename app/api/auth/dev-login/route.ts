@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connect';
 import { User } from '@/lib/db/models';
 import { cookies } from 'next/headers';
-import crypto from 'crypto';
+import { encode } from 'next-auth/jwt';
 
 // Bypass email login for testing
 // Works in dev mode OR with secret key in production
@@ -33,29 +33,26 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create session token
-    const sessionToken = crypto.randomUUID();
-    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-
-    // Import mongodb client directly for session creation
-    const clientPromise = (await import('@/lib/auth/mongodb-adapter')).default;
-    const client = await clientPromise;
-    const db = client.db();
-
-    // Create session in database
-    await db.collection('sessions').insertOne({
-      sessionToken,
-      userId: user._id,
-      expires,
-    });
-
-    // Set session cookie - use secure cookie name in production
-    const cookieStore = await cookies();
+    // Create JWT token
     const isSecure = process.env.NODE_ENV === 'production';
     const cookieName = isSecure ? '__Secure-authjs.session-token' : 'authjs.session-token';
 
-    cookieStore.set(cookieName, sessionToken, {
-      expires,
+    const token = await encode({
+      token: {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+      },
+      secret: process.env.AUTH_SECRET!,
+      salt: cookieName,
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    });
+
+    // Set JWT cookie
+    const cookieStore = await cookies();
+
+    cookieStore.set(cookieName, token, {
+      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       sameSite: 'lax',
       path: '/',
