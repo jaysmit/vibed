@@ -36,9 +36,15 @@ export async function connectDB(): Promise<typeof mongoose> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      // Serverless optimizations
+      maxPoolSize: 1,
+      minPoolSize: 0,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     };
 
     cached.promise = mongoose.connect(getMongoUri(), opts).then((mongoose) => {
+      console.log('[MongoDB] Connected');
       return mongoose;
     });
   }
