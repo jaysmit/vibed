@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,19 +15,26 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (signInError) {
-        setError(signInError.message);
+      if (signUpError) {
+        setError(signUpError.message);
         setIsLoading(false);
         return;
       }
 
+      // Redirect to dashboard (or check-email if confirmation required)
       window.location.href = '/dashboard';
     } catch {
       setError('Something went wrong. Please try again.');
@@ -51,10 +58,10 @@ export default function LoginPage() {
           className="text-[32px] font-black tracking-tight leading-tight mb-2"
           style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
         >
-          Sign in
+          Create account
         </h2>
         <p className="text-ink-2 text-[15px] mb-8">
-          Welcome back.
+          Start sharing your founder journey.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -83,8 +90,9 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
+              placeholder="At least 6 characters"
               required
+              minLength={6}
               className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent transition-shadow"
             />
           </div>
@@ -96,16 +104,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading || !email || !password}
-            className="w-full bg-ink text-white font-semibold py-3 px-6 rounded-full hover:bg-[#2a2a2a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-go text-[#00301E] font-semibold py-3 px-6 rounded-full hover:bg-[#04B76B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Signing in...' : 'Sign in'}
+            {isLoading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
 
         <p className="text-ink-2 text-[14px] mt-8 text-center">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-ink font-medium hover:underline">
-            Create one
+          Already have an account?{' '}
+          <Link href="/login" className="text-ink font-medium hover:underline">
+            Sign in
           </Link>
         </p>
       </div>

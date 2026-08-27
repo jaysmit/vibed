@@ -51,10 +51,10 @@ export function Header() {
             Sign in
           </Link>
           <Link
-            href="/start"
+            href="/register"
             className="bg-go text-[#00301E] font-semibold px-[15px] py-2 rounded-full text-[14px] hover:bg-[#04B76B] transition-colors"
           >
-            Tell your story
+            Sign up
           </Link>
         </div>
       </div>
