@@ -1,8 +1,8 @@
-import { connectDB } from '@/lib/db/connect';
-import { Venture, Founder, User, EVENT_TYPES } from '@/lib/db/models';
+import { createAdminClient } from '@/lib/supabase/server';
 import { logEvent } from './events';
+import { EVENT_TYPES } from '@/lib/supabase/types';
 import type { Rung, SegmentKey } from '@/lib/domain/rungs';
-import { Types } from 'mongoose';
+import type { Founder } from '@/lib/supabase/types';
 
 // Generate a URL-safe slug from a name
 function generateSlug(name: string): string {
@@ -53,49 +53,10 @@ export interface UpdateSegmentInput {
   body: string;
 }
 
-// Type for lean venture documents
-interface LeanVenture {
-  _id: Types.ObjectId;
-  slug: string;
-  name: string;
-  pitch: string;
-  brand: string;
-  glyph: string;
-  rung: Rung;
-  status: 'draft' | 'live' | 'graduated' | 'closed';
-  founderId: Types.ObjectId;
-  segments: Map<string, { body?: string; publishedAt?: Date; updatedAt?: Date }>;
-  counters: {
-    followers: number;
-    clips: number;
-    weekNumber: number;
-    streakWeeks: number;
-  };
-  problem?: string;
-  who?: string;
-  why?: string;
-  links: Record<string, string | undefined>;
-}
-
-interface LeanFounder {
-  _id: Types.ObjectId;
-  userId: Types.ObjectId;
-  name: string;
-  slug: string;
-  bio?: string;
-  location?: string;
-}
-
 export async function createVenture(input: CreateVentureInput) {
-  await connectDB();
+  const supabase = await createAdminClient();
 
   const { userId, name, pitch, founderName, founderBio, founderLocation } = input;
-
-  // Update user role to founder
-  await User.updateOne(
-    { _id: userId },
-    { $set: { role: 'founder', name: founderName } }
-  );
 
   // Create founder profile
   const baseSlug = generateSlug(founderName);
@@ -103,18 +64,34 @@ export async function createVenture(input: CreateVentureInput) {
   let counter = 1;
 
   // Ensure unique founder slug
-  while (await Founder.exists({ slug: founderSlug })) {
+  while (true) {
+    const { data: existing } = await supabase
+      .from('founders')
+      .select('id')
+      .eq('slug', founderSlug)
+      .single();
+
+    if (!existing) break;
     founderSlug = `${baseSlug}-${counter}`;
     counter++;
   }
 
-  const founder = await Founder.create({
-    userId: new Types.ObjectId(userId),
-    name: founderName,
-    slug: founderSlug,
-    bio: founderBio || '',
-    location: founderLocation || '',
-  });
+  const { data: founder, error: founderError } = await supabase
+    .from('founders')
+    .insert({
+      user_id: userId,
+      name: founderName,
+      slug: founderSlug,
+      bio: founderBio || '',
+      location: founderLocation || '',
+      links: {},
+    })
+    .select()
+    .single();
+
+  if (founderError || !founder) {
+    throw new Error(`Failed to create founder: ${founderError?.message}`);
+  }
 
   // Create venture
   const ventureBaseSlug = generateSlug(name);
@@ -122,101 +99,113 @@ export async function createVenture(input: CreateVentureInput) {
   counter = 1;
 
   // Ensure unique venture slug
-  while (await Venture.exists({ slug: ventureSlug })) {
+  while (true) {
+    const { data: existing } = await supabase
+      .from('ventures')
+      .select('id')
+      .eq('slug', ventureSlug)
+      .single();
+
+    if (!existing) break;
     ventureSlug = `${ventureBaseSlug}-${counter}`;
     counter++;
   }
 
-  const venture = await Venture.create({
-    slug: ventureSlug,
-    founderId: founder._id,
-    name,
-    pitch,
-    brand: generateBrandColor(),
-    glyph: 'wave', // default glyph
-    rung: 'idea' as Rung,
-    rungEnteredAt: new Date(),
-    status: 'draft',
-    media: { tier: 'photo' },
-    links: {},
-    segments: {},
-    promiseHistory: [],
-    counters: {
-      followers: 0,
-      clips: 0,
-      photos: 0,
-      likes: 0,
-      comments: 0,
-      weekNumber: 1,
-      streakWeeks: 0,
-      siteClicks30d: 0,
-      trendingScore: 0,
-    },
-    standards: {
-      met: 0,
-      of: 7,
-    },
-  });
+  const { data: venture, error: ventureError } = await supabase
+    .from('ventures')
+    .insert({
+      slug: ventureSlug,
+      founder_id: founder.id,
+      name,
+      pitch,
+      brand: generateBrandColor(),
+      glyph: 'wave',
+      rung: 'idea',
+      status: 'draft',
+      links: {},
+      segments: {},
+      counters: {
+        followers: 0,
+        clips: 0,
+        photos: 0,
+        likes: 0,
+        comments: 0,
+        weekNumber: 1,
+        streakWeeks: 0,
+        siteClicks30d: 0,
+        trendingScore: 0,
+      },
+    })
+    .select()
+    .single();
+
+  if (ventureError || !venture) {
+    throw new Error(`Failed to create venture: ${ventureError?.message}`);
+  }
 
   // Log event
   await logEvent({
     type: EVENT_TYPES.VENTURE_CREATED,
     actorId: userId,
-    ventureId: venture._id.toString(),
+    ventureId: venture.id,
     meta: { slug: ventureSlug },
   });
 
   return {
-    ventureId: venture._id.toString(),
+    ventureId: venture.id,
     ventureSlug: venture.slug,
-    founderId: founder._id.toString(),
+    founderId: founder.id,
     founderSlug: founder.slug,
   };
 }
 
 export async function getVentureForEdit(ventureId: string, userId: string) {
-  await connectDB();
+  const supabase = await createAdminClient();
 
-  const venture = await Venture.findById(ventureId).lean<LeanVenture>();
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .eq('id', ventureId)
+    .single();
+
   if (!venture) return null;
 
   // Verify ownership
-  const founder = await Founder.findById(venture.founderId).lean<LeanFounder>();
-  if (!founder || founder.userId.toString() !== userId) {
-    return null; // Not the owner
+  const founder = venture.founders as Founder;
+  if (!founder || founder.user_id !== userId) {
+    return null;
   }
 
   return {
     ...venture,
-    _id: venture._id.toString(),
-    founderId: venture.founderId.toString(),
+    _id: venture.id,
+    founderId: venture.founder_id,
   };
 }
 
 export async function getVentureByFounderUserId(userId: string) {
-  await connectDB();
+  const supabase = await createAdminClient();
 
-  const founder = await Founder.findOne({ userId: new Types.ObjectId(userId) }).lean<LeanFounder>();
+  const { data: founder } = await supabase
+    .from('founders')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
   if (!founder) return null;
 
-  const venture = await Venture.findOne({ founderId: founder._id }).lean<LeanVenture>();
-  if (!venture) return null;
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('*')
+    .eq('founder_id', founder.id)
+    .single();
 
-  // Convert Map to plain object for serialization
-  const segmentsObj: Record<string, { body?: string }> = {};
-  if (venture.segments instanceof Map) {
-    venture.segments.forEach((value, key) => {
-      segmentsObj[key] = value;
-    });
-  } else if (venture.segments && typeof venture.segments === 'object') {
-    Object.assign(segmentsObj, venture.segments);
-  }
+  if (!venture) return null;
 
   return {
     ...venture,
-    segments: segmentsObj,
-    _id: venture._id.toString(),
-    founderId: venture.founderId.toString(),
+    _id: venture.id,
+    founderId: venture.founder_id,
     founder: {
       name: founder.name,
       slug: founder.slug,
@@ -231,21 +220,31 @@ export async function updateVenture(
   userId: string,
   updates: UpdateVentureInput
 ) {
-  await connectDB();
+  const supabase = await createAdminClient();
 
-  // Verify ownership
-  const venture = await Venture.findById(ventureId);
+  // Get venture and verify ownership
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .eq('id', ventureId)
+    .single();
+
   if (!venture) return null;
 
-  const founder = await Founder.findById(venture.founderId);
-  if (!founder || founder.userId.toString() !== userId) {
+  const founder = venture.founders as Founder;
+  if (!founder || founder.user_id !== userId) {
     return null;
   }
 
   // Apply updates
-  Object.assign(venture, updates);
-  venture.updatedAt = new Date();
-  await venture.save();
+  const { error } = await supabase
+    .from('ventures')
+    .update(updates)
+    .eq('id', ventureId);
+
+  if (error) {
+    throw new Error(`Failed to update venture: ${error.message}`);
+  }
 
   return { success: true };
 }
@@ -256,27 +255,40 @@ export async function updateSegment(
   segmentKey: SegmentKey,
   input: UpdateSegmentInput
 ) {
-  await connectDB();
+  const supabase = await createAdminClient();
 
-  // Verify ownership
-  const venture = await Venture.findById(ventureId);
+  // Get venture and verify ownership
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .eq('id', ventureId)
+    .single();
+
   if (!venture) return null;
 
-  const founder = await Founder.findById(venture.founderId);
-  if (!founder || founder.userId.toString() !== userId) {
+  const founder = venture.founders as Founder;
+  if (!founder || founder.user_id !== userId) {
     return null;
   }
 
-  const isNew = !venture.segments.get(segmentKey)?.body;
+  const segments = (venture.segments || {}) as Record<string, { body?: string; publishedAt?: string; updatedAt?: string }>;
+  const isNew = !segments[segmentKey]?.body;
 
   // Update segment
-  venture.segments.set(segmentKey, {
+  segments[segmentKey] = {
     body: input.body,
-    publishedAt: venture.segments.get(segmentKey)?.publishedAt || new Date(),
-    updatedAt: new Date(),
-  });
+    publishedAt: segments[segmentKey]?.publishedAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 
-  await venture.save();
+  const { error } = await supabase
+    .from('ventures')
+    .update({ segments })
+    .eq('id', ventureId);
+
+  if (error) {
+    throw new Error(`Failed to update segment: ${error.message}`);
+  }
 
   // Log event
   await logEvent({
@@ -290,14 +302,19 @@ export async function updateSegment(
 }
 
 export async function publishVenture(ventureId: string, userId: string) {
-  await connectDB();
+  const supabase = await createAdminClient();
 
-  // Verify ownership
-  const venture = await Venture.findById(ventureId);
+  // Get venture and verify ownership
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .eq('id', ventureId)
+    .single();
+
   if (!venture) return null;
 
-  const founder = await Founder.findById(venture.founderId);
-  if (!founder || founder.userId.toString() !== userId) {
+  const founder = venture.founders as Founder;
+  if (!founder || founder.user_id !== userId) {
     return null;
   }
 
@@ -305,9 +322,17 @@ export async function publishVenture(ventureId: string, userId: string) {
     return { success: true, alreadyPublished: true };
   }
 
-  venture.status = 'live';
-  venture.publishedAt = new Date();
-  await venture.save();
+  const { error } = await supabase
+    .from('ventures')
+    .update({
+      status: 'live',
+      published_at: new Date().toISOString(),
+    })
+    .eq('id', ventureId);
+
+  if (error) {
+    throw new Error(`Failed to publish venture: ${error.message}`);
+  }
 
   await logEvent({
     type: EVENT_TYPES.VENTURE_PUBLISHED,
@@ -320,20 +345,32 @@ export async function publishVenture(ventureId: string, userId: string) {
 }
 
 export async function updateRung(ventureId: string, userId: string, rung: Rung) {
-  await connectDB();
+  const supabase = await createAdminClient();
 
-  const venture = await Venture.findById(ventureId);
+  // Get venture and verify ownership
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .eq('id', ventureId)
+    .single();
+
   if (!venture) return null;
 
-  const founder = await Founder.findById(venture.founderId);
-  if (!founder || founder.userId.toString() !== userId) {
+  const founder = venture.founders as Founder;
+  if (!founder || founder.user_id !== userId) {
     return null;
   }
 
   const oldRung = venture.rung;
-  venture.rung = rung;
-  venture.rungEnteredAt = new Date();
-  await venture.save();
+
+  const { error } = await supabase
+    .from('ventures')
+    .update({ rung })
+    .eq('id', ventureId);
+
+  if (error) {
+    throw new Error(`Failed to update rung: ${error.message}`);
+  }
 
   await logEvent({
     type: EVENT_TYPES.VENTURE_RUNG_CHANGED,

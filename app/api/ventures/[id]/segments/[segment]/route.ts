@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/supabase/auth';
 import { updateSegment } from '@/lib/services/ventures';
 import { SEGMENT_KEYS } from '@/lib/domain/rungs';
 import type { SegmentKey } from '@/lib/domain/rungs';
@@ -13,10 +13,10 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; segment: string }> }
 ) {
-  const session = await auth();
+  const userId = await getCurrentUserId();
   const { id, segment } = await params;
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -31,7 +31,7 @@ export async function PUT(
 
     const result = await updateSegment(
       id,
-      session.user.id,
+      userId,
       segment as SegmentKey,
       data
     );

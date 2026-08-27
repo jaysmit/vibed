@@ -1,18 +1,18 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { auth } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/supabase/auth';
 import { Header, VentureCard } from '@/components/ui';
-import { getVenturesByIds } from '@/lib/db/repos';
+import { getVenturesByIds } from '@/lib/services/ventures-public';
 import { getFollowedVentureIds } from '@/lib/services';
 
 export default async function FollowingPage() {
-  const session = await auth();
+  const userId = await getCurrentUserId();
 
-  if (!session?.user?.id) {
+  if (!userId) {
     redirect('/login');
   }
 
-  const followedIds = await getFollowedVentureIds(session.user.id);
+  const followedIds = await getFollowedVentureIds(userId);
   const ventures = await getVenturesByIds(followedIds);
 
   return (
@@ -34,7 +34,7 @@ export default async function FollowingPage() {
           <div className="grid gap-5 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
             {ventures.map((venture) => (
               <VentureCard
-                key={venture._id.toString()}
+                key={venture._id}
                 slug={venture.slug}
                 name={venture.name}
                 pitch={venture.pitch}

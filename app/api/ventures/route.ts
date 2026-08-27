@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/supabase/auth';
 import { createVenture, getVentureByFounderUserId } from '@/lib/services/ventures';
 import { z } from 'zod';
 
@@ -12,15 +12,15 @@ const CreateVentureSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const userId = await getCurrentUserId();
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     // Check if user already has a venture
-    const existing = await getVentureByFounderUserId(session.user.id);
+    const existing = await getVentureByFounderUserId(userId);
     if (existing) {
       return NextResponse.json(
         { error: 'You already have a venture', ventureSlug: existing.slug },
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const data = CreateVentureSchema.parse(body);
 
     const result = await createVenture({
-      userId: session.user.id,
+      userId,
       name: data.ventureName,
       pitch: data.venturePitch,
       founderName: data.founderName,
@@ -51,22 +51,13 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  const start = Date.now();
-  console.log('[ventures/GET] Starting...');
+  const userId = await getCurrentUserId();
 
-  const authStart = Date.now();
-  const session = await auth();
-  console.log(`[ventures/GET] Auth took ${Date.now() - authStart}ms`);
-
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const queryStart = Date.now();
-  const venture = await getVentureByFounderUserId(session.user.id);
-  console.log(`[ventures/GET] Query took ${Date.now() - queryStart}ms`);
-
-  console.log(`[ventures/GET] Total: ${Date.now() - start}ms`);
+  const venture = await getVentureByFounderUserId(userId);
 
   if (!venture) {
     return NextResponse.json({ venture: null });

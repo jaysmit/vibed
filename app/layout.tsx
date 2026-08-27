@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
-import { SessionProvider } from "@/components/providers";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -36,9 +35,7 @@ export default function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${inter.variable} ${ibmPlexMono.variable}`}
     >
-      <body>
-          <SessionProvider>{children}</SessionProvider>
-        </body>
+      <body>{children}</body>
     </html>
   );
 }

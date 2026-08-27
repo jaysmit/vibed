@@ -1,32 +1,49 @@
-import { connectDB } from '@/lib/db/connect';
-import { Venture, EVENT_TYPES } from '@/lib/db/models';
-import * as followsRepo from '@/lib/db/repos/follows';
+import { createAdminClient } from '@/lib/supabase/server';
 import { logEvent } from './events';
-import type { TargetType } from '@/lib/db/models/follow';
-
-export interface FollowInput {
-  userId: string;
-  targetType: TargetType;
-  targetId: string;
-}
+import { EVENT_TYPES } from '@/lib/supabase/types';
 
 export async function followVenture(userId: string, ventureId: string): Promise<boolean> {
-  await connectDB();
+  const supabase = await createAdminClient();
 
   // Check if already following
-  const existing = await followsRepo.getFollow(userId, 'venture', ventureId);
+  const { data: existing } = await supabase
+    .from('follows')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('venture_id', ventureId)
+    .single();
+
   if (existing) {
     return false; // Already following
   }
 
   // Create follow
-  await followsRepo.createFollow(userId, 'venture', ventureId);
+  const { error } = await supabase.from('follows').insert({
+    user_id: userId,
+    venture_id: ventureId,
+  });
 
-  // Increment counter on venture (denormalised per architecture rules)
-  await Venture.updateOne(
-    { _id: ventureId },
-    { $inc: { 'counters.followers': 1 } }
-  );
+  if (error) {
+    console.error('Failed to create follow:', error);
+    return false;
+  }
+
+  // Increment counter on venture
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('counters')
+    .eq('id', ventureId)
+    .single();
+
+  if (venture) {
+    const counters = venture.counters as { followers: number };
+    await supabase
+      .from('ventures')
+      .update({
+        counters: { ...venture.counters, followers: (counters.followers || 0) + 1 },
+      })
+      .eq('id', ventureId);
+  }
 
   // Track event
   await logEvent({
@@ -40,19 +57,36 @@ export async function followVenture(userId: string, ventureId: string): Promise<
 }
 
 export async function unfollowVenture(userId: string, ventureId: string): Promise<boolean> {
-  await connectDB();
+  const supabase = await createAdminClient();
 
   // Delete follow
-  const deleted = await followsRepo.deleteFollow(userId, 'venture', ventureId);
-  if (!deleted) {
+  const { data: deleted } = await supabase
+    .from('follows')
+    .delete()
+    .eq('user_id', userId)
+    .eq('venture_id', ventureId)
+    .select();
+
+  if (!deleted || deleted.length === 0) {
     return false; // Wasn't following
   }
 
   // Decrement counter on venture
-  await Venture.updateOne(
-    { _id: ventureId },
-    { $inc: { 'counters.followers': -1 } }
-  );
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('counters')
+    .eq('id', ventureId)
+    .single();
+
+  if (venture) {
+    const counters = venture.counters as { followers: number };
+    await supabase
+      .from('ventures')
+      .update({
+        counters: { ...venture.counters, followers: Math.max(0, (counters.followers || 0) - 1) },
+      })
+      .eq('id', ventureId);
+  }
 
   // Track event
   await logEvent({
@@ -65,47 +99,26 @@ export async function unfollowVenture(userId: string, ventureId: string): Promis
   return true;
 }
 
-export async function followFounder(userId: string, founderId: string): Promise<boolean> {
-  await connectDB();
-
-  const existing = await followsRepo.getFollow(userId, 'founder', founderId);
-  if (existing) {
-    return false;
-  }
-
-  await followsRepo.createFollow(userId, 'founder', founderId);
-
-  await logEvent({
-    type: EVENT_TYPES.FOLLOW_CREATED,
-    actorId: userId,
-    meta: { targetType: 'founder', founderId },
-  });
-
-  return true;
-}
-
-export async function unfollowFounder(userId: string, founderId: string): Promise<boolean> {
-  await connectDB();
-
-  const deleted = await followsRepo.deleteFollow(userId, 'founder', founderId);
-  if (!deleted) {
-    return false;
-  }
-
-  await logEvent({
-    type: EVENT_TYPES.FOLLOW_REMOVED,
-    actorId: userId,
-    meta: { targetType: 'founder', founderId },
-  });
-
-  return true;
-}
-
 export async function getFollowedVentureIds(userId: string): Promise<string[]> {
-  const follows = await followsRepo.getUserFollows(userId, 'venture');
-  return follows.map((f) => f.targetId);
+  const supabase = await createAdminClient();
+
+  const { data: follows } = await supabase
+    .from('follows')
+    .select('venture_id')
+    .eq('user_id', userId);
+
+  return (follows || []).map((f) => f.venture_id);
 }
 
 export async function isFollowingVenture(userId: string, ventureId: string): Promise<boolean> {
-  return followsRepo.isFollowing(userId, 'venture', ventureId);
+  const supabase = await createAdminClient();
+
+  const { data: follow } = await supabase
+    .from('follows')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('venture_id', ventureId)
+    .single();
+
+  return !!follow;
 }

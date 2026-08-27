@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { Header, VentureLogo, RungTag, PromiseClock, Avatar } from '@/components/ui';
-import { getVentureBySlug } from '@/lib/db/repos';
-import { type SegmentKey } from '@/lib/db/models';
+import { getVentureBySlug } from '@/lib/services/ventures-public';
+import { type SegmentKey } from '@/lib/domain/rungs';
 
 // Segment definitions
 const SEGMENTS: { k: SegmentKey; t: string; p: string }[] = [
@@ -350,7 +350,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
                         key={item}
                         className="text-[12.5px] text-go-deep flex gap-2 opacity-90"
                       >
-                        <em className="not-italic">{i < venture.standards.met ? '✓' : '○'}</em>
+                        <em className="not-italic">{i < (venture.standards?.met ?? 0) ? '✓' : '○'}</em>
                         {item}
                       </li>
                     )

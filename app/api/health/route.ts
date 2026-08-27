@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
-import { pingDB } from '@/lib/db/connect';
+import { createAdminClient } from '@/lib/supabase/server';
 
 export async function GET() {
-  const dbConnected = await pingDB();
+  let dbConnected = false;
+
+  try {
+    const supabase = await createAdminClient();
+    const { error } = await supabase.from('founders').select('id').limit(1);
+    dbConnected = !error;
+  } catch {
+    dbConnected = false;
+  }
 
   return NextResponse.json({
     status: 'ok',

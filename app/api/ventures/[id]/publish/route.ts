@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/supabase/auth';
 import { publishVenture } from '@/lib/services/ventures';
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
+  const userId = await getCurrentUserId();
   const { id } = await params;
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const result = await publishVenture(id, session.user.id);
+    const result = await publishVenture(id, userId);
 
     if (!result) {
       return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });

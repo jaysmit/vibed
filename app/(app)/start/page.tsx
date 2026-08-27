@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 
 type Step = 'founder' | 'venture' | 'submitting';
 
 export default function StartPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const [step, setStep] = useState<Step>('founder');
   const [error, setError] = useState('');
@@ -22,6 +23,16 @@ export default function StartPage() {
   // Venture fields
   const [ventureName, setVentureName] = useState('');
   const [venturePitch, setVenturePitch] = useState('');
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      setIsLoading(false);
+    };
+    checkAuth();
+  }, []);
 
   const handleFounderNext = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +81,7 @@ export default function StartPage() {
   };
 
   // Show login prompt if not authenticated
-  if (status === 'loading') {
+  if (isLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <div className="text-ink-2">Loading...</div>
@@ -78,7 +89,7 @@ export default function StartPage() {
     );
   }
 
-  if (!session) {
+  if (!isAuthenticated) {
     return (
       <main className="min-h-screen flex items-center justify-center px-6">
         <div className="w-full max-w-[420px] text-center">

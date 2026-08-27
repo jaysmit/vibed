@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Header, VentureLogo, Avatar } from '@/components/ui';
-import { getClipsByQuestion } from '@/lib/db/repos';
+import { getClipsByQuestion } from '@/lib/services/clips-public';
 import { getQuestion, QUESTIONS } from '@/lib/domain/questions';
 
 interface PageProps {

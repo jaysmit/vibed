@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/supabase/auth';
 import { followVenture, unfollowVenture, isFollowingVenture } from '@/lib/services';
 import { z } from 'zod';
 
@@ -9,9 +9,9 @@ const FollowSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const userId = await getCurrentUserId();
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -20,12 +20,12 @@ export async function POST(req: NextRequest) {
     const { ventureId, action } = FollowSchema.parse(body);
 
     if (action === 'follow') {
-      await followVenture(session.user.id, ventureId);
+      await followVenture(userId, ventureId);
     } else {
-      await unfollowVenture(session.user.id, ventureId);
+      await unfollowVenture(userId, ventureId);
     }
 
-    const isFollowing = await isFollowingVenture(session.user.id, ventureId);
+    const isFollowing = await isFollowingVenture(userId, ventureId);
 
     return NextResponse.json({ success: true, isFollowing });
   } catch (error) {
@@ -38,9 +38,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
+  const userId = await getCurrentUserId();
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ isFollowing: false });
   }
 
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing ventureId' }, { status: 400 });
   }
 
-  const isFollowing = await isFollowingVenture(session.user.id, ventureId);
+  const isFollowing = await isFollowingVenture(userId, ventureId);
 
   return NextResponse.json({ isFollowing });
 }

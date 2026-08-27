@@ -1,6 +1,6 @@
 import { Header } from '@/components/ui';
 import { VentureRail } from '@/components/venture';
-import { getPublishedVentures, getFeaturedVenture } from '@/lib/db/repos';
+import { getPublishedVentures, getFeaturedVenture } from '@/lib/services/ventures-public';
 
 export default async function HomePage() {
   const [ventures, featured] = await Promise.all([

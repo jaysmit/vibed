@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logClientEvent, isValidEventType, isClientEventType, checkRateLimit } from '@/lib/services/events';
-import type { EventType } from '@/lib/db/models';
+import type { EventType } from '@/lib/supabase/types';
 
 // Request body schema
 const trackEventSchema = z.object({

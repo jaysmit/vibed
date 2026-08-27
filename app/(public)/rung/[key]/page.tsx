@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Header, VentureCard } from '@/components/ui';
-import { getVenturesByRung } from '@/lib/db/repos';
-import { RUNGS, type Rung } from '@/lib/db/models';
+import { getVenturesByRung } from '@/lib/services/ventures-public';
+import { RUNGS, type Rung } from '@/lib/domain/rungs';
 
 const RUNG_INFO: Record<Rung, { label: string; description: string }> = {
   idea: { label: 'Idea', description: 'Founders exploring whether this is worth building.' },

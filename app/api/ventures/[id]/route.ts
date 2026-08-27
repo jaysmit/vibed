@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/supabase/auth';
 import { updateVenture, publishVenture, updateRung } from '@/lib/services/ventures';
 import { z } from 'zod';
 import { RUNGS } from '@/lib/domain/rungs';
@@ -27,10 +27,10 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
+  const userId = await getCurrentUserId();
   const { id } = await params;
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -40,12 +40,12 @@ export async function PATCH(
 
     // Handle rung change separately
     if (data.rung) {
-      await updateRung(id, session.user.id, data.rung);
+      await updateRung(id, userId, data.rung);
       delete data.rung;
     }
 
     // Update other fields
-    const result = await updateVenture(id, session.user.id, data);
+    const result = await updateVenture(id, userId, data);
 
     if (!result) {
       return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
@@ -65,17 +65,17 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
+  const userId = await getCurrentUserId();
   const { id } = await params;
   const url = new URL(req.url);
 
-  if (!session?.user?.id) {
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // Check if this is a publish request
   if (url.pathname.endsWith('/publish')) {
-    const result = await publishVenture(id, session.user.id);
+    const result = await publishVenture(id, userId);
 
     if (!result) {
       return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });

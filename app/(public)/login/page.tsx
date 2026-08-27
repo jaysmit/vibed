@@ -1,16 +1,15 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { signIn } from 'next-auth/react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 // Show dev login in dev mode, or if ?bypass=secret is in URL for production testing
 const isDev = process.env.NODE_ENV !== 'production';
 const BYPASS_SECRET = 'vibed-test-2026';
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const bypassMode = searchParams.get('bypass') === BYPASS_SECRET;
   const showDevLogin = isDev || bypassMode;
@@ -24,17 +23,18 @@ function LoginForm() {
     setError('');
 
     try {
-      // redirect: false so we can handle errors
-      const result = await signIn('resend', {
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithOtp({
         email,
-        callbackUrl: '/following',
-        redirect: false,
+        options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/dashboard`,
+        },
       });
 
-      if (result?.error) {
-        setError('Something went wrong. Please try again.');
+      if (authError) {
+        setError(authError.message);
         setIsLoading(false);
-      } else if (result?.ok) {
+      } else {
         // Redirect to check email page
         window.location.href = '/login/check-email';
       }
@@ -53,22 +53,47 @@ function LoginForm() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/dev-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, secret: bypassMode ? BYPASS_SECRET : undefined }),
+      const supabase = createClient();
+
+      // In dev mode, use Supabase's signInWithPassword with a test password
+      // or use OTP with auto-confirm if configured
+      const { error: authError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          // For dev, this will auto-confirm if "Enable automatic confirmation" is on
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/dashboard`,
+        },
       });
 
-      if (res.ok) {
-        // Full page navigation to ensure session is loaded
-        window.location.href = '/dashboard';
-      } else {
-        const data = await res.json();
-        setError(data.error || 'Login failed');
+      if (authError) {
+        // Try creating the user if they don't exist
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password: 'dev-password-123',
+          options: {
+            emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/dashboard`,
+          },
+        });
+
+        if (signUpError) {
+          // User exists, try signing in with password
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password: 'dev-password-123',
+          });
+
+          if (signInError) {
+            setError(signInError.message);
+            setIsLoading(false);
+            return;
+          }
+        }
       }
+
+      // Full page navigation to ensure session is loaded
+      window.location.href = '/dashboard';
     } catch {
       setError('Login failed');
-    } finally {
       setIsLoading(false);
     }
   };

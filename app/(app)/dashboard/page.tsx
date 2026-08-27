@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { auth } from '@/lib/auth';
+import { getCurrentUserId } from '@/lib/supabase/auth';
 import { getVentureByFounderUserId } from '@/lib/services/ventures';
 import { Header } from '@/components/ui';
 import { SEGMENT_KEYS } from '@/lib/domain/rungs';
@@ -25,13 +25,13 @@ const SEGMENT_LABELS: Record<string, string> = {
 };
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const userId = await getCurrentUserId();
 
-  if (!session?.user?.id) {
+  if (!userId) {
     redirect('/login');
   }
 
-  const venture = await getVentureByFounderUserId(session.user.id);
+  const venture = await getVentureByFounderUserId(userId);
 
   if (!venture) {
     redirect('/start');

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 import { SEGMENT_KEYS, RUNGS } from '@/lib/domain/rungs';
 import type { SegmentKey, Rung } from '@/lib/domain/rungs';
 import { QUESTIONS } from '@/lib/domain/questions';
@@ -81,11 +81,11 @@ interface Venture {
 }
 
 export default function EditVenturePage() {
-  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const segmentParam = searchParams.get('segment') as SegmentKey | null;
 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [venture, setVenture] = useState<Venture | null>(null);
   const [clips, setClips] = useState<Clip[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +102,18 @@ export default function EditVenturePage() {
   const [why, setWhy] = useState('');
   const [rung, setRung] = useState<Rung>('idea');
   const [segmentBody, setSegmentBody] = useState('');
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      if (!user) {
+        router.push('/login');
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
     if (segmentParam && SEGMENT_KEYS.includes(segmentParam as SegmentKey)) {
@@ -133,12 +145,10 @@ export default function EditVenturePage() {
       }
     }
 
-    if (status === 'authenticated') {
+    if (isAuthenticated === true) {
       loadVenture();
-    } else if (status === 'unauthenticated') {
-      router.push('/login');
     }
-  }, [status, router]);
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     if (venture?.segments?.[activeSegment]) {
@@ -215,7 +225,7 @@ export default function EditVenturePage() {
     }
   };
 
-  if (loading || status === 'loading') {
+  if (loading || isAuthenticated === null) {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <div className="text-ink-2">Loading...</div>

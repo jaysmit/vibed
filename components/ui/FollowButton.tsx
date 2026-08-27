@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useSession } from 'next-auth/react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 interface FollowButtonProps {
   ventureId: string;
@@ -11,15 +11,24 @@ interface FollowButtonProps {
 }
 
 export function FollowButton({ ventureId, initialFollowing = false, className = '' }: FollowButtonProps) {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isFollowing, setIsFollowing] = useState(initialFollowing);
   const [isPending, startTransition] = useTransition();
 
-  const handleClick = async () => {
-    if (status === 'loading') return;
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+  }, []);
 
-    if (!session) {
+  const handleClick = async () => {
+    if (isAuthenticated === null) return;
+
+    if (!isAuthenticated) {
       router.push('/login');
       return;
     }

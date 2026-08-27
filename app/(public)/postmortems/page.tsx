@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Header, VentureLogo } from '@/components/ui';
-import { getClosedVentures } from '@/lib/db/repos';
+import { getClosedVentures } from '@/lib/services/ventures-public';
 
 export const metadata = {
   title: 'Post-mortems — Vibed',
