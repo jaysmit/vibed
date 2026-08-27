@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { VentureLogo } from './VentureLogo';
 import { RungTag } from './RungLadder';
 import { PromiseClock } from './PromiseClock';
-import type { Rung } from '@/lib/db/models';
+import type { Rung } from '@/lib/domain/rungs';
 
 interface VentureCardProps {
   slug: string;

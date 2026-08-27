@@ -1,3 +1,7 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
 interface PromiseClockProps {
   text: string;
   dueAt: Date;

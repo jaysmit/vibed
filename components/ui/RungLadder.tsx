@@ -1,4 +1,4 @@
-import { type Rung, RUNGS } from '@/lib/db/models';
+import { type Rung, RUNGS } from '@/lib/domain/rungs';
 
 interface RungLadderProps {
   rung: Rung;

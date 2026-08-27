@@ -2,7 +2,7 @@
 
 import { VentureCard } from '@/components/ui';
 import { TrackImpression } from '@/components/tracking';
-import type { Rung } from '@/lib/db/models';
+import type { Rung } from '@/lib/domain/rungs';
 
 interface VentureData {
   slug: string;
