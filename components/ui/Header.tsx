@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AuthActions } from './AuthActions';
 
 export function Header() {
   return (
@@ -37,25 +38,8 @@ export function Header() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1.5 ml-auto">
-          <Link
-            href="/following"
-            className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
-          >
-            Following
-          </Link>
-          <Link
-            href="/login"
-            className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/register"
-            className="bg-go text-[#00301E] font-semibold px-[15px] py-2 rounded-full text-[14px] hover:bg-[#04B76B] transition-colors"
-          >
-            Sign up
-          </Link>
+        <div className="ml-auto">
+          <AuthActions />
         </div>
       </div>
 
