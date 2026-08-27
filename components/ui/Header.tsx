@@ -42,31 +42,6 @@ export function Header() {
           <AuthActions />
         </div>
       </div>
-
-      {/* Filters / Rung nav */}
-      <div className="border-t border-rule bg-page sticky top-[68px] z-25">
-        <div className="max-w-[1180px] mx-auto px-6">
-          <nav className="flex gap-[26px] h-[50px] items-center overflow-x-auto scrollbar-hide">
-            {[
-              { key: 'all', label: 'All' },
-              { key: 'idea', label: 'Idea' },
-              { key: 'building', label: 'Building' },
-              { key: 'live', label: 'Live' },
-              { key: 'first', label: 'First dollar', cash: true },
-              { key: 'growing', label: 'Growing', cash: true },
-              { key: 'alumni', label: 'Alumni', cash: true },
-            ].map((r) => (
-              <Link
-                key={r.key}
-                href={r.key === 'all' ? '/' : `/rung/${r.key}`}
-                className="text-[14px] text-ink-2 whitespace-nowrap py-[15px] border-b-2 border-transparent font-medium hover:text-ink"
-              >
-                {r.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </div>
     </header>
   );
 }
