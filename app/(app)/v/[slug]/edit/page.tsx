@@ -493,7 +493,25 @@ export default function EditVenturePage() {
                             {existingClip.transcriptStatus === 'pending' && ' Transcribing...'}
                             {existingClip.transcriptStatus === 'failed' && ' Transcript failed'}
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-3">
+                            <button
+                              onClick={async () => {
+                                if (!confirm('Delete this video?')) return;
+                                try {
+                                  const res = await fetch(`/api/clips/${existingClip._id}`, {
+                                    method: 'DELETE',
+                                  });
+                                  if (res.ok) {
+                                    fetchClips();
+                                  }
+                                } catch {
+                                  console.error('Failed to delete');
+                                }
+                              }}
+                              className="text-[13px] text-dead hover:text-[#8a2a1f]"
+                            >
+                              Delete
+                            </button>
                             {existingClip.publishedAt ? (
                               <span className="text-[13px] text-go-deep">Published</span>
                             ) : (
