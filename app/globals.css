@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Design tokens from MVP */
+  --color-page: #FFFFFF;
+  --color-bg: #F4F4F1;
+  --color-soft: #F8F8F6;
+
+  --color-ink: #0E0E0E;
+  --color-ink-2: #565656;
+  --color-ink-3: #8A8A8A;
+
+  --color-rule: #E4E4E1;
+  --color-rule-2: #CFCFCB;
+
+  --color-go: #05CE78;
+  --color-go-deep: #017A4C;
+  --color-go-tint: #E6F9F0;
+
+  --color-heat: #5A2EC4;
+  --color-heat-tint: #EEE9FB;
+
+  --color-warn: #B7791F;
+  --color-warn-tint: #FBF1DE;
+
+  --color-dead: #B03A28;
+  --color-dead-tint: #FBEAE6;
+
+  /* Fonts */
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-inter);
+  --font-mono: var(--font-ibm-plex-mono);
+
+  /* Layout */
+  --container-max: 1180px;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-go-deep);
+  outline-offset: 2px;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+  font-family: var(--font-display), Georgia, serif;
+  font-variation-settings: 'SOFT' 60, 'WONK' 1;
+  letter-spacing: -0.018em;
+  line-height: 1.14;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -4,38 +4,60 @@ Vertical slices. Each one ships something that works end to end. Do not start th
 
 ---
 
-### 0 — Scaffold
+### 0 — Scaffold ✅ DONE
 Next.js + TypeScript + Tailwind, ESLint, Prettier, `npm run typecheck`. Design tokens from `CLAUDE.md` into the Tailwind config. Folder structure from the architecture doc, with empty `lib/domain`, `lib/services`, `lib/db`. Railway `web` service deploying from GitHub, health check at `/api/health`.
 
 **Done when:** a blank styled page is live on a Railway URL.
 
+**Completed:** Next.js 15, Tailwind 4, design tokens in globals.css, folder structure, health endpoint. Deployed to Vercel.
+
 ---
 
-### 1 — Data layer
+### 1 — Data layer ✅ DONE
 Mongoose connection cached on `globalThis`. Models: `users`, `founders`, `ventures`, `clips`, `follows`, `events`. Indexes from the architecture doc. A seed script that loads the seven ventures from the prototype.
 
 **Done when:** `npm run seed` populates Atlas and a script can read a venture back.
 
+**Completed:** All 6 models with full indexes, cached connection pattern, seed script with 7 ventures. Needs MongoDB Atlas setup to test.
+
 ---
 
-### 2 — Public read paths (server-rendered)
+### 2 — Public read paths (server-rendered) ✅ DONE
 `/` landing, `/v/[slug]` with three tabs, `/q/[slug]`, `/answers`, `/shorts`, `/postmortems`. Real data, no auth, no video yet — posters render the generated SVG art from the prototype.
 
 **Done when:** every page in the prototype exists at a real URL and renders from the database with JavaScript disabled.
 
+**Completed:** Landing page with featured venture + grid, venture profile with segments/promise/sidebar, question pages, answers index, rung filter, postmortems. 6 UI components built. Note: `/shorts` not built yet (video-dependent).
+
 ---
 
-### 3 — Events
+### 3 — Events ✅ DONE
 `lib/services/events.ts` plus `/api/track`. Log the full taxonomy: progress, engagement, discovery (with rail name and position), founder-side. Rate limit the endpoint and treat all client-sent events as untrusted.
 
 **Done when:** loading the landing page writes impression events with rail and position.
 
+**Completed:**
+- `lib/services/events.ts` - logEvent(), logClientEvent(), rate limiting, input sanitization
+- `/api/track/route.ts` - POST endpoint (single event) + PUT endpoint (batch)
+- `components/tracking/` - TrackImpression, TrackClick, tracker utilities
+- `components/venture/VentureRail.tsx` - Grid with impression tracking
+- Landing page uses VentureRail with rail="all-journeys"
+
 ---
 
-### 4 — Auth and follow
+### 4 — Auth and follow 🔜 NEXT
 Auth.js with the Mongo adapter, email magic link. `/login`, `/signup`, `/following`. Follow writes the row and `$inc`s the counter. Following while signed out opens signup and applies the follow after.
 
 **Done when:** I can sign up, follow a venture, and see it on `/following` after a refresh.
+
+**To build:**
+- Install `next-auth` and `@auth/mongodb-adapter`
+- `lib/auth/` - Auth.js config with MongoDB adapter
+- `/api/auth/[...nextauth]/route.ts` - Auth routes
+- `/login/page.tsx` - Magic link login
+- `/signup/page.tsx` - Sign up flow
+- `/following/page.tsx` - Followed ventures
+- `lib/services/follows.ts` - Follow/unfollow with counter updates
 
 ---
 
