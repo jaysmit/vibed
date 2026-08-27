@@ -114,10 +114,10 @@ function LoginForm() {
         className="text-[32px] font-black tracking-tight leading-tight mb-2"
         style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
       >
-        Sign in
+        Sign in or sign up
       </h2>
       <p className="text-ink-2 text-[15px] mb-8">
-        Enter your email to receive a magic link.
+        Enter your email — we&apos;ll send you a magic link. New here? We&apos;ll create your account automatically.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
