@@ -1,4 +1,3 @@
-import { Header } from '@/components/ui';
 import { VentureRail } from '@/components/venture';
 import { getPublishedVentures, getFeaturedVenture } from '@/lib/services/ventures-public';
 
@@ -9,10 +8,7 @@ export default async function HomePage() {
   ]);
 
   return (
-    <>
-      <Header />
-
-      <main className="max-w-[1180px] mx-auto px-6">
+    <main className="max-w-[1180px] mx-auto px-6">
         {/* Tagline */}
         <section className="py-11">
           <h1
@@ -174,6 +170,5 @@ export default async function HomePage() {
           </div>
         </footer>
       </main>
-    </>
   );
 }
