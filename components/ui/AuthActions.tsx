@@ -44,6 +44,12 @@ export function AuthActions() {
     return (
       <div className="flex items-center gap-1.5">
         <Link
+          href="/discover"
+          className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
+        >
+          Discover
+        </Link>
+        <Link
           href="/following"
           className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
         >
@@ -74,10 +80,10 @@ export function AuthActions() {
   return (
     <div className="flex items-center gap-1.5">
       <Link
-        href="/following"
+        href="/discover"
         className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
       >
-        Following
+        Discover
       </Link>
       <Link
         href="/login"
