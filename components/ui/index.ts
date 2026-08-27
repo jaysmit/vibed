@@ -5,3 +5,5 @@ export { PromiseClock } from './PromiseClock';
 export { RungLadder, RungTag } from './RungLadder';
 export { VentureCard } from './VentureCard';
 export { VentureLogo } from './VentureLogo';
+export { VideoPlayer } from './VideoPlayer';
+export { VideoUploader } from './VideoUploader';

@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.3",
+    "@mux/mux-node": "^15.0.0",
+    "@mux/mux-player-react": "^3.13.2",
+    "@mux/upchunk": "^3.5.0",
     "mongoose": "^8.8.0",
     "next": "^15.2.0",
     "next-auth": "^5.0.0-beta.32",

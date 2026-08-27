@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SEGMENT_KEYS, RUNGS } from '@/lib/domain/rungs';
 import type { SegmentKey, Rung } from '@/lib/domain/rungs';
+import { QUESTIONS } from '@/lib/domain/questions';
+import { VideoUploader, VideoPlayer } from '@/components/ui';
 
 const SEGMENT_LABELS: Record<string, string> = {
   pitch: 'The Pitch',
@@ -45,6 +47,17 @@ const SEGMENT_PROMPTS: Record<string, string> = {
   next: 'What comes next. Where this is heading.',
 };
 
+interface Clip {
+  _id: string;
+  questionSlug: string;
+  title: string;
+  playbackId: string;
+  durationSec: number;
+  transcriptStatus: 'pending' | 'ready' | 'failed';
+  publishedAt?: string;
+  createdAt: string;
+}
+
 interface Venture {
   _id: string;
   slug: string;
@@ -74,10 +87,12 @@ export default function EditVenturePage() {
   const segmentParam = searchParams.get('segment') as SegmentKey | null;
 
   const [venture, setVenture] = useState<Venture | null>(null);
+  const [clips, setClips] = useState<Clip[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'basics' | 'segment'>('basics');
+  const [activeTab, setActiveTab] = useState<'basics' | 'segment' | 'videos'>('basics');
   const [activeSegment, setActiveSegment] = useState<SegmentKey>(segmentParam || 'pitch');
+  const [selectedQuestion, setSelectedQuestion] = useState<string>(QUESTIONS[0].slug);
 
   // Form state
   const [name, setName] = useState('');
@@ -132,6 +147,25 @@ export default function EditVenturePage() {
       setSegmentBody('');
     }
   }, [activeSegment, venture]);
+
+  const fetchClips = useCallback(async () => {
+    if (!venture?._id) return;
+    try {
+      const res = await fetch(`/api/ventures/${venture._id}/clips`);
+      if (res.ok) {
+        const data = await res.json();
+        setClips(data.clips || []);
+      }
+    } catch {
+      console.error('Failed to load clips');
+    }
+  }, [venture?._id]);
+
+  useEffect(() => {
+    if (activeTab === 'videos' && venture?._id) {
+      fetchClips();
+    }
+  }, [activeTab, venture?._id, fetchClips]);
 
   const handleSaveBasics = async () => {
     if (!venture) return;
@@ -238,6 +272,16 @@ export default function EditVenturePage() {
             }`}
           >
             Segments
+          </button>
+          <button
+            onClick={() => setActiveTab('videos')}
+            className={`px-4 py-2 rounded-md text-[14px] font-medium transition-colors ${
+              activeTab === 'videos'
+                ? 'bg-page shadow-sm text-ink'
+                : 'text-ink-2 hover:text-ink'
+            }`}
+          >
+            Videos
           </button>
         </div>
 
@@ -390,6 +434,102 @@ export default function EditVenturePage() {
                   {saving ? 'Saving...' : 'Save segment'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'videos' && (
+          <div className="flex gap-6">
+            {/* Question list */}
+            <div className="w-[220px] shrink-0">
+              <div className="bg-page border border-rule rounded-xl p-3 space-y-1">
+                {QUESTIONS.map((q) => {
+                  const hasClip = clips.some((c) => c.questionSlug === q.slug);
+                  return (
+                    <button
+                      key={q.slug}
+                      onClick={() => setSelectedQuestion(q.slug)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors ${
+                        selectedQuestion === q.slug
+                          ? 'bg-ink text-white'
+                          : hasClip
+                          ? 'text-go-deep hover:bg-go-tint'
+                          : 'text-ink-2 hover:bg-soft'
+                      }`}
+                    >
+                      {q.q.length > 35 ? q.q.slice(0, 35) + '...' : q.q}
+                      {hasClip && selectedQuestion !== q.slug && ' ✓'}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Video upload/display */}
+            <div className="flex-1 bg-page border border-rule rounded-xl p-6">
+              {(() => {
+                const question = QUESTIONS.find((q) => q.slug === selectedQuestion);
+                const existingClip = clips.find((c) => c.questionSlug === selectedQuestion);
+
+                return (
+                  <>
+                    <h2 className="text-[20px] font-bold mb-2">
+                      {question?.q}
+                    </h2>
+                    <p className="text-ink-2 text-[14px] mb-6">
+                      Record a short video (under 60 seconds) answering this question.
+                    </p>
+
+                    {existingClip ? (
+                      <div className="space-y-4">
+                        <VideoPlayer
+                          playbackId={existingClip.playbackId}
+                          title={existingClip.title}
+                        />
+                        <div className="flex items-center justify-between">
+                          <div className="text-[13px] text-ink-2">
+                            {Math.floor(existingClip.durationSec / 60)}:{String(existingClip.durationSec % 60).padStart(2, '0')} ·
+                            {existingClip.transcriptStatus === 'ready' && ' Transcript ready'}
+                            {existingClip.transcriptStatus === 'pending' && ' Transcribing...'}
+                            {existingClip.transcriptStatus === 'failed' && ' Transcript failed'}
+                          </div>
+                          <div className="flex gap-2">
+                            {existingClip.publishedAt ? (
+                              <span className="text-[13px] text-go-deep">Published</span>
+                            ) : (
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch(`/api/clips/${existingClip._id}/publish`, {
+                                      method: 'POST',
+                                    });
+                                    if (res.ok) {
+                                      fetchClips();
+                                    }
+                                  } catch {
+                                    console.error('Failed to publish');
+                                  }
+                                }}
+                                className="text-[13px] text-go-deep hover:text-go font-medium"
+                              >
+                                Publish
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <VideoUploader
+                        questionSlug={selectedQuestion}
+                        onUploadComplete={() => {
+                          // Refresh clips after a short delay to let webhook process
+                          setTimeout(() => fetchClips(), 3000);
+                        }}
+                      />
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
