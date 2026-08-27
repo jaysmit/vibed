@@ -51,13 +51,22 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
+  const start = Date.now();
+  console.log('[ventures/GET] Starting...');
+
+  const authStart = Date.now();
   const session = await auth();
+  console.log(`[ventures/GET] Auth took ${Date.now() - authStart}ms`);
 
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const queryStart = Date.now();
   const venture = await getVentureByFounderUserId(session.user.id);
+  console.log(`[ventures/GET] Query took ${Date.now() - queryStart}ms`);
+
+  console.log(`[ventures/GET] Total: ${Date.now() - start}ms`);
 
   if (!venture) {
     return NextResponse.json({ venture: null });
