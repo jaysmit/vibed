@@ -3,6 +3,7 @@ import { VentureLogo } from './VentureLogo';
 import { RungTag } from './RungLadder';
 import { PromiseClock } from './PromiseClock';
 import type { Rung } from '@/lib/domain/rungs';
+import { INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 
 interface VentureCardProps {
   slug: string;
@@ -11,6 +12,7 @@ interface VentureCardProps {
   brand: string;
   glyph: string;
   rung: Rung;
+  industry?: Industry;
   status: 'draft' | 'live' | 'graduated' | 'closed';
   founder: {
     name: string;
@@ -40,6 +42,7 @@ export function VentureCard({
   brand,
   glyph,
   rung,
+  industry,
   status,
   founder,
   promise,
@@ -113,10 +116,10 @@ export function VentureCard({
               .join('')}
           </span>
           <span>{founder.name}</span>
-          {founder.location && (
+          {industry && (
             <>
               <span className="text-rule-2">·</span>
-              <span>{founder.location}</span>
+              <span className="text-heat">{INDUSTRY_LABELS[industry]}</span>
             </>
           )}
         </div>

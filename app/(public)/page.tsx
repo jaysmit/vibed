@@ -51,6 +51,7 @@ export default async function HomePage() {
               brand={v.brand}
               glyph={v.glyph}
               rung={v.rung}
+              industry={v.industry}
               status={v.status}
               founder={v.founder}
               promise={v.promise}
@@ -87,6 +88,7 @@ export default async function HomePage() {
               brand={v.brand}
               glyph={v.glyph}
               rung={v.rung}
+              industry={v.industry}
               status={v.status}
               founder={v.founder}
               promise={v.promise}
@@ -123,6 +125,7 @@ export default async function HomePage() {
               brand={v.brand}
               glyph={v.glyph}
               rung={v.rung}
+              industry={v.industry}
               status={v.status}
               founder={v.founder}
               promise={v.promise}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { INDUSTRIES, INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 
 type Step = 'founder' | 'venture' | 'submitting';
 
@@ -23,6 +24,7 @@ export default function StartPage() {
   // Venture fields
   const [ventureName, setVentureName] = useState('');
   const [venturePitch, setVenturePitch] = useState('');
+  const [ventureIndustry, setVentureIndustry] = useState<Industry>('tech');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -64,6 +66,7 @@ export default function StartPage() {
           founderLocation,
           ventureName,
           venturePitch,
+          ventureIndustry,
         }),
       });
 
@@ -251,6 +254,24 @@ export default function StartPage() {
                 <p className="text-[12px] text-ink-3 mt-2">
                   Keep it short. You can always change this later.
                 </p>
+              </div>
+
+              <div>
+                <label htmlFor="ventureIndustry" className="block text-[13px] font-medium mb-2">
+                  Industry *
+                </label>
+                <select
+                  id="ventureIndustry"
+                  value={ventureIndustry}
+                  onChange={(e) => setVentureIndustry(e.target.value as Industry)}
+                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
+                >
+                  {INDUSTRIES.map((ind) => (
+                    <option key={ind} value={ind}>
+                      {INDUSTRY_LABELS[ind]}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

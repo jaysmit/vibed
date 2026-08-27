@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import type { Rung } from '@/lib/domain/rungs';
+import type { Industry } from '@/lib/supabase/types';
 
 export interface VentureWithFounder {
   _id: string;
@@ -12,6 +13,7 @@ export interface VentureWithFounder {
   brand: string;
   glyph: string;
   rung: Rung;
+  industry: Industry;
   status: 'draft' | 'live' | 'graduated' | 'closed';
   links: Record<string, string | undefined>;
   problem?: string;
@@ -83,6 +85,7 @@ function mapVenture(v: Record<string, unknown>, founder: Record<string, unknown>
     brand: v.brand as string,
     glyph: v.glyph as string,
     rung: v.rung as Rung,
+    industry: (v.industry as Industry) || 'other',
     status: v.status as 'draft' | 'live' | 'graduated' | 'closed',
     links: (v.links as Record<string, string | undefined>) || {},
     problem: v.problem as string | undefined,

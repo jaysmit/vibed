@@ -1,5 +1,44 @@
 // Database types for Supabase
 
+// Industry/category options for ventures
+export const INDUSTRIES = [
+  'tech',
+  'saas',
+  'ecommerce',
+  'fintech',
+  'health',
+  'education',
+  'media',
+  'fashion',
+  'food',
+  'travel',
+  'gaming',
+  'ai',
+  'crypto',
+  'sustainability',
+  'other',
+] as const;
+
+export type Industry = typeof INDUSTRIES[number];
+
+export const INDUSTRY_LABELS: Record<Industry, string> = {
+  tech: 'Tech',
+  saas: 'SaaS',
+  ecommerce: 'E-commerce',
+  fintech: 'Fintech',
+  health: 'Health',
+  education: 'Education',
+  media: 'Media',
+  fashion: 'Fashion',
+  food: 'Food & Beverage',
+  travel: 'Travel',
+  gaming: 'Gaming',
+  ai: 'AI / ML',
+  crypto: 'Crypto / Web3',
+  sustainability: 'Sustainability',
+  other: 'Other',
+};
+
 export interface Founder {
   id: string;
   user_id: string;
@@ -23,6 +62,7 @@ export interface Venture {
   brand: string;
   glyph: string;
   rung: string;
+  industry: Industry;
   status: 'draft' | 'live' | 'graduated' | 'closed';
   problem: string | null;
   who: string | null;

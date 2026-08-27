@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { VentureCard } from '@/components/ui';
 import { getPublishedVentures } from '@/lib/services/ventures-public';
 import { RUNGS, type Rung } from '@/lib/domain/rungs';
+import { INDUSTRIES, INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 
 const RUNG_LABELS: Record<Rung, string> = {
   idea: 'Idea',
@@ -16,23 +17,28 @@ const SORT_OPTIONS = [
   { key: 'recent', label: 'Most Recent' },
   { key: 'trending', label: 'Trending' },
   { key: 'popular', label: 'Most Popular' },
-  { key: 'trending-pitches', label: 'Trending Pitches' },
 ];
 
 interface PageProps {
-  searchParams: Promise<{ sort?: string; rung?: string }>;
+  searchParams: Promise<{ sort?: string; rung?: string; industry?: string }>;
 }
 
 export default async function DiscoverPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const currentSort = params.sort || 'recent';
   const currentRung = params.rung || 'all';
+  const currentIndustry = params.industry || 'all';
 
   let ventures = await getPublishedVentures();
 
   // Filter by rung
   if (currentRung !== 'all' && RUNGS.includes(currentRung as Rung)) {
     ventures = ventures.filter((v) => v.rung === currentRung);
+  }
+
+  // Filter by industry
+  if (currentIndustry !== 'all' && INDUSTRIES.includes(currentIndustry as Industry)) {
+    ventures = ventures.filter((v) => v.industry === currentIndustry);
   }
 
   // Sort (in production, this would be done in the query)
@@ -42,6 +48,15 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
     ventures = [...ventures].sort((a, b) => b.counters.trendingScore - a.counters.trendingScore);
   }
   // 'recent' is default order from getPublishedVentures
+
+  const buildUrl = (sort: string, rung: string, industry: string) => {
+    const params = new URLSearchParams();
+    if (sort !== 'recent') params.set('sort', sort);
+    if (rung !== 'all') params.set('rung', rung);
+    if (industry !== 'all') params.set('industry', industry);
+    const query = params.toString();
+    return `/discover${query ? `?${query}` : ''}`;
+  };
 
   return (
     <main className="max-w-[1180px] mx-auto px-6 py-10">
@@ -59,15 +74,15 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-8 pb-6 border-b border-rule">
+      <div className="flex flex-col gap-4 mb-8 pb-6 border-b border-rule">
         {/* Sort */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[13px] text-ink-3 font-medium">Sort:</span>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             {SORT_OPTIONS.map((opt) => (
               <Link
                 key={opt.key}
-                href={`/discover?sort=${opt.key}${currentRung !== 'all' ? `&rung=${currentRung}` : ''}`}
+                href={buildUrl(opt.key, currentRung, currentIndustry)}
                 className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
                   currentSort === opt.key
                     ? 'bg-ink text-white'
@@ -80,15 +95,45 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
           </div>
         </div>
 
+        {/* Industry filter */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[13px] text-ink-3 font-medium">Industry:</span>
+          <div className="flex gap-1 flex-wrap">
+            <Link
+              href={buildUrl(currentSort, currentRung, 'all')}
+              className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
+                currentIndustry === 'all'
+                  ? 'bg-heat text-white'
+                  : 'bg-soft text-ink-2 hover:bg-rule'
+              }`}
+            >
+              All
+            </Link>
+            {INDUSTRIES.map((ind) => (
+              <Link
+                key={ind}
+                href={buildUrl(currentSort, currentRung, ind)}
+                className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
+                  currentIndustry === ind
+                    ? 'bg-heat text-white'
+                    : 'bg-soft text-ink-2 hover:bg-rule'
+                }`}
+              >
+                {INDUSTRY_LABELS[ind]}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         {/* Stage filter */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[13px] text-ink-3 font-medium">Stage:</span>
           <div className="flex gap-1 flex-wrap">
             <Link
-              href={`/discover?sort=${currentSort}`}
+              href={buildUrl(currentSort, 'all', currentIndustry)}
               className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
                 currentRung === 'all'
-                  ? 'bg-ink text-white'
+                  ? 'bg-go-deep text-white'
                   : 'bg-soft text-ink-2 hover:bg-rule'
               }`}
             >
@@ -97,10 +142,10 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
             {RUNGS.map((rung) => (
               <Link
                 key={rung}
-                href={`/discover?sort=${currentSort}&rung=${rung}`}
+                href={buildUrl(currentSort, rung, currentIndustry)}
                 className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
                   currentRung === rung
-                    ? 'bg-ink text-white'
+                    ? 'bg-go-deep text-white'
                     : 'bg-soft text-ink-2 hover:bg-rule'
                 }`}
               >
@@ -129,6 +174,7 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
             brand={v.brand}
             glyph={v.glyph}
             rung={v.rung}
+            industry={v.industry}
             status={v.status}
             founder={v.founder}
             promise={v.promise}
@@ -159,5 +205,5 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
 
 export const metadata = {
   title: 'Discover — Vibed',
-  description: 'Find founders building in public. Filter by stage, sort by trending or popularity.',
+  description: 'Find founders building in public. Filter by industry, stage, sort by trending or popularity.',
 };

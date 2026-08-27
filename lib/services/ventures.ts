@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { logEvent } from './events';
 import { EVENT_TYPES } from '@/lib/supabase/types';
 import type { Rung, SegmentKey } from '@/lib/domain/rungs';
-import type { Founder } from '@/lib/supabase/types';
+import type { Founder, Industry } from '@/lib/supabase/types';
 
 // Generate a URL-safe slug from a name
 function generateSlug(name: string): string {
@@ -26,6 +26,7 @@ export interface CreateVentureInput {
   userId: string;
   name: string;
   pitch: string;
+  industry: Industry;
   founderName: string;
   founderBio?: string;
   founderLocation?: string;
@@ -34,6 +35,7 @@ export interface CreateVentureInput {
 export interface UpdateVentureInput {
   name?: string;
   pitch?: string;
+  industry?: Industry;
   problem?: string;
   who?: string;
   why?: string;
@@ -118,6 +120,7 @@ export async function createVenture(input: CreateVentureInput) {
       founder_id: founder.id,
       name,
       pitch,
+      industry: input.industry,
       brand: generateBrandColor(),
       glyph: 'wave',
       rung: 'idea',

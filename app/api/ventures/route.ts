@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserId } from '@/lib/supabase/auth';
 import { createVenture, getVentureByFounderUserId } from '@/lib/services/ventures';
 import { z } from 'zod';
+import { INDUSTRIES } from '@/lib/supabase/types';
 
 const CreateVentureSchema = z.object({
   founderName: z.string().min(1).max(100),
@@ -9,6 +10,7 @@ const CreateVentureSchema = z.object({
   founderLocation: z.string().max(100).optional(),
   ventureName: z.string().min(1).max(100),
   venturePitch: z.string().min(1).max(300),
+  ventureIndustry: z.enum(INDUSTRIES),
 });
 
 export async function POST(req: NextRequest) {
@@ -35,6 +37,7 @@ export async function POST(req: NextRequest) {
       userId,
       name: data.ventureName,
       pitch: data.venturePitch,
+      industry: data.ventureIndustry,
       founderName: data.founderName,
       founderBio: data.founderBio,
       founderLocation: data.founderLocation,
