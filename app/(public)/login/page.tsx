@@ -60,8 +60,8 @@ function LoginForm() {
       });
 
       if (res.ok) {
-        router.push('/dashboard');
-        router.refresh();
+        // Full page navigation to ensure session is loaded
+        window.location.href = '/dashboard';
       } else {
         const data = await res.json();
         setError(data.error || 'Login failed');
