@@ -34,11 +34,18 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
     /login/error/page.tsx       # auth error page
   /(app)
     /following/page.tsx         # followed ventures (protected)
+    /start/page.tsx             # new founder wizard
+    /dashboard/page.tsx         # founder dashboard
+    /v/[slug]/edit/page.tsx     # edit venture and segments
   /api
     /auth/[...nextauth]/route.ts # Auth.js routes
     /follow/route.ts            # follow/unfollow API
     /health/route.ts            # health check endpoint
     /track/route.ts             # event tracking endpoint
+    /ventures/route.ts          # create/get venture
+    /ventures/[id]/route.ts     # update venture
+    /ventures/[id]/publish/route.ts # publish venture
+    /ventures/[id]/segments/[segment]/route.ts # update segment
   layout.tsx                    # root layout with fonts + SessionProvider
 
 /components
@@ -78,6 +85,7 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
   /services
     events.ts                   # event logging service
     follows.ts                  # follow/unfollow with counters
+    ventures.ts                 # venture CRUD operations
     index.ts                    # barrel export
   /domain
     questions.ts                # 16 fixed questions definition
@@ -125,6 +133,7 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
 - [x] **Slice 2 - Public Read Paths**: Landing, venture profile, question pages, answers, rung filter, postmortems
 - [x] **Slice 3 - Events**: Event service, /api/track endpoint, impression tracking on landing page
 - [x] **Slice 4 - Auth + Follow**: Auth.js with Resend magic link, /login pages, /following page, follow service with counter updates
+- [x] **Slice 5 - Founder Editor**: /start wizard, /dashboard, /v/[slug]/edit, ventures service with CRUD
 
 ### Production Environment
 - **Live URL**: https://vibed-hazel.vercel.app
@@ -132,7 +141,6 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
 - **Vercel env vars configured**: MONGODB_URI, AUTH_SECRET, AUTH_URL
 
 ### Known Issues
-- `/start` returns 404 - not built yet (Slice 5)
 - Magic link emails won't send until `AUTH_RESEND_KEY` is added to Vercel
 
 ### Local Development
@@ -148,23 +156,24 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
 
 ---
 
-## Next Session - Slice 5: Founder Editor
+## Next Session - Slice 6: Video
 
 ### What to Build
-1. `/start` page for new founders to begin their journey
-2. `/dashboard` for founders to manage their venture
-3. `/v/[slug]/edit` for editing venture details and segments
+1. Mux integration for video upload
+2. Mux webhook for processing status
+3. Video player component
+4. Transcript extraction and display
 
 ### Files to Create
 ```
-app/(app)/start/page.tsx        # Start journey wizard
-app/(app)/dashboard/page.tsx    # Founder dashboard
-app/(app)/v/[slug]/edit/page.tsx # Edit venture
-lib/services/ventures.ts        # Venture CRUD operations
+lib/services/mux.ts             # Mux API integration
+app/api/mux/webhook/route.ts    # Mux webhook handler
+app/api/upload/route.ts         # Get signed upload URL
+components/ui/VideoPlayer.tsx   # Video player component
 ```
 
 ### Done When
-Can create a venture, edit segments, and publish.
+Can upload a video, see it process, and play it with transcript.
 
 ---
 
@@ -186,3 +195,4 @@ Can create a venture, edit segments, and publish.
 - **2026-08-27**: Built events tracking system - event service with rate limiting, /api/track endpoint (single + batch), TrackImpression component with IntersectionObserver, VentureRail component. Landing page now tracks rail impressions with position.
 - **2026-08-27**: Built auth + follow system - Auth.js v5 with Resend magic link provider, MongoDB adapter, /login with check-email and error pages, /following protected page, FollowButton component, /api/follow endpoint, follows service with counter denormalisation, follows repo.
 - **2026-08-27**: Deployed to Vercel production. Fixed framework preset (was "Other", needed "Next.js"). Fixed client-side Mongoose bundling by moving RUNGS/SEGMENT_KEYS to lib/domain/rungs.ts. Seeded 7 test ventures via Railway MongoDB. Site live at https://vibed-hazel.vercel.app
+- **2026-08-27**: Built Slice 5 (Founder Editor) - /start wizard for creating ventures, /dashboard for managing, /v/[slug]/edit for editing basics and 16 journey segments. Full CRUD via ventures service.
