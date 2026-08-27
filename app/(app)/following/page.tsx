@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUserId } from '@/lib/supabase/auth';
-import { Header, VentureCard } from '@/components/ui';
+import { VentureCard } from '@/components/ui';
 import { getVenturesByIds } from '@/lib/services/ventures-public';
 import { getFollowedVentureIds } from '@/lib/services';
 
@@ -16,10 +16,7 @@ export default async function FollowingPage() {
   const ventures = await getVenturesByIds(followedIds);
 
   return (
-    <>
-      <Header />
-
-      <main className="max-w-[1180px] mx-auto px-6 py-10">
+    <main className="max-w-[1180px] mx-auto px-6 py-10">
         <h1
           className="text-[32px] font-black tracking-tight mb-2"
           style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
@@ -65,6 +62,5 @@ export default async function FollowingPage() {
           </div>
         )}
       </main>
-    </>
   );
 }

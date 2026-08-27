@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { Header, VentureLogo, RungTag, PromiseClock, Avatar } from '@/components/ui';
+import { VentureLogo, RungTag, PromiseClock, Avatar } from '@/components/ui';
 import { getVentureBySlug } from '@/lib/services/ventures-public';
 import { type SegmentKey } from '@/lib/domain/rungs';
 
@@ -48,8 +48,6 @@ export default async function VentureProfilePage({ params }: PageProps) {
 
   return (
     <>
-      <Header />
-
       {/* Banner */}
       <div
         className="relative h-[300px] overflow-hidden border-b border-rule bg-soft"

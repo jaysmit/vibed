@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Header, VentureLogo } from '@/components/ui';
+import { VentureLogo } from '@/components/ui';
 import { getClosedVentures } from '@/lib/services/ventures-public';
 
 export const metadata = {
@@ -11,10 +11,7 @@ export default async function PostmortemsPage() {
   const ventures = await getClosedVentures();
 
   return (
-    <>
-      <Header />
-
-      <main className="max-w-[1180px] mx-auto px-6 py-10">
+    <main className="max-w-[1180px] mx-auto px-6 py-10">
         {/* Hero */}
         <div className="bg-ink text-white rounded-2xl p-10 mb-[34px]">
           <h1
@@ -75,6 +72,5 @@ export default async function PostmortemsPage() {
           </div>
         )}
       </main>
-    </>
   );
 }

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Header, VentureCard } from '@/components/ui';
+import { VentureCard } from '@/components/ui';
 import { getVenturesByRung } from '@/lib/services/ventures-public';
 import { RUNGS, type Rung } from '@/lib/domain/rungs';
 
@@ -28,10 +28,7 @@ export default async function RungPage({ params }: PageProps) {
   const info = RUNG_INFO[rung];
 
   return (
-    <>
-      <Header />
-
-      <main className="max-w-[1180px] mx-auto px-6 py-10">
+    <main className="max-w-[1180px] mx-auto px-6 py-10">
         <h1
           className="text-[clamp(28px,4vw,40px)] font-black tracking-tight"
           style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
@@ -68,7 +65,6 @@ export default async function RungPage({ params }: PageProps) {
           </div>
         )}
       </main>
-    </>
   );
 }
 

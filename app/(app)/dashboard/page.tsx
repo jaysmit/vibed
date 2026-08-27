@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUserId } from '@/lib/supabase/auth';
 import { getVentureByFounderUserId } from '@/lib/services/ventures';
-import { Header } from '@/components/ui';
 import { SEGMENT_KEYS } from '@/lib/domain/rungs';
 
 const SEGMENT_LABELS: Record<string, string> = {
@@ -43,10 +42,7 @@ export default async function DashboardPage() {
   const isDraft = venture.status === 'draft';
 
   return (
-    <>
-      <Header />
-
-      <main className="max-w-[900px] mx-auto px-6 py-10">
+    <main className="max-w-[900px] mx-auto px-6 py-10">
         {/* Header */}
         <div className="flex items-start justify-between gap-6 mb-10">
           <div>
@@ -197,6 +193,5 @@ export default async function DashboardPage() {
           </section>
         </div>
       </main>
-    </>
   );
 }

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Header, VentureLogo, Avatar } from '@/components/ui';
+import { VentureLogo, Avatar } from '@/components/ui';
 import { getClipsByQuestion } from '@/lib/services/clips-public';
 import { getQuestion, QUESTIONS } from '@/lib/domain/questions';
 
@@ -24,10 +24,7 @@ export default async function QuestionPage({ params }: PageProps) {
   const nextQuestion = currentIndex < QUESTIONS.length - 1 ? QUESTIONS[currentIndex + 1] : null;
 
   return (
-    <>
-      <Header />
-
-      <main className="max-w-[1180px] mx-auto px-6 py-10">
+    <main className="max-w-[1180px] mx-auto px-6 py-10">
         {/* Breadcrumb */}
         <Link href="/answers" className="text-[13.5px] text-ink-3 hover:text-ink">
           ← All questions
@@ -131,7 +128,6 @@ export default async function QuestionPage({ params }: PageProps) {
           )}
         </div>
       </main>
-    </>
   );
 }
 
