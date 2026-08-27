@@ -50,12 +50,6 @@ export function AuthActions() {
           Following
         </Link>
         <Link
-          href="/start"
-          className="bg-go text-[#00301E] font-semibold px-[15px] py-2 rounded-full text-[14px] hover:bg-[#04B76B] transition-colors"
-        >
-          Create journey
-        </Link>
-        <Link
           href="/dashboard"
           className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
         >
@@ -67,6 +61,12 @@ export function AuthActions() {
         >
           Sign out
         </button>
+        <Link
+          href="/start"
+          className="bg-go text-[#00301E] font-semibold px-[15px] py-2 rounded-full text-[14px] hover:bg-[#04B76B] transition-colors"
+        >
+          Tell your story
+        </Link>
       </div>
     );
   }
@@ -80,22 +80,16 @@ export function AuthActions() {
         Following
       </Link>
       <Link
-        href="/start"
-        className="bg-go text-[#00301E] font-semibold px-[15px] py-2 rounded-full text-[14px] hover:bg-[#04B76B] transition-colors"
-      >
-        Create journey
-      </Link>
-      <Link
         href="/login"
         className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
       >
         Sign in
       </Link>
       <Link
-        href="/register"
-        className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"
+        href="/start"
+        className="bg-go text-[#00301E] font-semibold px-[15px] py-2 rounded-full text-[14px] hover:bg-[#04B76B] transition-colors"
       >
-        Sign up
+        Tell your story
       </Link>
     </div>
   );
