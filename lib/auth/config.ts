@@ -16,15 +16,22 @@ export const authConfig: NextAuthConfig = {
     error: '/login/error',
   },
   callbacks: {
-    session({ session, user }) {
-      // Add user id to session
-      if (session.user) {
-        session.user.id = user.id;
+    jwt({ token, user }) {
+      // Add user id to token on sign in
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      // Add user id to session from token
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
       }
       return session;
     },
   },
   session: {
-    strategy: 'database',
+    strategy: 'jwt', // JWT = no DB call on every request
   },
 };
