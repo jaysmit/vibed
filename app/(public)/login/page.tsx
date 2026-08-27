@@ -53,48 +53,23 @@ function LoginForm() {
     setError('');
 
     try {
-      const supabase = createClient();
-
-      // Try signing in with password first (no email needed)
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: 'dev-password-123',
+      // Use the dev login API that has admin powers
+      const res = await fetch('/api/auth/dev-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, secret: 'vibed-test-2026' }),
       });
 
-      if (signInError) {
-        // User doesn't exist or wrong password - try creating them
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password: 'dev-password-123',
-          options: {
-            // Skip email confirmation for dev
-            data: { dev_user: true },
-          },
-        });
+      const data = await res.json();
 
-        if (signUpError) {
-          setError(signUpError.message);
-          setIsLoading(false);
-          return;
-        }
-
-        // If user was created but needs confirmation, try password login anyway
-        // (works if email confirmation is disabled in Supabase)
-        if (data.user && !data.session) {
-          const { error: retryError } = await supabase.auth.signInWithPassword({
-            email,
-            password: 'dev-password-123',
-          });
-          if (retryError) {
-            setError('Account created but email confirmation required. Disable it in Supabase dashboard.');
-            setIsLoading(false);
-            return;
-          }
-        }
+      if (!res.ok) {
+        setError(data.error || 'Login failed');
+        setIsLoading(false);
+        return;
       }
 
-      // Full page navigation to ensure session is loaded
-      window.location.href = '/dashboard';
+      // Redirect to the callback URL with the token
+      window.location.href = data.redirectUrl;
     } catch {
       setError('Login failed');
       setIsLoading(false);
