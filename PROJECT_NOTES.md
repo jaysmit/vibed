@@ -134,6 +134,7 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
 - [x] **Slice 3 - Events**: Event service, /api/track endpoint, impression tracking on landing page
 - [x] **Slice 4 - Auth + Follow**: Auth.js with Resend magic link, /login pages, /following page, follow service with counter updates
 - [x] **Slice 5 - Founder Editor**: /start wizard, /dashboard, /v/[slug]/edit, ventures service with CRUD
+- [x] **Slice 6 - Video**: Mux integration for uploads, VideoPlayer/VideoUploader components, webhook handler, clips service
 
 ### Production Environment
 - **Live URL**: https://vibed-hazel.vercel.app
@@ -142,6 +143,7 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
 
 ### Known Issues
 - Magic link emails won't send until `AUTH_RESEND_KEY` is added to Vercel
+- Video uploads require `MUX_TOKEN_ID`, `MUX_TOKEN_SECRET`, and `MUX_WEBHOOK_SECRET` env vars in Vercel
 
 ### Local Development
 - `.env.local` configured with Railway MongoDB connection
@@ -156,24 +158,22 @@ See `CLAUDE.md` in Vibed folder for full architecture spec.
 
 ---
 
-## Next Session - Slice 6: Video
+## Next Session - Slice 7: Email
 
 ### What to Build
-1. Mux integration for video upload
-2. Mux webhook for processing status
-3. Video player component
-4. Transcript extraction and display
+1. Resend integration for transactional emails
+2. Weekly digest email for followers
+3. Founder nudge emails (reminder to post)
 
 ### Files to Create
 ```
-lib/services/mux.ts             # Mux API integration
-app/api/mux/webhook/route.ts    # Mux webhook handler
-app/api/upload/route.ts         # Get signed upload URL
-components/ui/VideoPlayer.tsx   # Video player component
+lib/services/email.ts           # Resend API integration
+app/api/email/digest/route.ts   # Trigger weekly digest
+components/email/DigestEmail.tsx # Email template
 ```
 
 ### Done When
-Can upload a video, see it process, and play it with transcript.
+Can send formatted emails via Resend with proper templates.
 
 ---
 
@@ -196,3 +196,4 @@ Can upload a video, see it process, and play it with transcript.
 - **2026-08-27**: Built auth + follow system - Auth.js v5 with Resend magic link provider, MongoDB adapter, /login with check-email and error pages, /following protected page, FollowButton component, /api/follow endpoint, follows service with counter denormalisation, follows repo.
 - **2026-08-27**: Deployed to Vercel production. Fixed framework preset (was "Other", needed "Next.js"). Fixed client-side Mongoose bundling by moving RUNGS/SEGMENT_KEYS to lib/domain/rungs.ts. Seeded 7 test ventures via Railway MongoDB. Site live at https://vibed-hazel.vercel.app
 - **2026-08-27**: Built Slice 5 (Founder Editor) - /start wizard for creating ventures, /dashboard for managing, /v/[slug]/edit for editing basics and 16 journey segments. Full CRUD via ventures service.
+- **2026-08-27**: Built Slice 6 (Video) - Mux integration with direct uploads, VideoPlayer and VideoUploader components, webhook handler for asset.ready/track.ready, clips service, Videos tab in edit page.
