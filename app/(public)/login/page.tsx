@@ -3,8 +3,17 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+// Show dev login in dev mode, or if ?bypass=secret is in URL for production testing
+const isDev = process.env.NODE_ENV !== 'production';
+const BYPASS_SECRET = 'vibed-test-2026';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const bypassMode = searchParams.get('bypass') === BYPASS_SECRET;
+  const showDevLogin = isDev || bypassMode;
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,6 +40,35 @@ export default function LoginPage() {
       }
     } catch {
       setError('Something went wrong. Please try again.');
+      setIsLoading(false);
+    }
+  };
+
+  const handleDevLogin = async () => {
+    if (!email) {
+      setError('Enter an email address');
+      return;
+    }
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/dev-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, secret: bypassMode ? BYPASS_SECRET : undefined }),
+      });
+
+      if (res.ok) {
+        router.push('/dashboard');
+        router.refresh();
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Login failed');
+      }
+    } catch {
+      setError('Login failed');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -91,6 +129,21 @@ export default function LoginPage() {
         <p className="text-ink-3 text-[13px] mt-8 text-center">
           No password needed. We&apos;ll email you a link to sign in.
         </p>
+
+        {showDevLogin && (
+          <div className="mt-8 pt-6 border-t border-rule">
+            <p className="text-[12px] text-ink-3 mb-3 text-center uppercase tracking-wide">
+              {bypassMode ? 'Test Mode' : 'Dev Mode'}
+            </p>
+            <button
+              onClick={handleDevLogin}
+              disabled={isLoading || !email}
+              className="w-full bg-heat text-white font-semibold py-3 px-6 rounded-full hover:bg-[#4a26a3] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isLoading ? 'Logging in...' : 'Quick Login (skip email)'}
+            </button>
+          </div>
+        )}
       </div>
     </main>
   );
