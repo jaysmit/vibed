@@ -49,13 +49,17 @@ export async function POST(req: NextRequest) {
       expires,
     });
 
-    // Set session cookie
+    // Set session cookie - use secure cookie name in production
     const cookieStore = await cookies();
-    cookieStore.set('authjs.session-token', sessionToken, {
+    const isSecure = process.env.NODE_ENV === 'production';
+    const cookieName = isSecure ? '__Secure-authjs.session-token' : 'authjs.session-token';
+
+    cookieStore.set(cookieName, sessionToken, {
       expires,
       httpOnly: true,
       sameSite: 'lax',
       path: '/',
+      secure: isSecure,
     });
 
     return NextResponse.json({ success: true, email: user.email });
