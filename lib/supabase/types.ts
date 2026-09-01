@@ -44,12 +44,26 @@ export interface Founder {
   user_id: string;
   name: string;
   slug: string;
+  headline: string | null;
   bio: string | null;
   location: string | null;
   links: Record<string, string | undefined>;
   avatar_key: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// Extended founder with ventures for public profile
+export interface FounderWithVentures extends Founder {
+  ventures: (Venture & { role?: TeamRole })[];
+}
+
+// Segment entry with flexible timeline support
+export interface SegmentEntry {
+  body?: string;
+  happenedAt?: string;  // When this actually happened (ISO date, for timeline ordering)
+  publishedAt?: string;  // When founder published this content
+  updatedAt?: string;   // When founder last edited this
 }
 
 export interface Venture {
@@ -63,11 +77,13 @@ export interface Venture {
   glyph: string;
   rung: string;
   industry: Industry;
+  country: string | null;
+  categories: Industry[];
   status: 'draft' | 'live' | 'graduated' | 'closed';
   problem: string | null;
   who: string | null;
   why: string | null;
-  segments: Record<string, { body?: string; publishedAt?: string; updatedAt?: string }>;
+  segments: Record<string, SegmentEntry>;
   links: Record<string, string | undefined>;
   counters: {
     followers: number;
@@ -86,6 +102,36 @@ export interface Venture {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// Team member roles
+export const TEAM_ROLES = ['founder', 'partner', 'team_member'] as const;
+export type TeamRole = typeof TEAM_ROLES[number];
+
+export const TEAM_ROLE_LABELS: Record<TeamRole, string> = {
+  founder: 'Founder',
+  partner: 'Partner',
+  team_member: 'Team Member',
+};
+
+// Team member status
+export const TEAM_STATUSES = ['pending', 'accepted', 'declined', 'removed'] as const;
+export type TeamStatus = typeof TEAM_STATUSES[number];
+
+export interface VentureMember {
+  id: string;
+  venture_id: string;
+  founder_id: string | null;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  role: TeamRole;
+  status: TeamStatus;
+  is_master: boolean;
+  invited_by: string | null;
+  invitation_token: string | null;
+  created_at: string;
+  accepted_at: string | null;
 }
 
 export interface Clip {
@@ -187,3 +233,113 @@ export const EVENT_TYPES = {
 } as const;
 
 export type EventType = typeof EVENT_TYPES[keyof typeof EVENT_TYPES];
+
+// ============================================
+// ENDORSEMENT SYSTEM
+// ============================================
+
+// Endorsement reason tags
+export const ENDORSEMENT_REASONS = [
+  'honest_failure',
+  'useful_tactics',
+  'changed_thinking',
+  'less_alone',
+] as const;
+
+export type EndorsementReason = typeof ENDORSEMENT_REASONS[number];
+
+export const ENDORSEMENT_REASON_LABELS: Record<EndorsementReason, string> = {
+  honest_failure: 'Honest about failure',
+  useful_tactics: 'Tactics I can use',
+  changed_thinking: 'Changed how I think',
+  less_alone: 'Made me feel less alone',
+};
+
+export interface ClipEndorsement {
+  id: string;
+  clip_id: string;
+  user_id: string;
+  reason: EndorsementReason | null;
+  founder_rung: string | null; // snapshot of endorser's venture rung
+  created_at: string;
+}
+
+// ============================================
+// VIEW TRACKING
+// ============================================
+
+export interface ClipView {
+  id: string;
+  clip_id: string;
+  user_id: string | null;
+  anon_id: string | null;
+  session_id: string | null;
+  watch_percent: number;
+  completed: boolean;
+  rewatched: boolean;
+  followed_venture_after: boolean;
+  endorsed_after: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Extended clip counters (includes new tracking fields)
+export interface ClipCounters {
+  views: number;
+  completes: number;
+  likes: number; // endorsements count
+  comments: number;
+  rewatches: number;
+  follows_after: number;
+  avg_watch_percent: number;
+  endorsements_from_founders: number;
+  trending_score: number;
+}
+
+// ============================================
+// STAFF PICKS
+// ============================================
+
+export const PILLARS = [
+  'the_idea',
+  'building_it',
+  'getting_customers',
+  'hard_parts',
+  'featured',
+] as const;
+
+export type Pillar = typeof PILLARS[number];
+
+export const PILLAR_LABELS: Record<Pillar, string> = {
+  the_idea: 'The Idea',
+  building_it: 'Building It',
+  getting_customers: 'Getting Customers',
+  hard_parts: 'The Hard Parts',
+  featured: 'Staff Pick',
+};
+
+export const PILLAR_DESCRIPTIONS: Record<Pillar, string> = {
+  the_idea: 'How founders found and validated their ideas',
+  building_it: 'The messy reality of building a product',
+  getting_customers: 'Distribution, launches, and first sales',
+  hard_parts: 'Setbacks, funding, and team challenges',
+  featured: 'Editor\'s choice',
+};
+
+// Which segments belong to which pillar
+export const PILLAR_SEGMENTS: Record<Exclude<Pillar, 'featured'>, string[]> = {
+  the_idea: ['pitch', 'spark', 'validation'],
+  building_it: ['proto', 'build', 'beta'],
+  getting_customers: ['gtm', 'launch', 'channel', 'first', 'audience'],
+  hard_parts: ['trouble', 'money', 'team', 'scale'],
+};
+
+export interface StaffPick {
+  id: string;
+  clip_id: string;
+  pillar: Pillar;
+  note: string | null;
+  active: boolean;
+  picked_by: string | null;
+  created_at: string;
+}
