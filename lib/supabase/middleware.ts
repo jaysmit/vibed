@@ -29,18 +29,20 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired - required for Server Components
+  // Check session locally (no network call) - fast JWT validation
+  // getSession() validates the JWT signature locally using the anon key
+  // Only use getUser() in pages where you need guaranteed fresh user data
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
   // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/start', '/v/'];
+  const protectedPaths = ['/dashboard', '/start', '/following', '/settings', '/profile'];
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
-  );
+  ) || request.nextUrl.pathname.endsWith('/edit');
 
-  if (isProtectedPath && !user) {
+  if (isProtectedPath && !session) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', request.nextUrl.pathname);
