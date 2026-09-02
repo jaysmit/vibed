@@ -5,5 +5,15 @@
     "app/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/digest",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/nudge",
+      "schedule": "0 10 * * 3"
+    }
+  ]
 }

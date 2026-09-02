@@ -96,8 +96,20 @@ Edit icons on venture page for owners. Click to edit inline, save without page r
 
 ---
 
-### 10 — Email
-Resend. Weekly digest driven by rung changes and promise resolutions. Founder nudge when idle.
+### 10 — Email ✅ DONE (2026-09-02)
+Resend integration for weekly digests and founder nudges.
+
+**Completed:**
+- Resend client with lazy initialization
+- Email templates: layout, weekly-digest, founder-nudge
+- Digest service: getUsersForDigest, getVentureUpdates, sendWeeklyDigests
+- Founder nudge service: getIdleFounders, sendFounderNudges
+- Cron routes: /api/cron/digest (Mondays 9am), /api/cron/nudge (Wednesdays 10am)
+- Vercel cron configuration in vercel.json
+
+**Env vars needed:**
+- RESEND_API_KEY
+- CRON_SECRET (for production auth)
 
 ---
 
