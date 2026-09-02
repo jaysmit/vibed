@@ -25,9 +25,11 @@ function generateBrandColor(): string {
 export interface CreateVentureInput {
   userId: string;
   name: string;
-  pitch: string;
-  industry: Industry;
-  founderName: string;
+  pitch?: string;
+  industry?: Industry;
+  country?: string | null;
+  categories?: Industry[];
+  founderName?: string;
   founderBio?: string;
   founderLocation?: string;
 }
@@ -53,52 +55,68 @@ export interface UpdateVentureInput {
 
 export interface UpdateSegmentInput {
   body: string;
+  happenedAt?: string; // ISO date when this actually happened
 }
 
 export async function createVenture(input: CreateVentureInput) {
   const supabase = await createAdminClient();
 
-  const { userId, name, pitch, founderName, founderBio, founderLocation } = input;
+  const { userId, name, pitch, founderName, founderBio, founderLocation, country, categories } = input;
 
-  // Create founder profile
-  const baseSlug = generateSlug(founderName);
-  let founderSlug = baseSlug;
-  let counter = 1;
-
-  // Ensure unique founder slug
-  while (true) {
-    const { data: existing } = await supabase
-      .from('founders')
-      .select('id')
-      .eq('slug', founderSlug)
-      .single();
-
-    if (!existing) break;
-    founderSlug = `${baseSlug}-${counter}`;
-    counter++;
-  }
-
-  const { data: founder, error: founderError } = await supabase
+  // Check if user already has a founder profile
+  let { data: founder } = await supabase
     .from('founders')
-    .insert({
-      user_id: userId,
-      name: founderName,
-      slug: founderSlug,
-      bio: founderBio || '',
-      location: founderLocation || '',
-      links: {},
-    })
-    .select()
+    .select('*')
+    .eq('user_id', userId)
     .single();
 
-  if (founderError || !founder) {
-    throw new Error(`Failed to create founder: ${founderError?.message}`);
+  // Create founder profile if doesn't exist and founderName is provided
+  if (!founder && founderName) {
+    const baseSlug = generateSlug(founderName);
+    let founderSlug = baseSlug;
+    let counter = 1;
+
+    // Ensure unique founder slug
+    while (true) {
+      const { data: existing } = await supabase
+        .from('founders')
+        .select('id')
+        .eq('slug', founderSlug)
+        .single();
+
+      if (!existing) break;
+      founderSlug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    const { data: newFounder, error: founderError } = await supabase
+      .from('founders')
+      .insert({
+        user_id: userId,
+        name: founderName,
+        slug: founderSlug,
+        bio: founderBio || '',
+        location: founderLocation || '',
+        links: {},
+      })
+      .select()
+      .single();
+
+    if (founderError || !newFounder) {
+      throw new Error(`Failed to create founder: ${founderError?.message}`);
+    }
+
+    founder = newFounder;
+  }
+
+  if (!founder) {
+    throw new Error('Founder profile required. Please create one first.');
   }
 
   // Create venture
   const ventureBaseSlug = generateSlug(name);
   let ventureSlug = ventureBaseSlug;
-  counter = 1;
+  let ventureCounter = 1;
 
   // Ensure unique venture slug
   while (true) {
@@ -109,38 +127,69 @@ export async function createVenture(input: CreateVentureInput) {
       .single();
 
     if (!existing) break;
-    ventureSlug = `${ventureBaseSlug}-${counter}`;
-    counter++;
+    ventureSlug = `${ventureBaseSlug}-${ventureCounter}`;
+    ventureCounter++;
   }
 
-  const { data: venture, error: ventureError } = await supabase
+  // Build venture data with all fields
+  const ventureData: Record<string, unknown> = {
+    slug: ventureSlug,
+    founder_id: founder.id,
+    name,
+    pitch: pitch || '',
+    brand: generateBrandColor(),
+    glyph: 'wave',
+    rung: 'idea',
+    status: 'draft',
+    links: {},
+    segments: {},
+    counters: {
+      followers: 0,
+      clips: 0,
+      photos: 0,
+      likes: 0,
+      comments: 0,
+      weekNumber: 1,
+      streakWeeks: 0,
+      siteClicks30d: 0,
+      trendingScore: 0,
+    },
+  };
+
+  // Add optional fields
+  if (input.industry) {
+    ventureData.industry = input.industry;
+  }
+  if (country) {
+    ventureData.country = country;
+  }
+  if (categories && categories.length > 0) {
+    ventureData.categories = categories;
+  }
+
+  // Try to insert with all fields first
+  let { data: venture, error: ventureError } = await supabase
     .from('ventures')
-    .insert({
-      slug: ventureSlug,
-      founder_id: founder.id,
-      name,
-      pitch,
-      industry: input.industry,
-      brand: generateBrandColor(),
-      glyph: 'wave',
-      rung: 'idea',
-      status: 'draft',
-      links: {},
-      segments: {},
-      counters: {
-        followers: 0,
-        clips: 0,
-        photos: 0,
-        likes: 0,
-        comments: 0,
-        weekNumber: 1,
-        streakWeeks: 0,
-        siteClicks30d: 0,
-        trendingScore: 0,
-      },
-    })
+    .insert(ventureData)
     .select()
     .single();
+
+  // If insert fails due to missing columns, retry without new fields
+  if (ventureError?.message?.includes('column')) {
+    // Remove potentially missing columns and retry
+    delete ventureData.country;
+    delete ventureData.categories;
+    delete ventureData.industry;
+
+    const retryResult = await supabase
+      .from('ventures')
+      .insert(ventureData)
+      .select()
+      .single();
+
+    venture = retryResult.data;
+    ventureError = retryResult.error;
+  }
 
   if (ventureError || !venture) {
     throw new Error(`Failed to create venture: ${ventureError?.message}`);
@@ -218,6 +267,39 @@ export async function getVentureByFounderUserId(userId: string) {
   };
 }
 
+export async function getVenturesByFounderUserId(userId: string) {
+  const supabase = await createAdminClient();
+
+  const { data: founder } = await supabase
+    .from('founders')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (!founder) return [];
+
+  const { data: ventures } = await supabase
+    .from('ventures')
+    .select('*')
+    .eq('founder_id', founder.id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  if (!ventures || ventures.length === 0) return [];
+
+  return ventures.map((venture) => ({
+    ...venture,
+    _id: venture.id,
+    founderId: venture.founder_id,
+    founder: {
+      name: founder.name,
+      slug: founder.slug,
+      bio: founder.bio,
+      location: founder.location,
+    },
+  }));
+}
+
 export async function updateVenture(
   ventureId: string,
   userId: string,
@@ -274,12 +356,16 @@ export async function updateSegment(
     return null;
   }
 
-  const segments = (venture.segments || {}) as Record<string, { body?: string; publishedAt?: string; updatedAt?: string }>;
+  const segments = (venture.segments || {}) as Record<string, { body?: string; happenedAt?: string; publishedAt?: string; updatedAt?: string }>;
   const isNew = !segments[segmentKey]?.body;
 
-  // Update segment
+  // Update segment with flexible timeline support
+  // happenedAt: when this actually happened (defaults to today for new entries)
+  // publishedAt: when founder first published this content
+  // updatedAt: when founder last edited this
   segments[segmentKey] = {
     body: input.body,
+    happenedAt: input.happenedAt || segments[segmentKey]?.happenedAt || new Date().toISOString().split('T')[0],
     publishedAt: segments[segmentKey]?.publishedAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -380,6 +466,142 @@ export async function updateRung(ventureId: string, userId: string, rung: Rung) 
     actorId: userId,
     ventureId: ventureId,
     meta: { from: oldRung, to: rung },
+  });
+
+  return { success: true };
+}
+
+// ============================================
+// PROMISE MANAGEMENT
+// ============================================
+
+export interface CreatePromiseInput {
+  text: string;
+  dueAt: string; // ISO date
+}
+
+export interface PromiseRecord {
+  text: string;
+  dueAt: string;
+  createdAt: string;
+  kept?: boolean;
+  completedAt?: string;
+}
+
+export async function createPromise(
+  ventureId: string,
+  userId: string,
+  input: CreatePromiseInput
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createAdminClient();
+
+  // Get venture and verify ownership
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .eq('id', ventureId)
+    .single();
+
+  if (!venture) return { success: false, error: 'Venture not found' };
+
+  const founder = venture.founders as Founder;
+  if (!founder || founder.user_id !== userId) {
+    return { success: false, error: 'Not authorized' };
+  }
+
+  // If there's an existing promise, move it to history as uncompleted
+  const promiseHistory = (venture.promise_history || []) as PromiseRecord[];
+  if (venture.promise && (venture.promise as PromiseRecord).text) {
+    const oldPromise = venture.promise as PromiseRecord;
+    promiseHistory.push({
+      ...oldPromise,
+      kept: false, // Overwritten promise counts as not kept
+      completedAt: new Date().toISOString(),
+    });
+  }
+
+  // Create new promise
+  const newPromise: PromiseRecord = {
+    text: input.text,
+    dueAt: input.dueAt,
+    createdAt: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from('ventures')
+    .update({
+      promise: newPromise,
+      promise_history: promiseHistory,
+    })
+    .eq('id', ventureId);
+
+  if (error) {
+    throw new Error(`Failed to create promise: ${error.message}`);
+  }
+
+  await logEvent({
+    type: EVENT_TYPES.PROMISE_CREATED,
+    actorId: userId,
+    ventureId: ventureId,
+    meta: { text: input.text, dueAt: input.dueAt },
+  });
+
+  return { success: true };
+}
+
+export async function completePromise(
+  ventureId: string,
+  userId: string,
+  kept: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createAdminClient();
+
+  // Get venture and verify ownership
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .eq('id', ventureId)
+    .single();
+
+  if (!venture) return { success: false, error: 'Venture not found' };
+
+  const founder = venture.founders as Founder;
+  if (!founder || founder.user_id !== userId) {
+    return { success: false, error: 'Not authorized' };
+  }
+
+  if (!venture.promise || !(venture.promise as PromiseRecord).text) {
+    return { success: false, error: 'No active promise' };
+  }
+
+  const currentPromise = venture.promise as PromiseRecord;
+  const promiseHistory = (venture.promise_history || []) as PromiseRecord[];
+
+  // Move current promise to history with completion status
+  promiseHistory.push({
+    ...currentPromise,
+    kept,
+    completedAt: new Date().toISOString(),
+  });
+
+  // Clear active promise
+  const { error } = await supabase
+    .from('ventures')
+    .update({
+      promise: null,
+      promise_history: promiseHistory,
+    })
+    .eq('id', ventureId);
+
+  if (error) {
+    throw new Error(`Failed to complete promise: ${error.message}`);
+  }
+
+  await logEvent({
+    type: kept ? EVENT_TYPES.PROMISE_KEPT : EVENT_TYPES.PROMISE_BROKEN,
+    actorId: userId,
+    ventureId: ventureId,
+    meta: { text: currentPromise.text, kept },
   });
 
   return { success: true };

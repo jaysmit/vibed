@@ -15,6 +15,7 @@ export { OwnerSettings } from './OwnerSettings';
 export { PitchCard } from './PitchCard';
 export { ProgressRing, ProgressRingCompact } from './ProgressRing';
 export { PromiseClock } from './PromiseClock';
+export { PromiseEditor } from './PromiseEditor';
 export { PublishButton } from './PublishButton';
 export { RungLadder, RungTag } from './RungLadder';
 export { TeamMemberAdd } from './TeamMemberAdd';

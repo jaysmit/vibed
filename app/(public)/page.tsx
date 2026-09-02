@@ -111,6 +111,8 @@ export default async function HomePage() {
       <footer className="border-t border-rule py-5 sm:py-7 text-[12px] sm:text-[13px] text-ink-3">
         <div className="flex gap-4 sm:gap-5 flex-wrap items-center">
           <span>Vibed — follow founders from week one</span>
+          <Link href="/privacy" className="hover:text-ink transition-colors">Privacy</Link>
+          <Link href="/terms" className="hover:text-ink transition-colors">Terms</Link>
           <span className="ml-auto font-mono">v0.6</span>
         </div>
       </footer>
