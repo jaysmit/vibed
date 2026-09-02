@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { CountrySelector } from '@/components/ui';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [location, setLocation] = useState('');
+  const [country, setCountry] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,7 +38,13 @@ export default function RegisterPage() {
       });
 
       if (signUpError) {
-        setError(signUpError.message);
+        // Make error messages more user-friendly
+        let errorMessage = signUpError.message;
+        if (errorMessage.toLowerCase().includes('user already registered') ||
+            errorMessage.toLowerCase().includes('already been registered')) {
+          errorMessage = 'This email is already registered. Try signing in instead.';
+        }
+        setError(errorMessage);
         setIsLoading(false);
         return;
       }
@@ -49,7 +56,7 @@ export default function RegisterPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: fullName.trim(),
-            location: location.trim() || null,
+            location: country || null,
           }),
         });
 
@@ -61,8 +68,8 @@ export default function RegisterPage() {
         }
       }
 
-      // Redirect to dashboard (or check-email if confirmation required)
-      window.location.href = '/dashboard';
+      // Redirect to profile page
+      window.location.href = '/profile';
     } catch {
       setError('Something went wrong. Please try again.');
       setIsLoading(false);
@@ -140,16 +147,13 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="location" className="block text-[13px] font-medium mb-2">
-              Location
+            <label className="block text-[13px] font-medium mb-2">
+              Country
             </label>
-            <input
-              id="location"
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Melbourne, Australia"
-              className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent transition-shadow"
+            <CountrySelector
+              value={country}
+              onChange={setCountry}
+              placeholder="Select your country"
             />
           </div>
 

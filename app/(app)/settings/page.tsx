@@ -1,149 +1,122 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { getCurrentUserId } from '@/lib/supabase/auth';
+import { createAdminClient } from '@/lib/supabase/server';
+import { Avatar } from '@/components/ui';
+import { ProfileEditor } from './ProfileEditor';
+import { AccountSettings } from './AccountSettings';
+import { NotificationSettings } from './NotificationSettings';
+import { DangerZone } from './DangerZone';
 
-export default function SettingsPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+export default async function SettingsPage() {
+  const userId = await getCurrentUserId();
 
-  useEffect(() => {
-    const loadUser = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+  if (!userId) {
+    redirect('/login');
+  }
 
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+  const supabase = await createAdminClient();
 
-      setEmail(user.email || '');
-      setLoading(false);
-    };
-    loadUser();
-  }, [router]);
+  // Get founder profile
+  const { data: founder } = await supabase
+    .from('founders')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
 
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/');
-  };
+  // Get user email
+  const { data: { user } } = await supabase.auth.admin.getUserById(userId);
 
-  if (loading) {
-    return (
-      <main className="max-w-[700px] mx-auto px-6 py-10">
-        <div className="text-ink-3">Loading...</div>
-      </main>
-    );
+  if (!founder) {
+    redirect('/register');
   }
 
   return (
     <main className="max-w-[700px] mx-auto px-6 py-10">
-      <h1
-        className="text-[32px] font-black tracking-tight mb-8"
-        style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
-      >
-        Settings
-      </h1>
-
-      {/* Account section */}
-      <section className="bg-page border border-rule rounded-xl p-6 mb-6">
-        <h2 className="text-[18px] font-bold mb-4">Account</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-[13px] font-medium text-ink-3 mb-1">Email</label>
-            <div className="text-[15px] font-medium">{email}</div>
-          </div>
-          <div className="pt-2">
-            <Link
-              href="/profile"
-              className="text-[14px] text-go-deep hover:underline"
-            >
-              Edit profile →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Notifications section */}
-      <section className="bg-page border border-rule rounded-xl p-6 mb-6">
-        <h2 className="text-[18px] font-bold mb-4">Notifications</h2>
-        <div className="space-y-4">
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
-              <div className="text-[14px] font-medium">Email updates</div>
-              <div className="text-[13px] text-ink-3">Get notified about ventures you follow</div>
-            </div>
-            <input
-              type="checkbox"
-              defaultChecked
-              className="w-5 h-5 rounded border-rule text-go focus:ring-go"
-            />
-          </label>
-          <label className="flex items-center justify-between cursor-pointer">
-            <div>
-              <div className="text-[14px] font-medium">Weekly digest</div>
-              <div className="text-[13px] text-ink-3">Summary of activity from ventures you follow</div>
-            </div>
-            <input
-              type="checkbox"
-              defaultChecked
-              className="w-5 h-5 rounded border-rule text-go focus:ring-go"
-            />
-          </label>
-        </div>
-      </section>
-
-      {/* Session section */}
-      <section className="bg-page border border-rule rounded-xl p-6 mb-6">
-        <h2 className="text-[18px] font-bold mb-4">Session</h2>
-        <button
-          onClick={handleSignOut}
-          className="text-[14px] font-semibold text-dead hover:underline"
+      <div className="flex items-center justify-between mb-8">
+        <h1
+          className="text-[32px] font-black tracking-tight"
+          style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
         >
-          Sign out of all devices
-        </button>
-      </section>
+          Settings
+        </h1>
+        <Link
+          href="/profile"
+          className="text-[13px] text-go-deep hover:underline flex items-center gap-1"
+        >
+          View profile
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
+
+      {/* Profile preview card */}
+      <div className="bg-page border border-rule rounded-xl p-6 mb-6">
+        <div className="flex items-start gap-4">
+          <Avatar name={founder.name} size="lg" color="#1F6F5C" />
+          <div className="flex-1">
+            <h2 className="text-[24px] font-bold">{founder.name}</h2>
+            {founder.headline && (
+              <p className="text-ink-2 text-[14px] mt-0.5">{founder.headline}</p>
+            )}
+            <p className="text-ink-3 text-[13px] mt-1">@{founder.slug}</p>
+            {founder.location && (
+              <p className="text-ink-2 text-[14px] mt-1 flex items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                {founder.location}
+              </p>
+            )}
+          </div>
+          <Link
+            href={`/founder/${founder.slug}`}
+            className="text-[12px] text-ink-3 hover:text-ink flex items-center gap-1"
+          >
+            Public profile
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </Link>
+        </div>
+
+        {founder.bio && (
+          <p className="text-[15px] text-ink-2 mt-4 leading-relaxed">{founder.bio}</p>
+        )}
+      </div>
+
+      {/* Edit profile */}
+      <ProfileEditor
+        founderId={founder.id}
+        initialName={founder.name}
+        initialHeadline={founder.headline || ''}
+        initialBio={founder.bio || ''}
+        initialLocation={founder.location || ''}
+        initialLinks={{
+          linkedin: founder.links?.linkedin,
+          twitter: founder.links?.twitter,
+          website: founder.links?.website,
+        }}
+      />
+
+      {/* Account settings */}
+      <div className="mt-6">
+        <AccountSettings email={user?.email || ''} founderSlug={founder.slug} />
+      </div>
+
+      {/* Notifications */}
+      <div className="mt-6">
+        <NotificationSettings />
+      </div>
 
       {/* Danger zone */}
-      <section className="bg-dead-tint border border-dead/30 rounded-xl p-6">
-        <h2 className="text-[18px] font-bold text-dead mb-2">Danger Zone</h2>
-        <p className="text-[14px] text-ink-2 mb-4">
-          Once you delete your account, there is no going back. Please be certain.
-        </p>
-
-        {!showDeleteConfirm ? (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="text-[14px] font-semibold text-dead hover:underline"
-          >
-            Delete my account
-          </button>
-        ) : (
-          <div className="bg-page border border-dead rounded-lg p-4">
-            <p className="text-[14px] font-medium mb-3">
-              Are you sure? This will permanently delete your account and all your ventures.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 border border-rule rounded-lg text-[13px] font-medium hover:bg-soft"
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-dead text-white rounded-lg text-[13px] font-medium hover:bg-dead/90"
-              >
-                Yes, delete my account
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
+      <div className="mt-6">
+        <DangerZone />
+      </div>
     </main>
   );
 }

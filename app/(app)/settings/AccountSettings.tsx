@@ -6,9 +6,10 @@ import { createClient } from '@/lib/supabase/client';
 
 interface AccountSettingsProps {
   email: string;
+  founderSlug: string;
 }
 
-export function AccountSettings({ email }: AccountSettingsProps) {
+export function AccountSettings({ email, founderSlug }: AccountSettingsProps) {
   const router = useRouter();
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
@@ -208,7 +209,7 @@ export function AccountSettings({ email }: AccountSettingsProps) {
         <div className="pt-4 border-t border-rule">
           <label className="block text-[13px] font-medium text-ink-3 mb-2">Profile URL</label>
           <div className="text-[15px] text-ink-2">
-            vibed.com/founder/<span className="text-ink font-medium">your-slug</span>
+            vibed.app/founder/<span className="text-ink font-medium">{founderSlug}</span>
           </div>
           <p className="text-[12px] text-ink-3 mt-1">
             Contact support to change your profile URL
