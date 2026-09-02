@@ -371,3 +371,46 @@ export interface CommentWithAuthor extends Comment {
   replies?: CommentWithAuthor[];
   reply_count?: number;
 }
+
+// ============================================
+// FEEDBACK / SUPPORT
+// ============================================
+
+export const FEEDBACK_TYPES = ['bug', 'feature', 'general'] as const;
+export type FeedbackType = typeof FEEDBACK_TYPES[number];
+
+export const FEEDBACK_TYPE_LABELS: Record<FeedbackType, string> = {
+  bug: 'Bug Report',
+  feature: 'Feature Request',
+  general: 'General Feedback',
+};
+
+export const FEEDBACK_STATUSES = ['new', 'reviewing', 'in_progress', 'resolved', 'closed'] as const;
+export type FeedbackStatus = typeof FEEDBACK_STATUSES[number];
+
+export interface BrowserInfo {
+  browser: string;
+  version: string;
+  os: string;
+  device: string;
+  screen: string;
+}
+
+export interface Feedback {
+  id: string;
+  user_id: string | null;
+  founder_id: string | null;
+  type: FeedbackType;
+  subject: string;
+  content: string;
+  screenshot_url: string | null;
+  page_url: string | null;
+  browser_info: BrowserInfo | null;
+  status: FeedbackStatus;
+  priority: 'low' | 'medium' | 'high' | 'critical' | null;
+  assigned_to: string | null;
+  internal_notes: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}

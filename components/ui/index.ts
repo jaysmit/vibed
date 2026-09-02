@@ -2,6 +2,7 @@ export { Avatar } from './Avatar';
 export { CommentSection } from './CommentSection';
 export { CompletionChecklist } from './CompletionChecklist';
 export { EndorseButton } from './EndorseButton';
+export { FeedbackWidget } from './FeedbackWidget';
 export { FilterPanel } from './FilterPanel';
 export { ReasonPicker } from './ReasonPicker';
 export { SearchBar } from './SearchBar';
