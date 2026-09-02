@@ -4,52 +4,88 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { INDUSTRIES, INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
+import { type Industry, type TeamRole } from '@/lib/supabase/types';
+import { CountrySelector } from '@/components/ui/CountrySelector';
+import { CategorySelector } from '@/components/ui/CategorySelector';
+import { TeamMemberAdd } from '@/components/ui/TeamMemberAdd';
 
-type Step = 'founder' | 'venture' | 'submitting';
+type Step = 'loading' | 'name' | 'team' | 'country' | 'categories' | 'submitting';
+
+interface TeamMember {
+  type: 'existing' | 'new';
+  founderId?: string;
+  founderName?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role: TeamRole;
+}
 
 export default function StartPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const [step, setStep] = useState<Step>('founder');
+  const [step, setStep] = useState<Step>('loading');
   const [error, setError] = useState('');
+  const [founderId, setFounderId] = useState<string | null>(null);
 
-  // Founder fields
-  const [founderName, setFounderName] = useState('');
-  const [founderBio, setFounderBio] = useState('');
-  const [founderLocation, setFounderLocation] = useState('');
-
-  // Venture fields
+  // Form state
   const [ventureName, setVentureName] = useState('');
-  const [venturePitch, setVenturePitch] = useState('');
-  const [ventureIndustry, setVentureIndustry] = useState<Industry>('tech');
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [country, setCountry] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Industry[]>([]);
+
+  // Invitation URLs for display
+  const [invitationUrls, setInvitationUrls] = useState<{ name: string; url: string }[]>([]);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndProfile = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
-      setIsLoading(false);
-    };
-    checkAuth();
-  }, []);
 
-  const handleFounderNext = (e: React.FormEvent) => {
+      if (!user) {
+        router.push('/login?redirect=/start');
+        return;
+      }
+
+      // Check if user has a founder profile
+      const res = await fetch('/api/founder');
+      const data = await res.json();
+
+      if (!data.founder) {
+        // User needs to create founder profile first - redirect to register
+        router.push('/register');
+        return;
+      }
+
+      setFounderId(data.founder.id);
+      setStep('name');
+    };
+    checkAuthAndProfile();
+  }, [router]);
+
+  const handleNameNext = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!founderName.trim()) {
-      setError('Please enter your name');
+    if (!ventureName.trim()) {
+      setError('Please enter a venture name');
       return;
     }
     setError('');
-    setStep('venture');
+    setStep('team');
   };
 
-  const handleVentureSubmit = async (e: React.FormEvent) => {
+  const handleTeamNext = () => {
+    setError('');
+    setStep('country');
+  };
+
+  const handleCountryNext = () => {
+    setError('');
+    setStep('categories');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ventureName.trim() || !venturePitch.trim()) {
-      setError('Please fill in all fields');
+    if (categories.length === 0) {
+      setError('Please select at least one category');
       return;
     }
 
@@ -57,34 +93,57 @@ export default function StartPage() {
     setStep('submitting');
 
     try {
+      // Create venture
       const res = await fetch('/api/ventures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          founderName,
-          founderBio,
-          founderLocation,
-          ventureName,
-          venturePitch,
-          ventureIndustry,
+          name: ventureName,
+          country,
+          categories,
+          teamMembers,
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || 'Failed to create venture');
       }
 
-      const data = await res.json();
-      router.push(`/v/${data.ventureSlug}/edit`);
+      // Store invitation URLs for display
+      if (data.invitationUrls && data.invitationUrls.length > 0) {
+        setInvitationUrls(data.invitationUrls);
+        // Show invitations before redirecting
+        setTimeout(() => {
+          router.push(`/v/${data.ventureSlug}`);
+        }, 5000);
+      } else {
+        router.push(`/v/${data.ventureSlug}`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
-      setStep('venture');
+      setStep('categories');
     }
   };
 
-  // Show login prompt if not authenticated
-  if (isLoading) {
+  const goBack = () => {
+    if (step === 'team') setStep('name');
+    else if (step === 'country') setStep('team');
+    else if (step === 'categories') setStep('country');
+  };
+
+  const getStepNumber = () => {
+    switch (step) {
+      case 'name': return 0;
+      case 'team': return 1;
+      case 'country': return 2;
+      case 'categories': return 3;
+      default: return 0;
+    }
+  };
+
+  if (step === 'loading') {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <div className="text-ink-2">Loading...</div>
@@ -92,25 +151,45 @@ export default function StartPage() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (step === 'submitting' && invitationUrls.length > 0) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-6">
-        <div className="w-full max-w-[420px] text-center">
-          <h1
-            className="text-[32px] font-black tracking-tight mb-3"
+      <main className="min-h-screen flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-[480px] text-center">
+          <div className="text-[48px] mb-4">🎉</div>
+          <h2
+            className="text-[28px] font-black tracking-tight mb-4"
             style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
           >
-            Tell your story
-          </h1>
-          <p className="text-ink-2 text-[15px] mb-8">
-            Sign in to start documenting your journey.
+            Venture created!
+          </h2>
+          <p className="text-ink-2 mb-8">
+            Share these invitation links with your team members:
           </p>
-          <Link
-            href="/login"
-            className="inline-block bg-ink text-white font-semibold py-3 px-8 rounded-full hover:bg-[#2a2a2a] transition-colors"
-          >
-            Sign in to continue
-          </Link>
+          <div className="space-y-3 text-left">
+            {invitationUrls.map((inv, i) => (
+              <div key={i} className="p-4 bg-soft rounded-xl">
+                <div className="font-semibold text-[15px] mb-2">{inv.name}</div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={inv.url}
+                    className="flex-1 px-3 py-2 bg-page border border-rule rounded-lg text-[13px] text-ink-2"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(inv.url)}
+                    className="px-3 py-2 bg-ink text-white rounded-lg text-[13px] font-medium hover:bg-go-deep transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[13px] text-ink-3 mt-6">
+            Redirecting to your venture editor...
+          </p>
         </div>
       </main>
     );
@@ -118,7 +197,7 @@ export default function StartPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-[480px]">
+      <div className="w-full max-w-[520px]">
         {/* Logo */}
         <Link href="/" className="block mb-10">
           <h1
@@ -131,83 +210,58 @@ export default function StartPage() {
 
         {/* Progress indicator */}
         <div className="flex gap-2 mb-8">
-          <div className={`h-1 flex-1 rounded-full ${step === 'founder' ? 'bg-ink' : 'bg-go'}`} />
-          <div className={`h-1 flex-1 rounded-full ${step === 'venture' || step === 'submitting' ? 'bg-ink' : 'bg-rule'}`} />
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className={`h-1 flex-1 rounded-full transition-colors ${
+                i <= getStepNumber() ? 'bg-go' : 'bg-rule'
+              }`}
+            />
+          ))}
         </div>
 
-        {step === 'founder' && (
-          <form onSubmit={handleFounderNext}>
+        {/* Step 0: Venture Name */}
+        {step === 'name' && (
+          <form onSubmit={handleNameNext}>
             <h2
               className="text-[28px] font-black tracking-tight leading-tight mb-2"
               style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
             >
-              First, tell us about you
+              What&apos;s your venture called?
             </h2>
             <p className="text-ink-2 text-[15px] mb-8">
-              Who&apos;s behind this venture?
+              Pick a name. You can always change it later.
             </p>
 
-            <div className="space-y-5">
-              <div>
-                <label htmlFor="founderName" className="block text-[13px] font-medium mb-2">
-                  Your name *
-                </label>
-                <input
-                  id="founderName"
-                  type="text"
-                  value={founderName}
-                  onChange={(e) => setFounderName(e.target.value)}
-                  placeholder="Maya Okonkwo"
-                  autoFocus
-                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="founderLocation" className="block text-[13px] font-medium mb-2">
-                  Where are you based?
-                </label>
-                <input
-                  id="founderLocation"
-                  type="text"
-                  value={founderLocation}
-                  onChange={(e) => setFounderLocation(e.target.value)}
-                  placeholder="Melbourne"
-                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="founderBio" className="block text-[13px] font-medium mb-2">
-                  One-line bio
-                </label>
-                <input
-                  id="founderBio"
-                  type="text"
-                  value={founderBio}
-                  onChange={(e) => setFounderBio(e.target.value)}
-                  placeholder="Freelance producer for nine years. First-time founder."
-                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
-                />
-              </div>
+            <div>
+              <input
+                type="text"
+                value={ventureName}
+                onChange={(e) => setVentureName(e.target.value)}
+                placeholder="Slate"
+                autoFocus
+                className="w-full px-4 py-4 rounded-xl border border-rule bg-page text-[18px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
+              />
             </div>
 
             {error && <p className="text-dead text-[13px] mt-4">{error}</p>}
 
             <button
               type="submit"
-              className="w-full mt-8 bg-ink text-white font-semibold py-3 px-6 rounded-full hover:bg-[#2a2a2a] transition-colors"
+              disabled={!ventureName.trim()}
+              className="w-full mt-8 bg-go text-[#00301E] font-semibold py-3 px-6 rounded-full hover:bg-[#04B76B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Continue
             </button>
           </form>
         )}
 
-        {step === 'venture' && (
-          <form onSubmit={handleVentureSubmit}>
+        {/* Step 1: Team Members */}
+        {step === 'team' && (
+          <div>
             <button
               type="button"
-              onClick={() => setStep('founder')}
+              onClick={goBack}
               className="text-[13px] text-ink-2 hover:text-ink mb-6 flex items-center gap-1"
             >
               ← Back
@@ -217,83 +271,133 @@ export default function StartPage() {
               className="text-[28px] font-black tracking-tight leading-tight mb-2"
               style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
             >
-              Now, your venture
+              Add your team
             </h2>
             <p className="text-ink-2 text-[15px] mb-8">
-              What are you building?
+              Working with others? Add them now or skip this step.
             </p>
 
-            <div className="space-y-5">
-              <div>
-                <label htmlFor="ventureName" className="block text-[13px] font-medium mb-2">
-                  Venture name *
-                </label>
-                <input
-                  id="ventureName"
-                  type="text"
-                  value={ventureName}
-                  onChange={(e) => setVentureName(e.target.value)}
-                  placeholder="Slate"
-                  autoFocus
-                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
-                />
-              </div>
+            <TeamMemberAdd
+              members={teamMembers}
+              onMembersChange={setTeamMembers}
+            />
 
-              <div>
-                <label htmlFor="venturePitch" className="block text-[13px] font-medium mb-2">
-                  One-line pitch *
-                </label>
-                <input
-                  id="venturePitch"
-                  type="text"
-                  value={venturePitch}
-                  onChange={(e) => setVenturePitch(e.target.value)}
-                  placeholder="Turns voice notes into client-ready briefs"
-                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
-                />
-                <p className="text-[12px] text-ink-3 mt-2">
-                  Keep it short. You can always change this later.
-                </p>
-              </div>
+            {error && <p className="text-dead text-[13px] mt-4">{error}</p>}
 
-              <div>
-                <label htmlFor="ventureIndustry" className="block text-[13px] font-medium mb-2">
-                  Industry *
-                </label>
-                <select
-                  id="ventureIndustry"
-                  value={ventureIndustry}
-                  onChange={(e) => setVentureIndustry(e.target.value as Industry)}
-                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
+            <div className="flex gap-3 mt-8">
+              <button
+                type="button"
+                onClick={handleTeamNext}
+                className="flex-1 bg-rule text-ink font-semibold py-3 px-6 rounded-full hover:bg-rule-2 transition-colors"
+              >
+                {teamMembers.length === 0 ? 'Skip for now' : 'Continue'}
+              </button>
+              {teamMembers.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleTeamNext}
+                  className="flex-1 bg-go text-[#00301E] font-semibold py-3 px-6 rounded-full hover:bg-[#04B76B] transition-colors"
                 >
-                  {INDUSTRIES.map((ind) => (
-                    <option key={ind} value={ind}>
-                      {INDUSTRY_LABELS[ind]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  Continue
+                </button>
+              )}
             </div>
+          </div>
+        )}
+
+        {/* Step 2: Country */}
+        {step === 'country' && (
+          <div>
+            <button
+              type="button"
+              onClick={goBack}
+              className="text-[13px] text-ink-2 hover:text-ink mb-6 flex items-center gap-1"
+            >
+              ← Back
+            </button>
+
+            <h2
+              className="text-[28px] font-black tracking-tight leading-tight mb-2"
+              style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
+            >
+              Where are you based?
+            </h2>
+            <p className="text-ink-2 text-[15px] mb-8">
+              Where is your venture operating from?
+            </p>
+
+            <CountrySelector
+              value={country}
+              onChange={setCountry}
+              placeholder="Select a country"
+            />
+
+            {error && <p className="text-dead text-[13px] mt-4">{error}</p>}
+
+            <div className="flex gap-3 mt-8">
+              <button
+                type="button"
+                onClick={handleCountryNext}
+                className={`flex-1 font-semibold py-3 px-6 rounded-full transition-colors ${
+                  country
+                    ? 'bg-go text-[#00301E] hover:bg-[#04B76B]'
+                    : 'bg-rule text-ink hover:bg-rule-2'
+                }`}
+              >
+                {country ? 'Continue' : 'Skip for now'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Categories */}
+        {step === 'categories' && (
+          <form onSubmit={handleSubmit}>
+            <button
+              type="button"
+              onClick={goBack}
+              className="text-[13px] text-ink-2 hover:text-ink mb-6 flex items-center gap-1"
+            >
+              ← Back
+            </button>
+
+            <h2
+              className="text-[28px] font-black tracking-tight leading-tight mb-2"
+              style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
+            >
+              What category fits best?
+            </h2>
+            <p className="text-ink-2 text-[15px] mb-8">
+              Select up to 3 categories that describe your venture.
+            </p>
+
+            <CategorySelector
+              value={categories}
+              onChange={setCategories}
+              maxSelection={3}
+            />
 
             {error && <p className="text-dead text-[13px] mt-4">{error}</p>}
 
             <button
               type="submit"
-              className="w-full mt-8 bg-go text-[#00301E] font-semibold py-3 px-6 rounded-full hover:bg-[#04B76B] transition-colors"
+              disabled={categories.length === 0}
+              className="w-full mt-8 bg-go text-[#00301E] font-semibold py-3 px-6 rounded-full hover:bg-[#04B76B] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Create my journey
+              Create venture
             </button>
           </form>
         )}
 
-        {step === 'submitting' && (
+        {/* Submitting state */}
+        {step === 'submitting' && invitationUrls.length === 0 && (
           <div className="text-center py-12">
             <div className="text-[40px] mb-4">🚀</div>
             <h2
               className="text-[24px] font-black tracking-tight"
               style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
             >
-              Creating your journey...
+              Creating your venture...
             </h2>
           </div>
         )}

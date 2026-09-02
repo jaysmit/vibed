@@ -11,7 +11,7 @@ const GLYPHS: Record<string, string> = {
 interface VentureLogoProps {
   glyph: string;
   brand: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
@@ -19,6 +19,7 @@ const sizes = {
   sm: { box: 'w-7 h-7 rounded-lg', icon: 'w-3.5 h-3.5' },
   md: { box: 'w-[42px] h-[42px] rounded-[13px]', icon: 'w-[21px] h-[21px]' },
   lg: { box: 'w-24 h-24 rounded-3xl', icon: 'w-[46px] h-[46px]' },
+  xl: { box: 'w-32 h-32 rounded-full', icon: 'w-[60px] h-[60px]' },
 };
 
 export function VentureLogo({ glyph, brand, size = 'md', className = '' }: VentureLogoProps) {

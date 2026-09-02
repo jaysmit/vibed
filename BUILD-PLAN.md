@@ -5,87 +5,114 @@ Vertical slices. Each one ships something that works end to end. Do not start th
 ---
 
 ### 0 — Scaffold ✅ DONE
-Next.js + TypeScript + Tailwind, ESLint, Prettier, `npm run typecheck`. Design tokens from `CLAUDE.md` into the Tailwind config. Folder structure from the architecture doc, with empty `lib/domain`, `lib/services`, `lib/db`. Railway `web` service deploying from GitHub, health check at `/api/health`.
-
-**Done when:** a blank styled page is live on a Railway URL.
+Next.js + TypeScript + Tailwind, ESLint, Prettier, `npm run typecheck`. Design tokens from `CLAUDE.md` into the Tailwind config.
 
 **Completed:** Next.js 15, Tailwind 4, design tokens in globals.css, folder structure, health endpoint. Deployed to Vercel.
 
 ---
 
 ### 1 — Data layer ✅ DONE
-Mongoose connection cached on `globalThis`. Models: `users`, `founders`, `ventures`, `clips`, `follows`, `events`. Indexes from the architecture doc. A seed script that loads the seven ventures from the prototype.
+Supabase tables: founders, ventures, clips, follows, events, venture_members.
 
-**Done when:** `npm run seed` populates Atlas and a script can read a venture back.
-
-**Completed:** All 6 models with full indexes, cached connection pattern, seed script with 7 ventures. Needs MongoDB Atlas setup to test.
+**Completed:** All tables with indexes, RLS policies, service functions.
 
 ---
 
-### 2 — Public read paths (server-rendered) ✅ DONE
-`/` landing, `/v/[slug]` with three tabs, `/q/[slug]`, `/answers`, `/shorts`, `/postmortems`. Real data, no auth, no video yet — posters render the generated SVG art from the prototype.
+### 2 — Public read paths ✅ DONE
+`/` landing, `/v/[slug]` with tabs, `/q/[slug]`, `/answers`, `/postmortems`, `/discover`.
 
-**Done when:** every page in the prototype exists at a real URL and renders from the database with JavaScript disabled.
-
-**Completed:** Landing page with featured venture + grid, venture profile with segments/promise/sidebar, question pages, answers index, rung filter, postmortems. 6 UI components built. Note: `/shorts` not built yet (video-dependent).
+**Completed:** Landing page with 7 content pillars, venture profile with Journey/Clips/Promises/Updates tabs, discover with filters.
 
 ---
 
 ### 3 — Events ✅ DONE
-`lib/services/events.ts` plus `/api/track`. Log the full taxonomy: progress, engagement, discovery (with rail name and position), founder-side. Rate limit the endpoint and treat all client-sent events as untrusted.
+`lib/services/events.ts` plus `/api/track`. Full event taxonomy.
 
-**Done when:** loading the landing page writes impression events with rail and position.
+**Completed:** Event logging, tracking components, rate limiting.
+
+---
+
+### 4 — Auth ✅ DONE
+Supabase Auth with email/password. `/login`, `/signup`, `/following`.
+
+**Completed:** Email/password auth, session management, protected routes, header with user dropdown.
+
+---
+
+### 5 — Founder editor ✅ DONE
+`/start` wizard, `/dashboard`, `/v/[slug]/edit`. Segment editing. Standards checklist gates publish.
 
 **Completed:**
-- `lib/services/events.ts` - logEvent(), logClientEvent(), rate limiting, input sanitization
-- `/api/track/route.ts` - POST endpoint (single event) + PUT endpoint (batch)
-- `components/tracking/` - TrackImpression, TrackClick, tracker utilities
-- `components/venture/VentureRail.tsx` - Grid with impression tracking
-- Landing page uses VentureRail with rail="all-journeys"
+- 4-step /start wizard (name, team, country, categories)
+- Dashboard with venture management
+- Edit page with Basics/Segments/Videos tabs
+- **Flexible timeline system** - segments have happenedAt date picker for retroactive documentation
+- Progress ring and completion calculation
+- Publish gating based on completion percentage (7 requirements)
+- Owner controls (Settings dropdown, progress indicator)
 
 ---
 
-### 4 — Auth and follow 🔜 NEXT
-Auth.js with the Mongo adapter, email magic link. `/login`, `/signup`, `/following`. Follow writes the row and `$inc`s the counter. Following while signed out opens signup and applies the follow after.
+### 6 — Video ✅ DONE
+Mux signed direct uploads, webhook with signature verification, transcript ingest.
 
-**Done when:** I can sign up, follow a venture, and see it on `/following` after a refresh.
+**Completed:** VideoUploader, VideoPlayer, Mux webhook, clip management.
+
+---
+
+### 7 — Team System ✅ DONE
+Invite team members, accept invitations, role management.
+
+**Completed:**
+- venture_members table with roles (founder, partner, team_member)
+- Invitation tokens and accept flow
+- Team management in /start wizard
+- Master user (creator) distinction
+
+---
+
+### 8 — UI Redesign ✅ DONE (2026-09-01)
+Instagram-style cards, content pillars, Stats Bar, flexible timeline.
+
+**Completed:**
+- PitchCard - square video thumbnails, play overlay, likes, category, team dropdown
+- Landing page content pillars (Distribution, First Dollar, Challenges, Building Now, etc.)
+- Stats Bar on venture page
+- Promises tab with timeline
+- Video content category filters on Discover
+- JourneyAccordion with happenedAt dates
+- Date picker in segment editor
+
+---
+
+### 9 — Inline Editing 🔜 NEXT
+Edit icons on venture page for owners. Click to edit inline, save without page reload.
 
 **To build:**
-- Install `next-auth` and `@auth/mongodb-adapter`
-- `lib/auth/` - Auth.js config with MongoDB adapter
-- `/api/auth/[...nextauth]/route.ts` - Auth routes
-- `/login/page.tsx` - Magic link login
-- `/signup/page.tsx` - Sign up flow
-- `/following/page.tsx` - Followed ventures
-- `lib/services/follows.ts` - Follow/unfollow with counter updates
+- InlineEdit wrapper component
+- Edit icons on hover for editable fields
+- PATCH API for partial venture updates
+- Optimistic UI updates
 
 ---
 
-### 5 — Founder editor
-`/start` wizard (three steps, matching the prototype), `/dashboard`, `/v/[slug]/edit`. Segment editing. Standards checklist gates publish, and controls the `noindex` tag.
-
-**Done when:** a new account can create a venture, fill it in, and publish it once standards are met.
+### 10 — Email
+Resend. Weekly digest driven by rung changes and promise resolutions. Founder nudge when idle.
 
 ---
 
-### 6 — Video
-Mux signed direct uploads, webhook with signature verification, transcript ingest into `clips.transcript`. Player with scrubber and click-to-seek transcript. `VideoObject` schema.
-
-**Done when:** I can upload a clip from the editor and it plays on the profile with a working transcript.
+### 11 — Trending
+Worker service. Aggregation over `events` every 15 minutes writing `counters.trendingScore`.
 
 ---
 
-### 7 — Email
-Resend. Weekly digest driven by rung changes and promise resolutions in the last seven days. Founder nudge when they have not posted in 12 days.
-
-**Done when:** the digest sends on a Railway cron and links are UTM-tagged.
+### 12 — Follow System
+Backend implementation for follow button. Counter updates. /following page data.
 
 ---
 
-### 8 — Trending
-Worker service. Aggregation over `events` every 15 minutes writing `counters.trendingScore`. Reserved slot for a never-featured venture; three-day cooldown. Rules in `lib/domain/scoring.ts` with tests.
-
-**Done when:** the rail order changes based on real events and I can explain why any card ranked.
+### 13 — Promise Creation
+UI for founders to create/edit promises. Promise resolution workflow.
 
 ---
 

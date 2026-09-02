@@ -90,6 +90,111 @@ export async function getClipsByQuestion(questionSlug: string): Promise<ClipWith
   });
 }
 
+export async function getClipByVentureAndSegment(ventureId: string, segmentKey: string): Promise<ClipWithContext | null> {
+  const supabase = await createAdminClient();
+
+  const { data: clip } = await supabase
+    .from('clips')
+    .select('*, ventures(*), founders(*)')
+    .eq('venture_id', ventureId)
+    .eq('segment_key', segmentKey)
+    .not('published_at', 'is', null)
+    .is('deleted_at', null)
+    .order('published_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!clip) return null;
+
+  const venture = clip.ventures as Record<string, unknown>;
+  const founder = clip.founders as Record<string, unknown>;
+
+  return {
+    _id: clip.id,
+    venture_id: clip.venture_id,
+    founder_id: clip.founder_id,
+    question_slug: clip.question_slug,
+    title: clip.title,
+    hook: clip.hook,
+    tagline: clip.tagline,
+    mux_asset_id: clip.mux_asset_id,
+    playback_id: clip.playback_id,
+    durationSec: clip.duration_sec,
+    thumbTime: clip.thumb_time,
+    transcript: clip.transcript || [],
+    transcriptStatus: clip.transcript_status,
+    segment_key: clip.segment_key,
+    counters: clip.counters || { views: 0, completes: 0, likes: 0, comments: 0 },
+    published_at: clip.published_at,
+    deleted_at: clip.deleted_at,
+    created_at: clip.created_at,
+    updated_at: clip.updated_at,
+    venture: {
+      slug: (venture?.slug as string) || '',
+      name: (venture?.name as string) || 'Unknown',
+      brand: (venture?.brand as string) || '#888',
+      glyph: (venture?.glyph as string) || 'wave',
+    },
+    founder: {
+      name: (founder?.name as string) || 'Unknown',
+      slug: (founder?.slug as string) || '',
+      location: founder?.location as string | undefined,
+    },
+  };
+}
+
+export async function getClipsByVenture(ventureId: string): Promise<ClipWithContext[]> {
+  const supabase = await createAdminClient();
+
+  const { data: clips } = await supabase
+    .from('clips')
+    .select('*, ventures(*), founders(*)')
+    .eq('venture_id', ventureId)
+    .not('published_at', 'is', null)
+    .is('deleted_at', null)
+    .order('published_at', { ascending: false });
+
+  if (!clips || clips.length === 0) return [];
+
+  return clips.map((c) => {
+    const venture = c.ventures as Record<string, unknown>;
+    const founder = c.founders as Record<string, unknown>;
+
+    return {
+      _id: c.id,
+      venture_id: c.venture_id,
+      founder_id: c.founder_id,
+      question_slug: c.question_slug,
+      title: c.title,
+      hook: c.hook,
+      tagline: c.tagline,
+      mux_asset_id: c.mux_asset_id,
+      playback_id: c.playback_id,
+      durationSec: c.duration_sec,
+      thumbTime: c.thumb_time,
+      transcript: c.transcript || [],
+      transcriptStatus: c.transcript_status,
+      segment_key: c.segment_key,
+      counters: c.counters || { views: 0, completes: 0, likes: 0, comments: 0 },
+      published_at: c.published_at,
+      deleted_at: c.deleted_at,
+      created_at: c.created_at,
+      updated_at: c.updated_at,
+      venture: {
+        slug: (venture?.slug as string) || '',
+        name: (venture?.name as string) || 'Unknown',
+        brand: (venture?.brand as string) || '#888',
+        glyph: (venture?.glyph as string) || 'wave',
+      },
+      founder: {
+        name: (founder?.name as string) || 'Unknown',
+        slug: (founder?.slug as string) || '',
+        location: founder?.location as string | undefined,
+      },
+    };
+  });
+}
+
 export async function getRecentClips(limit = 20): Promise<ClipWithContext[]> {
   const supabase = await createAdminClient();
 

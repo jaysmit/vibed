@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { VentureLogo } from './VentureLogo';
 import { RungTag } from './RungLadder';
@@ -14,10 +16,12 @@ interface VentureCardProps {
   rung: Rung;
   industry?: Industry;
   status: 'draft' | 'live' | 'graduated' | 'closed';
+  poster?: string;
   founder: {
     name: string;
     slug: string;
     location?: string;
+    avatar?: string;
   };
   promise?: {
     text: string;
@@ -44,6 +48,7 @@ export function VentureCard({
   rung,
   industry,
   status,
+  poster,
   founder,
   promise,
   promiseHistory = [],
@@ -67,13 +72,21 @@ export function VentureCard({
     >
       {/* Poster area */}
       <div className="relative h-44 bg-soft overflow-hidden">
-        {/* Placeholder gradient art */}
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            background: `linear-gradient(135deg, ${brand} 0%, transparent 60%)`,
-          }}
-        />
+        {/* Poster image or gradient fallback */}
+        {poster ? (
+          <img
+            src={poster}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              background: `linear-gradient(135deg, ${brand} 0%, transparent 60%)`,
+            }}
+          />
+        )}
 
         {/* Badges */}
         {isPick && (
@@ -101,20 +114,31 @@ export function VentureCard({
 
       {/* Card body */}
       <div className="p-[15px_17px_17px]">
-        <h3 className="text-[18.5px] font-bold font-display">{name}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-[18.5px] font-bold font-display">{name}</h3>
+          <span className="text-[11px] text-ink-3">{counters.followers.toLocaleString()} followers</span>
+        </div>
         <p className="text-[13.5px] text-ink-2 mt-1 line-clamp-2">{pitch}</p>
 
         {/* Creator line */}
         <div className="text-[13px] text-ink-3 mt-[9px] flex items-center gap-[7px]">
-          <span
-            className="w-5 h-5 rounded-full grid place-items-center text-[9.5px] font-semibold text-white font-mono"
-            style={{ background: brand }}
-          >
-            {founder.name
-              .split(' ')
-              .map((w) => w[0])
-              .join('')}
-          </span>
+          {founder.avatar ? (
+            <img
+              src={founder.avatar}
+              alt={founder.name}
+              className="w-5 h-5 rounded-full object-cover"
+            />
+          ) : (
+            <span
+              className="w-5 h-5 rounded-full grid place-items-center text-[9.5px] font-semibold text-white font-mono"
+              style={{ background: brand }}
+            >
+              {founder.name
+                .split(' ')
+                .map((w) => w[0])
+                .join('')}
+            </span>
+          )}
           <span>{founder.name}</span>
           {industry && (
             <>
@@ -161,7 +185,7 @@ export function VentureCard({
             Follow
           </button>
           <span className="ml-auto text-[13px] font-semibold text-go-deep">
-            See the journey →
+            View venture →
           </span>
         </div>
       </div>

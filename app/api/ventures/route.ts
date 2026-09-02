@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserId } from '@/lib/supabase/auth';
-import { createVenture, getVentureByFounderUserId } from '@/lib/services/ventures';
+import { createVenture, getVenturesByFounderUserId } from '@/lib/services/ventures';
+import { addTeamMember, createMasterMember } from '@/lib/services/team';
 import { z } from 'zod';
-import { INDUSTRIES } from '@/lib/supabase/types';
+import { INDUSTRIES, TEAM_ROLES } from '@/lib/supabase/types';
+
+// Team member schema for new venture creation
+const TeamMemberSchema = z.object({
+  type: z.enum(['existing', 'new']),
+  founderId: z.string().uuid().optional(),
+  founderName: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  role: z.enum(TEAM_ROLES),
+});
 
 const CreateVentureSchema = z.object({
-  founderName: z.string().min(1).max(100),
-  founderBio: z.string().max(500).optional(),
-  founderLocation: z.string().max(100).optional(),
-  ventureName: z.string().min(1).max(100),
-  venturePitch: z.string().min(1).max(300),
-  ventureIndustry: z.enum(INDUSTRIES),
+  name: z.string().min(1).max(100),
+  country: z.string().max(10).nullable().optional(),
+  categories: z.array(z.enum(INDUSTRIES)).max(3).optional(),
+  teamMembers: z.array(TeamMemberSchema).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -21,32 +31,60 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Check if user already has a venture
-    const existing = await getVentureByFounderUserId(userId);
-    if (existing) {
-      return NextResponse.json(
-        { error: 'You already have a venture', ventureSlug: existing.slug },
-        { status: 400 }
-      );
-    }
-
     const body = await req.json();
     const data = CreateVentureSchema.parse(body);
 
     const result = await createVenture({
       userId,
-      name: data.ventureName,
-      pitch: data.venturePitch,
-      industry: data.ventureIndustry,
-      founderName: data.founderName,
-      founderBio: data.founderBio,
-      founderLocation: data.founderLocation,
+      name: data.name,
+      country: data.country || null,
+      categories: data.categories || [],
     });
 
-    return NextResponse.json(result);
+    // Try to create master member (may fail if table doesn't exist yet)
+    const invitationUrls: { name: string; url: string }[] = [];
+
+    try {
+      await createMasterMember(result.ventureId, result.founderId);
+
+      // Add team members and collect invitation URLs
+      if (data.teamMembers && data.teamMembers.length > 0) {
+        for (const member of data.teamMembers) {
+          try {
+            const { invitationUrl } = await addTeamMember({
+              ventureId: result.ventureId,
+              founderId: member.founderId,
+              email: member.email,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              role: member.role,
+              invitedBy: result.founderId,
+            });
+
+            if (invitationUrl) {
+              const name = member.founderName ||
+                [member.firstName, member.lastName].filter(Boolean).join(' ') ||
+                member.email ||
+                'Team Member';
+              invitationUrls.push({ name, url: invitationUrl });
+            }
+          } catch (err) {
+            console.error('Failed to add team member:', err);
+          }
+        }
+      }
+    } catch (err) {
+      // venture_members table may not exist yet - continue without team features
+      console.error('Team features not available:', err);
+    }
+
+    return NextResponse.json({
+      ...result,
+      invitationUrls,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 });
     }
     console.error('Create venture error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -60,11 +98,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const venture = await getVentureByFounderUserId(userId);
+  const ventures = await getVenturesByFounderUserId(userId);
 
-  if (!venture) {
-    return NextResponse.json({ venture: null });
-  }
-
-  return NextResponse.json({ venture });
+  return NextResponse.json({ ventures });
 }

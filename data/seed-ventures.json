@@ -1,0 +1,246 @@
+{
+  "founders": [
+    {
+      "name": "Maya Chen",
+      "slug": "maya-chen",
+      "bio": "Ex-Stripe engineer. Building in public for the first time.",
+      "location": "San Francisco",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "James Okonkwo",
+      "slug": "james-okonkwo",
+      "bio": "Serial founder. Third time's the charm.",
+      "location": "Lagos",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "Sofia Martinez",
+      "slug": "sofia-martinez",
+      "bio": "Designer turned founder. Obsessed with craft.",
+      "location": "Mexico City",
+      "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "Liam Walsh",
+      "slug": "liam-walsh",
+      "bio": "Former chef. Now cooking up software.",
+      "location": "Dublin",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "Priya Sharma",
+      "slug": "priya-sharma",
+      "bio": "Climate tech believer. Engineer by training.",
+      "location": "Mumbai",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "Alex Kim",
+      "slug": "alex-kim",
+      "bio": "Dropped out to build. No regrets yet.",
+      "location": "Seoul",
+      "avatar": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "Emma Thompson",
+      "slug": "emma-thompson",
+      "bio": "Freelance producer for nine years. First-time founder.",
+      "location": "Melbourne",
+      "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "Marcus Johnson",
+      "slug": "marcus-johnson",
+      "bio": "Former teacher. Building tools for educators.",
+      "location": "Atlanta",
+      "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "Yuki Tanaka",
+      "slug": "yuki-tanaka",
+      "bio": "AI researcher. Making ML accessible.",
+      "location": "Tokyo",
+      "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop"
+    },
+    {
+      "name": "Nina Petrova",
+      "slug": "nina-petrova",
+      "bio": "Finance background. Disrupting payments.",
+      "location": "Berlin",
+      "avatar": "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&h=200&fit=crop"
+    }
+  ],
+  "ventures": [
+    {
+      "name": "Slate",
+      "slug": "slate",
+      "pitch": "Turns voice notes into client-ready briefs",
+      "industry": "saas",
+      "rung": "building",
+      "brand": "#5A2EC4",
+      "glyph": "wave",
+      "poster": "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=400&fit=crop",
+      "problem": "Freelancers spend hours turning messy client calls into structured briefs. It's tedious and error-prone.",
+      "who": "Freelance designers, developers, and consultants who juggle multiple clients.",
+      "why": "I was that freelancer. Lost a client because I missed a key requirement buried in a 45-minute call.",
+      "segments": {
+        "pitch": { "body": "Slate records your client calls, transcribes them with AI, and generates structured briefs automatically. No more 'I thought you said...' moments.", "publishedAt": "2026-08-01T10:00:00Z" },
+        "spark": { "body": "Lost a $15k project because I misunderstood scope. The client said 'mobile-first' and I heard 'mobile too'. Three weeks of work, thrown away.", "publishedAt": "2026-08-03T14:00:00Z" },
+        "validation": { "body": "Talked to 47 freelancers. 43 said they'd pay for this. The other 4 were lying.", "publishedAt": "2026-08-10T09:00:00Z" }
+      }
+    },
+    {
+      "name": "Paykit",
+      "slug": "paykit",
+      "pitch": "Accept payments in Africa without the headache",
+      "industry": "fintech",
+      "rung": "live",
+      "brand": "#1F6F5C",
+      "glyph": "bolt",
+      "poster": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=400&fit=crop",
+      "problem": "Accepting payments in African markets requires integrating 15 different providers. Each with terrible docs.",
+      "who": "SaaS companies expanding into African markets.",
+      "why": "Spent 6 months at my last startup just on payment integrations. Never again.",
+      "segments": {
+        "pitch": { "body": "One API for payments across 20 African countries. M-Pesa, bank transfers, cards - all unified.", "publishedAt": "2026-07-15T10:00:00Z" },
+        "spark": { "body": "Our startup was growing fast in Kenya. Then we tried Nigeria. Three months just to accept naira. We almost gave up.", "publishedAt": "2026-07-18T11:00:00Z" },
+        "launch": { "body": "Launched on Twitter at 6am Lagos time. By noon we had 12 signups. By evening, 89. Couldn't believe it.", "publishedAt": "2026-08-20T18:00:00Z" }
+      }
+    },
+    {
+      "name": "Forma",
+      "slug": "forma",
+      "pitch": "Design system management for growing teams",
+      "industry": "saas",
+      "rung": "first",
+      "brand": "#B4621A",
+      "glyph": "grid",
+      "poster": "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800&h=400&fit=crop",
+      "problem": "Design systems break down as teams grow. Components drift. Nobody knows what's current.",
+      "who": "Product teams with 5-50 designers and developers.",
+      "why": "Led design systems at two startups. Watched both collapse under their own weight.",
+      "segments": {
+        "pitch": { "body": "Forma syncs your Figma with your codebase. When designers update a component, developers see it instantly. No more drift.", "publishedAt": "2026-06-01T10:00:00Z" },
+        "first": { "body": "First paying customer: a fintech in São Paulo. $299/month. I cried in the shower.", "publishedAt": "2026-08-15T16:00:00Z" }
+      }
+    },
+    {
+      "name": "Mise",
+      "slug": "mise",
+      "pitch": "Recipe scaling and costing for restaurants",
+      "industry": "food",
+      "rung": "building",
+      "brand": "#9A2A55",
+      "glyph": "flame",
+      "poster": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=400&fit=crop",
+      "problem": "Chefs scale recipes by gut feel. Then wonder why margins are thin.",
+      "who": "Restaurant owners and head chefs managing food costs.",
+      "why": "Ran a restaurant for 8 years. Discovered we were losing money on our most popular dish.",
+      "segments": {
+        "pitch": { "body": "Mise tracks ingredient costs in real-time and tells you exactly how much each dish costs to make. Scale recipes up or down with perfect proportions.", "publishedAt": "2026-08-10T10:00:00Z" },
+        "proto": { "body": "Built the first version in a spreadsheet. Used it at my own restaurant for a month. Found three dishes that were underwater.", "publishedAt": "2026-08-18T14:00:00Z" }
+      }
+    },
+    {
+      "name": "Verdant",
+      "slug": "verdant",
+      "pitch": "Carbon tracking for small manufacturers",
+      "industry": "sustainability",
+      "rung": "idea",
+      "brand": "#3D5A2B",
+      "glyph": "leaf",
+      "poster": "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=800&h=400&fit=crop",
+      "problem": "Enterprise carbon tracking tools cost $100k+. Small manufacturers can't afford to measure, so they don't.",
+      "who": "Small to medium manufacturers who want to prove their sustainability claims.",
+      "why": "Worked in sustainability consulting. Watched small suppliers lose contracts because they couldn't prove carbon numbers.",
+      "segments": {
+        "pitch": { "body": "Verdant connects to your existing systems - ERP, energy meters, logistics - and automatically calculates your carbon footprint. No consultants required.", "publishedAt": "2026-08-25T10:00:00Z" }
+      }
+    },
+    {
+      "name": "Cohort",
+      "slug": "cohort",
+      "pitch": "Community analytics for course creators",
+      "industry": "education",
+      "rung": "growing",
+      "brand": "#8A5A1A",
+      "glyph": "users",
+      "poster": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=400&fit=crop",
+      "problem": "Course creators have no idea which students will drop off until they're gone.",
+      "who": "Online course creators with 100+ students.",
+      "why": "Built three courses. Lost 60% of students by week 3. Had no warning signs.",
+      "segments": {
+        "pitch": { "body": "Cohort predicts which students are at risk of dropping out and tells you exactly when to intervene. Keep more students, make more impact.", "publishedAt": "2026-05-01T10:00:00Z" },
+        "channel": { "body": "Twitter threads about student retention. Each one brings 20-30 signups. Finally found what works.", "publishedAt": "2026-08-01T10:00:00Z" }
+      }
+    },
+    {
+      "name": "Lumina",
+      "slug": "lumina",
+      "pitch": "AI meeting notes that actually capture context",
+      "industry": "ai",
+      "rung": "live",
+      "brand": "#4A4A8A",
+      "glyph": "sparkle",
+      "poster": "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=800&h=400&fit=crop",
+      "problem": "Current AI note-takers just transcribe. They miss the subtext, the decisions, the action items buried in tangents.",
+      "who": "Product managers and founders who live in meetings.",
+      "why": "Spent 2 hours after every meeting writing notes. Then nobody read them anyway.",
+      "segments": {
+        "pitch": { "body": "Lumina understands your meeting context - who's who, what projects matter, what was decided before. Notes that actually make sense.", "publishedAt": "2026-07-01T10:00:00Z" },
+        "beta": { "body": "Gave it to 15 PMs. They found bugs I never imagined. One guy broke it with a 4-hour meeting. Who has 4-hour meetings?", "publishedAt": "2026-07-20T10:00:00Z" }
+      }
+    },
+    {
+      "name": "Klass",
+      "slug": "klass",
+      "pitch": "Lesson planning that doesn't suck",
+      "industry": "education",
+      "rung": "building",
+      "brand": "#2A6B8A",
+      "glyph": "book",
+      "poster": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=400&fit=crop",
+      "problem": "Teachers spend 10+ hours a week on lesson planning. Most of that time is formatting and finding resources.",
+      "who": "K-12 teachers drowning in admin work.",
+      "why": "My wife is a teacher. She works until 11pm most nights. I had to do something.",
+      "segments": {
+        "pitch": { "body": "Klass generates complete lesson plans aligned to your curriculum. Slides, worksheets, assessments - all done in minutes.", "publishedAt": "2026-08-01T10:00:00Z" },
+        "build": { "body": "Learning about curriculum standards. There are 47 different state standards in the US alone. This is harder than I thought.", "publishedAt": "2026-08-20T14:00:00Z" }
+      }
+    },
+    {
+      "name": "Tensor",
+      "slug": "tensor",
+      "pitch": "ML model deployment without the DevOps",
+      "industry": "ai",
+      "rung": "first",
+      "brand": "#6B2A5A",
+      "glyph": "cube",
+      "poster": "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=400&fit=crop",
+      "problem": "Data scientists build great models. Then wait months for engineering to deploy them.",
+      "who": "ML teams at mid-size companies without dedicated MLOps.",
+      "why": "Was a data scientist. Watched my best model sit in a notebook for 8 months. It never shipped.",
+      "segments": {
+        "pitch": { "body": "Tensor deploys your Jupyter notebook as a production API in one click. Auto-scaling, monitoring, versioning - all handled.", "publishedAt": "2026-06-15T10:00:00Z" },
+        "first": { "body": "A healthcare startup paid us $500/month. Their model was predicting patient no-shows. Now it actually runs in production.", "publishedAt": "2026-08-10T16:00:00Z" }
+      }
+    },
+    {
+      "name": "Zinc",
+      "slug": "zinc",
+      "pitch": "Expense management for bootstrapped startups",
+      "industry": "fintech",
+      "rung": "idea",
+      "brand": "#1A5C8A",
+      "glyph": "card",
+      "poster": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=400&fit=crop",
+      "problem": "Enterprise expense tools are overkill. Spreadsheets are chaos. Bootstrapped founders need something in between.",
+      "who": "Bootstrapped founders spending their own money carefully.",
+      "why": "Bootstrapped two startups. Lost track of expenses both times. Tax season was a nightmare.",
+      "segments": {
+        "pitch": { "body": "Zinc is dead simple expense tracking for founders. Snap receipts, categorize spending, know exactly where your runway is going.", "publishedAt": "2026-08-26T10:00:00Z" }
+      }
+    }
+  ]
+}

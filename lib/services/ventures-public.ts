@@ -14,6 +14,8 @@ export interface VentureWithFounder {
   glyph: string;
   rung: Rung;
   industry: Industry;
+  country?: string;
+  categories?: Industry[];
   status: 'draft' | 'live' | 'graduated' | 'closed';
   links: Record<string, string | undefined>;
   problem?: string;
@@ -39,9 +41,13 @@ export interface VentureWithFounder {
   created_at: string;
   updated_at: string;
   founder: {
+    id: string;
+    user_id: string;
     name: string;
     slug: string;
+    bio?: string;
     location?: string;
+    avatar?: string;
   };
   _redirect?: string;
 }
@@ -86,6 +92,8 @@ function mapVenture(v: Record<string, unknown>, founder: Record<string, unknown>
     glyph: v.glyph as string,
     rung: v.rung as Rung,
     industry: (v.industry as Industry) || 'other',
+    country: v.country as string | undefined,
+    categories: (v.categories as Industry[]) || [],
     status: v.status as 'draft' | 'live' | 'graduated' | 'closed',
     links: (v.links as Record<string, string | undefined>) || {},
     problem: v.problem as string | undefined,
@@ -101,9 +109,13 @@ function mapVenture(v: Record<string, unknown>, founder: Record<string, unknown>
     created_at: v.created_at as string,
     updated_at: v.updated_at as string,
     founder: {
+      id: (founder?.id as string) || '',
+      user_id: (founder?.user_id as string) || '',
       name: (founder?.name as string) || 'Unknown',
       slug: (founder?.slug as string) || '',
+      bio: founder?.bio as string | undefined,
       location: founder?.location as string | undefined,
+      avatar: (founder?.links as Record<string, string> | undefined)?.avatar,
     },
   };
 }
@@ -141,7 +153,7 @@ export async function getVenturesByRung(rung: Rung): Promise<VentureWithFounder[
   return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
 }
 
-export async function getVentureBySlug(slug: string): Promise<VentureWithFounder | null> {
+export async function getVentureBySlug(slug: string, viewerUserId?: string | null): Promise<VentureWithFounder | null> {
   const supabase = await createAdminClient();
 
   // Try by slug first
@@ -171,12 +183,15 @@ export async function getVentureBySlug(slug: string): Promise<VentureWithFounder
     return null;
   }
 
+  const founder = venture.founders as Record<string, unknown>;
+  const isOwner = viewerUserId && founder?.user_id === viewerUserId;
+
   // Draft ventures return null (404) for non-owners
-  if (venture.status === 'draft') {
+  if (venture.status === 'draft' && !isOwner) {
     return null;
   }
 
-  return mapVenture(venture, venture.founders as Record<string, unknown>);
+  return mapVenture(venture, founder);
 }
 
 export async function getFeaturedVenture(): Promise<VentureWithFounder | null> {

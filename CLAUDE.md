@@ -19,7 +19,7 @@ When the two disagree, ask rather than guessing.
 
 ## Stack
 
-Next.js (App Router, TypeScript) · MongoDB Atlas via Mongoose · Auth.js · Mux for video · Resend for email · Railway for hosting (`web` + `worker` services) · Redis from Phase 2 only.
+Next.js 15 (App Router, TypeScript) · **Supabase** (Postgres + Auth) · Mux for video · Resend for email · **Vercel** for hosting.
 
 ## Architecture rules — do not break these
 
@@ -31,7 +31,7 @@ Next.js (App Router, TypeScript) · MongoDB Atlas via Mongoose · Auth.js · Mux
 
 ## Security musts
 
-- Strip `$`-prefixed and dot-containing keys from any user input before it reaches a Mongo query.
+- Use parameterized queries (Supabase handles this). Sanitize user input.
 - Re-check ownership server-side on every mutation, from the session, against the document. Never trust an id in a request body.
 - Draft/unpublished ventures return 404, not 403.
 - Video uploads go client → Mux via signed URL. The server never handles bytes. Verify Mux webhook signatures.
@@ -81,5 +81,16 @@ Plain English, Australian spelling. Short sentences. Never "leverage", "empower"
 - **Plan before writing.** For anything beyond a single file, outline the change and wait for confirmation.
 - **One vertical slice at a time**, per `BUILD-PLAN.md`. Do not scaffold the whole app in one pass.
 - **Commit per slice** with a clear message so work can be rolled back.
-- **Run `npm run typecheck` and `npm run lint` before saying you are done.** Fix what they report.
+- **Run `npm run typecheck` before saying you are done.** Deploy with `vercel deploy --prod --yes`.
 - If a requirement here conflicts with what I have asked for in chat, say so rather than silently picking one.
+
+## When conversations are compacted
+
+When a conversation runs out of context and gets summarized, **always update reference files before ending**:
+
+1. **`PROJECT_NOTES.md`** - Update with new features, changes, session log entry
+2. **`BUILD-PLAN.md`** - Mark completed phases, add new phases if needed
+3. **`../CLAUDE.md`** (parent) - Add entry to Session Log
+4. **Plan files** (`.claude/plans/`) - Update completion status if following a plan
+
+This ensures the next session has accurate context even without the full conversation history.

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { SEGMENT_KEYS, RUNGS } from '@/lib/domain/rungs';
@@ -69,7 +69,7 @@ interface Venture {
   problem?: string;
   who?: string;
   why?: string;
-  segments: Record<string, { body: string }>;
+  segments: Record<string, { body: string; happenedAt?: string }>;
   links: {
     site?: string;
     siteStatus?: string;
@@ -82,7 +82,9 @@ interface Venture {
 
 export default function EditVenturePage() {
   const router = useRouter();
+  const params = useParams();
   const searchParams = useSearchParams();
+  const slug = params.slug as string;
   const segmentParam = searchParams.get('segment') as SegmentKey | null;
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -102,6 +104,7 @@ export default function EditVenturePage() {
   const [why, setWhy] = useState('');
   const [rung, setRung] = useState<Rung>('idea');
   const [segmentBody, setSegmentBody] = useState('');
+  const [segmentHappenedAt, setSegmentHappenedAt] = useState('');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -125,18 +128,26 @@ export default function EditVenturePage() {
   useEffect(() => {
     async function loadVenture() {
       try {
+        // Fetch all user's ventures
         const res = await fetch('/api/ventures');
         const data = await res.json();
-        if (data.venture) {
-          setVenture(data.venture);
-          setName(data.venture.name);
-          setPitch(data.venture.pitch);
-          setProblem(data.venture.problem || '');
-          setWho(data.venture.who || '');
-          setWhy(data.venture.why || '');
-          setRung(data.venture.rung);
+
+        // Find the venture matching the slug from the URL
+        const matchingVenture = data.ventures?.find(
+          (v: Venture) => v.slug === slug
+        );
+
+        if (matchingVenture) {
+          setVenture(matchingVenture);
+          setName(matchingVenture.name);
+          setPitch(matchingVenture.pitch);
+          setProblem(matchingVenture.problem || '');
+          setWho(matchingVenture.who || '');
+          setWhy(matchingVenture.why || '');
+          setRung(matchingVenture.rung);
         } else {
-          router.push('/start');
+          // User doesn't own this venture or it doesn't exist
+          router.push('/dashboard');
         }
       } catch {
         console.error('Failed to load venture');
@@ -145,16 +156,19 @@ export default function EditVenturePage() {
       }
     }
 
-    if (isAuthenticated === true) {
+    if (isAuthenticated === true && slug) {
       loadVenture();
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, slug]);
 
   useEffect(() => {
     if (venture?.segments?.[activeSegment]) {
       setSegmentBody(venture.segments[activeSegment].body || '');
+      // Default to today if no date set
+      setSegmentHappenedAt(venture.segments[activeSegment].happenedAt || new Date().toISOString().split('T')[0]);
     } else {
       setSegmentBody('');
+      setSegmentHappenedAt(new Date().toISOString().split('T')[0]); // Default to today for new entries
     }
   }, [activeSegment, venture]);
 
@@ -206,7 +220,7 @@ export default function EditVenturePage() {
       const res = await fetch(`/api/ventures/${venture._id}/segments/${activeSegment}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body: segmentBody }),
+        body: JSON.stringify({ body: segmentBody, happenedAt: segmentHappenedAt }),
       });
 
       if (res.ok) {
@@ -214,7 +228,7 @@ export default function EditVenturePage() {
           ...venture,
           segments: {
             ...venture.segments,
-            [activeSegment]: { body: segmentBody },
+            [activeSegment]: { body: segmentBody, happenedAt: segmentHappenedAt },
           },
         });
       }
@@ -420,9 +434,35 @@ export default function EditVenturePage() {
               <h2 className="text-[20px] font-bold mb-2">
                 {SEGMENT_LABELS[activeSegment]}
               </h2>
-              <p className="text-ink-2 text-[14px] mb-6">
+              <p className="text-ink-2 text-[14px] mb-4">
                 {SEGMENT_PROMPTS[activeSegment]}
               </p>
+
+              {/* Date picker for flexible timeline */}
+              <div className="mb-4 p-3 bg-soft rounded-lg border border-rule">
+                <label className="block text-[12px] font-semibold text-ink-2 mb-1.5">
+                  When did this happen?
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="date"
+                    value={segmentHappenedAt}
+                    onChange={(e) => setSegmentHappenedAt(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="px-3 py-2 rounded-lg border border-rule bg-page text-[14px] focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSegmentHappenedAt(new Date().toISOString().split('T')[0])}
+                    className="text-[12px] text-go-deep hover:underline"
+                  >
+                    Set to today
+                  </button>
+                  <span className="text-[11px] text-ink-3 ml-auto">
+                    Use past dates to document your journey retroactively
+                  </span>
+                </div>
+              </div>
 
               <textarea
                 value={segmentBody}

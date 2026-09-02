@@ -1,199 +1,158 @@
 # Vibed - Project Notes
 
 ## Purpose
-Main showcase website for following founders from week one. Founders publish journeys, make public promises, and post short videos answering fixed questions.
+Platform for following founders from week one. Founders publish ventures, make public promises, and post short videos. Users discover and follow ventures.
 
 Tagline: **"The overnight success, filmed daily."**
 
 ## Tech Stack (Current)
 - Next.js 15 (App Router, TypeScript)
 - Tailwind CSS 4
-- MongoDB Atlas via Mongoose
-- Deployed to Vercel (considering Railway for worker service)
-
-## Tech Stack (Planned - Phase 1+)
-- Auth.js for authentication
+- **Supabase** (Postgres + Auth)
 - Mux for video
-- Resend for email
-- Redis (Phase 2)
-
-See `CLAUDE.md` in Vibed folder for full architecture spec.
-
-## Project Structure
-```
-/app
-  /(public)
-    page.tsx                    # landing with ventures grid
-    /v/[slug]/page.tsx          # venture profile with segments
-    /q/[slug]/page.tsx          # question page with clips
-    /answers/page.tsx           # all 16 questions index
-    /rung/[key]/page.tsx        # filter by journey stage
-    /postmortems/page.tsx       # closed ventures
-    /login/page.tsx             # magic link login
-    /login/check-email/page.tsx # email sent confirmation
-    /login/error/page.tsx       # auth error page
-  /(app)
-    /following/page.tsx         # followed ventures (protected)
-    /start/page.tsx             # new founder wizard
-    /dashboard/page.tsx         # founder dashboard
-    /v/[slug]/edit/page.tsx     # edit venture and segments
-  /api
-    /auth/[...nextauth]/route.ts # Auth.js routes
-    /follow/route.ts            # follow/unfollow API
-    /health/route.ts            # health check endpoint
-    /track/route.ts             # event tracking endpoint
-    /ventures/route.ts          # create/get venture
-    /ventures/[id]/route.ts     # update venture
-    /ventures/[id]/publish/route.ts # publish venture
-    /ventures/[id]/segments/[segment]/route.ts # update segment
-  layout.tsx                    # root layout with fonts + SessionProvider
-
-/components
-  /providers
-    SessionProvider.tsx         # next-auth session wrapper
-  /ui
-    Avatar.tsx                  # initials avatar
-    FollowButton.tsx            # follow/unfollow button
-    Header.tsx                  # nav with search, rung tabs
-    PromiseClock.tsx            # promise countdown + history
-    RungLadder.tsx              # progress bar visualization
-    VentureCard.tsx             # card with promise, stats
-    VentureLogo.tsx             # SVG glyph icons
-    index.ts                    # barrel export
-
-/lib
-  /auth
-    config.ts                   # Auth.js configuration
-    mongodb-adapter.ts          # MongoDB client for adapter
-    index.ts                    # exports auth, signIn, signOut
-  /db
-    connect.ts                  # cached Mongo connection
-    /models
-      user.ts                   # email, name, handle, role
-      founder.ts                # userId, name, slug, bio, links
-      venture.ts                # the hub document (segments, promise, counters)
-      clip.ts                   # video clips with transcript
-      follow.ts                 # user follows
-      event.ts                  # full event taxonomy
-      index.ts                  # barrel export
-    /repos
-      ventures.ts               # query functions for ventures
-      founders.ts               # query functions for founders
-      clips.ts                  # query functions for clips
-      follows.ts                # query functions for follows
-      index.ts                  # barrel export
-  /services
-    events.ts                   # event logging service
-    follows.ts                  # follow/unfollow with counters
-    ventures.ts                 # venture CRUD operations
-    index.ts                    # barrel export
-  /domain
-    questions.ts                # 16 fixed questions definition
-    rungs.ts                    # RUNGS + SEGMENT_KEYS constants (client-safe)
-  /validation
-    schemas.ts                  # Zod schemas (slug, email, ulid)
-
-/types
-  next-auth.d.ts                # session type augmentation
-
-/reference
-  vibed-mvp.html                # original HTML prototype (design spec)
-
-/scripts
-  seed.ts                       # seeds 7 ventures from MVP
-```
+- Deployed to Vercel
 
 ## Deployment
-- **Platform**: Vercel (works with Next.js + external services)
+- **Platform**: Vercel
 - **Production URL**: https://vibed-hazel.vercel.app
 - **Vercel Project**: jaysmit/vibed
 - **GitHub Repo**: https://github.com/jaysmit/vibed
-- **Auto-deploy**: Enabled (push to main triggers deploy)
+- **Supabase Project**: hhhhqgmmnhmxuzavdcqt
 
-## Environment Variables Required
-- `MONGODB_URI` - MongoDB Atlas connection string (REQUIRED for app to work)
-- `AUTH_SECRET` - Auth.js secret (run `npx auth secret` to generate)
-- `AUTH_RESEND_KEY` - Resend API key for magic link emails
-- `EMAIL_FROM` - From address for emails (default: "Vibed <noreply@vibed.com>")
+---
+
+## Development Workflow
+
+### Key Principle: Deploy Early, Deploy Often
+Don't let changes pile up locally. Deploy to Vercel frequently to catch build/runtime issues early.
+
+### Deployment Steps (DO THIS EVERY TIME)
+```bash
+cd "C:\Users\jake_\Documents\Web apps\Vibed"
+npm run typecheck                # Fast - catches TS errors
+vercel deploy --prod --yes       # Deploy immediately after typecheck passes
+```
+
+**DO NOT run `npm run build` locally** - it's slow and often hangs on Windows. Vercel builds faster and more reliably.
+
+---
+
+## Environment Variables
+
+### Required in Vercel Dashboard
+```
+NEXT_PUBLIC_SUPABASE_URL=https://hhhhqgmmnhmxuzavdcqt.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
+MUX_TOKEN_ID=...
+MUX_TOKEN_SECRET=...
+MUX_WEBHOOK_SECRET=...
+NEXT_PUBLIC_APP_URL=https://vibed-hazel.vercel.app
+```
+
+---
+
+## Database Schema (Supabase)
+
+### Tables
+- **founders** - user_id, name, slug, bio, location, links, avatar_key
+- **ventures** - slug, founder_id, name, pitch, industry, brand, glyph, rung, status, segments, promise, counters, country, categories
+- **venture_members** - venture_id, founder_id, role, status, is_master, invitation_token
+- **clips** - venture_id, segment_key, mux_asset_id, playback_id, transcript, counters
+- **follows** - user_id, venture_id
+- **events** - type, actor_id, venture_id, meta, created_at
+
+---
+
+## Current Features (2026-09-01)
+
+### Authentication
+- Email/password signup and login (Supabase Auth)
+- Session management via cookies
+- Protected routes redirect to login
+
+### Public Pages
+- **/** - Landing with content pillars (Trending Pitches, Distribution Playbooks, First Dollar Stories, Real Challenges, Building Right Now, Trending Ventures, All Time Favourites)
+- **/discover** - Filter by industry, stage, video content type, sort by trending/popular
+- **/v/[slug]** - Venture profile with tabs (Journey, Clips, Promises, Updates), Stats Bar, Elevator Pitch section
+- **/login** - Email/password login
+- **/register** - Email/password signup with name/location fields
+
+### Protected Pages
+- **/start** - Create new venture (4-step wizard: name, team, country, categories)
+- **/dashboard** - Manage ventures
+- **/v/[slug]/edit** - Edit venture details, segments with date picker, videos
+- **/following** - Followed ventures
+- **/profile** - Edit founder profile
+- **/invite/[token]** - Accept team invitation
+
+### Cards
+- **PitchCard** - Instagram-style square cards for trending pitches (play icon overlay, likes, category, stage, founder with team dropdown, followers count)
+- **VentureCard** - Full cards with more info (promise progress, followers, glyph)
+
+### Journey/Timeline System
+- **Flexible timeline**: Each segment has a "When did this happen?" date picker
+- **Retroactive documentation**: Established businesses can set past dates to tell their story
+- **Chronological display**: Journey accordion shows segments ordered by happenedAt date
+- **16 predefined segments**: pitch, spark, validation, audience, proto, build, beta, gtm, launch, first, channel, trouble, money, team, scale, next
+
+### Team System
+- Invite team members by email or search existing users
+- Roles: founder, partner, team_member
+- Master user (venture creator) has full control
+- Invitation tokens with accept/decline flow
+
+### Owner Controls (when viewing own venture)
+- Progress ring showing completion percentage
+- Publish button (activates at 100% completion)
+- Settings dropdown (Team, Edit URL, Visibility, Close, Delete)
+- Inline edit icons on hover (pending full implementation)
+
+---
+
+## UI Components
+
+### Core Components (`components/ui/`)
+- VentureLogo, RungTag, PromiseClock, Avatar
+- VentureCard, PitchCard
+- VideoPlayer, VideoUploader
+- JourneyAccordion (with happenedAt dates)
+- TimelineProgress
+- OwnerSettings, VentureCompletionControls
+- ProgressRing
+- CountrySelector, CategorySelector
+
+---
 
 ## Commands
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run lint` - Run ESLint
-- `npm run typecheck` - Run TypeScript type checking
-- `npm run seed` - Seed database with 7 ventures
-
----
-
-## Current Status (2026-08-27)
-
-### Completed Slices
-- [x] **Slice 0 - Scaffold**: Next.js 15, TypeScript, Tailwind 4, ESLint, Prettier, design tokens, folder structure
-- [x] **Slice 1 - Data Layer**: Mongoose models with indexes, cached connection, seed script
-- [x] **Slice 2 - Public Read Paths**: Landing, venture profile, question pages, answers, rung filter, postmortems
-- [x] **Slice 3 - Events**: Event service, /api/track endpoint, impression tracking on landing page
-- [x] **Slice 4 - Auth + Follow**: Auth.js with Resend magic link, /login pages, /following page, follow service with counter updates
-- [x] **Slice 5 - Founder Editor**: /start wizard, /dashboard, /v/[slug]/edit, ventures service with CRUD
-- [x] **Slice 6 - Video**: Mux integration for uploads, VideoPlayer/VideoUploader components, webhook handler, clips service
-
-### Production Environment
-- **Live URL**: https://vibed-hazel.vercel.app
-- **MongoDB**: Railway managed (shared with GameHub)
-- **Vercel env vars configured**: MONGODB_URI, AUTH_SECRET, AUTH_URL
-
-### Known Issues
-- Magic link emails won't send until `AUTH_RESEND_KEY` is added to Vercel
-- Video uploads require `MUX_TOKEN_ID`, `MUX_TOKEN_SECRET`, and `MUX_WEBHOOK_SECRET` env vars in Vercel
-
-### Local Development
-- `.env.local` configured with Railway MongoDB connection
-- Run `npm run dev` to start local server
-- Run `npm run seed` to populate test data
-
-### What Works Without MongoDB
-- Dev server runs (`npm run dev`)
-- TypeScript compiles (`npm run typecheck`)
-- ESLint passes (`npm run lint`)
-- Pages render (will show "No ventures" empty states)
-
----
-
-## Next Session - Slice 7: Email
-
-### What to Build
-1. Resend integration for transactional emails
-2. Weekly digest email for followers
-3. Founder nudge emails (reminder to post)
-
-### Files to Create
+```bash
+npm run dev        # Start dev server (Turbopack)
+npm run typecheck  # Run TypeScript checks (use this before deploy)
+npm run lint       # Run ESLint
 ```
-lib/services/email.ts           # Resend API integration
-app/api/email/digest/route.ts   # Trigger weekly digest
-components/email/DigestEmail.tsx # Email template
-```
-
-### Done When
-Can send formatted emails via Resend with proper templates.
-
----
-
-## Future Slices
-
-| Slice | What | Key Files |
-|-------|------|-----------|
-| 5 | Founder Editor | `/start`, `/dashboard`, `/v/[slug]/edit` |
-| 6 | Video | Mux upload, webhook, transcript, player |
-| 7 | Email | Resend, weekly digest, founder nudge |
-| 8 | Trending | Worker, scoring aggregation |
 
 ---
 
 ## Session Log
-- **2026-08-26**: Initial Vercel deploy. Connected GitHub for auto-deploy.
-- **2026-08-26**: Converted to Next.js 15 + Tailwind 4. Built full data layer with 6 Mongoose models, indexes per architecture spec. Created seed script with 7 ventures from MVP.
-- **2026-08-26**: Built all public read paths - landing page with venture grid, venture profile with segments/promise/sidebar, question pages, answers index, rung filter, postmortems. Created 6 UI components (Header, VentureCard, VentureLogo, RungLadder, PromiseClock, Avatar).
-- **2026-08-27**: Built events tracking system - event service with rate limiting, /api/track endpoint (single + batch), TrackImpression component with IntersectionObserver, VentureRail component. Landing page now tracks rail impressions with position.
-- **2026-08-27**: Built auth + follow system - Auth.js v5 with Resend magic link provider, MongoDB adapter, /login with check-email and error pages, /following protected page, FollowButton component, /api/follow endpoint, follows service with counter denormalisation, follows repo.
-- **2026-08-27**: Deployed to Vercel production. Fixed framework preset (was "Other", needed "Next.js"). Fixed client-side Mongoose bundling by moving RUNGS/SEGMENT_KEYS to lib/domain/rungs.ts. Seeded 7 test ventures via Railway MongoDB. Site live at https://vibed-hazel.vercel.app
-- **2026-08-27**: Built Slice 5 (Founder Editor) - /start wizard for creating ventures, /dashboard for managing, /v/[slug]/edit for editing basics and 16 journey segments. Full CRUD via ventures service.
-- **2026-08-27**: Built Slice 6 (Video) - Mux integration with direct uploads, VideoPlayer and VideoUploader components, webhook handler for asset.ready/track.ready, clips service, Videos tab in edit page.
+
+- **2026-08-26**: Initial setup. Deployed to Vercel. Built data layer with MongoDB.
+- **2026-08-27**: Built auth, follow system, founder editor, video uploads (Mux).
+- **2026-08-28**: Migrated from MongoDB to Supabase. Built email/password auth. Redesigned header. Renamed "Journey" to "Venture". Built Discover page. Redesigned venture profile.
+- **2026-09-01**: Major redesign session:
+  - Added Instagram-style PitchCard with square video thumbnails, play overlay, likes, team dropdown
+  - Added content pillars to landing page (Distribution Playbooks, First Dollar Stories, Real Challenges, Building Right Now)
+  - Added Stats Bar to venture page (week, followers, clips, industry, location, streak, founder)
+  - Added Promises tab with timeline and rewards
+  - Redesigned Discover page with video content category filters
+  - Implemented flexible timeline system with happenedAt dates for retroactive documentation
+  - Added date picker to segment editor ("When did this happen?")
+  - Journey accordion now shows timeline dates prominently
+
+---
+
+## Next Steps
+- Complete inline editing on venture page
+- Build actual follow functionality (backend)
+- Build promise creation UI
+- Add notifications for promise deadlines
+- Build shorts export with watermark

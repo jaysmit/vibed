@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 const UpdateSegmentSchema = z.object({
   body: z.string().max(10000),
+  happenedAt: z.string().optional(), // ISO date when this actually happened
 });
 
 export async function PUT(
