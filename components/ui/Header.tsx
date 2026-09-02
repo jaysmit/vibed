@@ -5,11 +5,11 @@ import { SearchBar } from './SearchBar';
 export function Header() {
   return (
     <header className="border-b border-rule bg-page sticky top-0 z-30">
-      <div className="max-w-[1180px] mx-auto px-6 flex items-center gap-4 h-[68px]">
-        {/* Logo */}
+      <div className="max-w-[1180px] mx-auto px-6 flex items-center h-[68px]">
+        {/* Logo - left aligned */}
         <Link
           href="/"
-          className="font-display font-black text-[23px] tracking-tight flex items-center gap-[9px]"
+          className="font-display font-black text-[23px] tracking-tight flex items-center gap-[9px] flex-shrink-0"
           style={{ fontVariationSettings: "'SOFT' 80, 'WONK' 1" }}
         >
           <svg className="h-5" viewBox="0 0 44 32" aria-hidden="true">
@@ -23,13 +23,15 @@ export function Header() {
           vibed
         </Link>
 
-        {/* Search */}
-        <div className="flex-1 max-w-[330px] hidden sm:block">
-          <SearchBar />
+        {/* Center - Search + Discover link */}
+        <div className="flex-1 flex items-center justify-center gap-4">
+          <div className="max-w-[330px] w-full hidden sm:block">
+            <SearchBar />
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="ml-auto">
+        {/* Actions - right aligned */}
+        <div className="flex-shrink-0">
           <AuthActions />
         </div>
       </div>

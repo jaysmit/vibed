@@ -11,6 +11,7 @@ import { TimelineProgress } from '@/components/ui/TimelineProgress';
 import { calculateCompletion } from '@/lib/domain/standards';
 import { VentureContentTabs } from './VentureContentTabs';
 import { ElevatorPitchEditable } from './ElevatorPitchEditable';
+import { ClipsGrid } from './ClipsGrid';
 
 // Segment definitions with stage groupings
 const SEGMENTS: { k: SegmentKey; t: string; p: string; stage: Rung }[] = [
@@ -436,49 +437,18 @@ export default async function VentureProfilePage({ params }: PageProps) {
                 />
               }
               clipsContent={
-                <div className="grid grid-cols-3 gap-1 sm:gap-2">
-                  {/* Show actual clips first - square like Instagram */}
-                  {allClips.map((clip) => (
-                    <div key={clip._id} className="aspect-square bg-soft rounded-sm sm:rounded-lg overflow-hidden relative group cursor-pointer">
-                      {clip.playback_id ? (
-                        <>
-                          <VideoPlayer
-                            playbackId={clip.playback_id}
-                            title={clip.title}
-                            thumbTime={clip.thumbTime}
-                          />
-                          {/* Play icon overlay - Instagram style */}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white" className="opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg">
-                              <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg>
-                          </div>
-                          {/* Views/likes count */}
-                          <div className="absolute bottom-1 left-1 flex items-center gap-1 text-white text-[10px] sm:text-[11px] font-semibold drop-shadow-lg">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                              <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg>
-                            <span>{clip.counters?.views || 0}</span>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="h-full flex flex-col items-center justify-center bg-ink/5">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-3">
-                            <polygon points="5 3 19 12 5 21 5 3" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {/* Show placeholders for remaining slots - square */}
-                  {Array.from({ length: Math.max(0, 6 - allClips.length) }).map((_, i) => (
-                    <div key={`placeholder-${i}`} className="aspect-square bg-soft rounded-sm sm:rounded-lg flex items-center justify-center border border-dashed border-rule">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-3">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
-                    </div>
-                  ))}
-                </div>
+                <ClipsGrid
+                  clips={allClips.map((clip) => ({
+                    _id: clip._id,
+                    playback_id: clip.playback_id || null,
+                    title: clip.title,
+                    thumbTime: clip.thumbTime,
+                    segment_key: clip.segment_key,
+                    counters: clip.counters,
+                    created_at: clip.created_at,
+                  }))}
+                  ventureName={venture.name}
+                />
               }
               promisesContent={
                 <div className="space-y-4">
@@ -610,7 +580,10 @@ export default async function VentureProfilePage({ params }: PageProps) {
           {/* Sidebar */}
           <aside className="lg:sticky lg:top-[88px] lg:self-start flex flex-col gap-4">
             {/* Founder card */}
-            <div className="bg-page border border-rule rounded-[14px] p-[18px] shadow-sm">
+            <Link
+              href={`/founder/${venture.founder.slug}`}
+              className="block bg-page border border-rule rounded-[14px] p-[18px] shadow-sm hover:border-ink/30 hover:shadow-md transition-all"
+            >
               <div className="flex gap-3 items-start">
                 <Avatar name={venture.founder.name} color={venture.brand} size="lg" />
                 <div className="flex-1 min-w-0">
@@ -619,11 +592,14 @@ export default async function VentureProfilePage({ params }: PageProps) {
                     <div className="text-[12.5px] text-ink-3">{venture.founder.location}</div>
                   )}
                 </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-3 flex-shrink-0">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
               </div>
               {venture.founder.bio && (
                 <p className="text-[13px] text-ink-2 mt-3 leading-relaxed">{venture.founder.bio}</p>
               )}
-            </div>
+            </Link>
 
             {/* Industry */}
             {venture.industry && (

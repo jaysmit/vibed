@@ -62,7 +62,7 @@ export function AuthActions() {
       <>
         {/* Desktop nav */}
         <div className="flex items-center gap-1">
-          {/* Left nav items */}
+          {/* Center nav item */}
           <Link
             href="/discover"
             className={`text-[14px] font-medium px-3 py-2 rounded-full hidden sm:flex items-center gap-[7px] transition-colors ${
@@ -71,21 +71,19 @@ export function AuthActions() {
           >
             Discover
           </Link>
+
+          {/* Profile link */}
           <Link
-            href="/following"
+            href="/profile"
             className={`text-[14px] font-medium px-3 py-2 rounded-full hidden sm:flex items-center gap-[7px] transition-colors ${
-              isActive('/following') ? 'text-ink bg-soft' : 'text-ink-2 hover:text-ink hover:bg-soft'
+              isActive('/profile') ? 'text-ink bg-soft' : 'text-ink-2 hover:text-ink hover:bg-soft'
             }`}
           >
-            Following
-          </Link>
-          <Link
-            href="/dashboard"
-            className={`text-[14px] font-medium px-3 py-2 rounded-full hidden sm:flex items-center gap-[7px] transition-colors ${
-              isActive('/dashboard') ? 'text-ink bg-soft' : 'text-ink-2 hover:text-ink hover:bg-soft'
-            }`}
-          >
-            Dashboard
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Profile
           </Link>
 
           {/* User dropdown */}
@@ -125,6 +123,32 @@ export function AuthActions() {
                     <circle cx="12" cy="7" r="4" />
                   </svg>
                   Profile
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[14px] text-ink-2 hover:bg-soft hover:text-ink"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                  </svg>
+                  Dashboard
+                </Link>
+                <Link
+                  href="/following"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[14px] text-ink-2 hover:bg-soft hover:text-ink"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Following
                 </Link>
                 <Link
                   href="/settings"

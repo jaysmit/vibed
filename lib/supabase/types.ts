@@ -343,3 +343,31 @@ export interface StaffPick {
   picked_by: string | null;
   created_at: string;
 }
+
+// ============================================
+// COMMENTS
+// ============================================
+
+export interface Comment {
+  id: string;
+  clip_id: string;
+  user_id: string;
+  founder_id: string | null;
+  content: string;
+  reply_to_id: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Comment with author details for display
+export interface CommentWithAuthor extends Comment {
+  author: {
+    id: string;
+    name: string;
+    slug: string;
+    avatar_url?: string | null;
+  } | null;
+  replies?: CommentWithAuthor[];
+  reply_count?: number;
+}

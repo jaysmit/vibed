@@ -1,6 +1,8 @@
 export { Avatar } from './Avatar';
+export { CommentSection } from './CommentSection';
 export { CompletionChecklist } from './CompletionChecklist';
 export { EndorseButton } from './EndorseButton';
+export { FilterPanel } from './FilterPanel';
 export { ReasonPicker } from './ReasonPicker';
 export { SearchBar } from './SearchBar';
 export { VentureCompletionControls } from './VentureCompletionControls';
