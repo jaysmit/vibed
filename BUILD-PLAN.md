@@ -85,14 +85,14 @@ Instagram-style cards, content pillars, Stats Bar, flexible timeline.
 
 ---
 
-### 9 — Inline Editing 🔜 NEXT
+### 9 — Inline Editing ✅ DONE (2026-09-02)
 Edit icons on venture page for owners. Click to edit inline, save without page reload.
 
-**To build:**
-- InlineEdit wrapper component
-- Edit icons on hover for editable fields
-- PATCH API for partial venture updates
-- Optimistic UI updates
+**Completed:**
+- ElevatorPitchEditable component wraps pitch, problem, who fields
+- Edit icon appears on hover for owners
+- Uses existing InlineEdit component
+- Saves via PATCH API with router.refresh()
 
 ---
 
@@ -101,18 +101,47 @@ Resend. Weekly digest driven by rung changes and promise resolutions. Founder nu
 
 ---
 
-### 11 — Trending
-Worker service. Aggregation over `events` every 15 minutes writing `counters.trendingScore`.
+### 11 — Trending ✅ DONE (2026-09-02)
+Scoring algorithm with time decay. Staff picks boost.
+
+**Completed:**
+- lib/services/trending.ts with calculateTrendingScore, recalculateAllTrendingScores
+- getTopClipsByPillar for landing page
+- Scoring: views, endorsements, founder endorsements, follows, watch %, rewatches
+- Time decay (5% per day)
+- Staff pick boost (+20)
 
 ---
 
-### 12 — Follow System
-Backend implementation for follow button. Counter updates. /following page data.
+### 12 — Follow System ✅ DONE (2026-09-02)
+Backend + UI for follow button on venture pages.
+
+**Completed:**
+- FollowButton component wired to venture page
+- lib/services/follows.ts (follow, unfollow, isFollowing)
+- /api/follow route
+- Counter updates on ventures
 
 ---
 
-### 13 — Promise Creation
+### 13 — Promise Creation ✅ DONE (2026-09-02)
 UI for founders to create/edit promises. Promise resolution workflow.
+
+**Completed:**
+- createPromise, completePromise in ventures service
+- /api/ventures/[id]/promise route (POST create, PATCH complete)
+- PromiseEditor component (create form, kept/missed buttons)
+- Promise history tracking
+
+---
+
+### 14 — Compliance ✅ DONE (2026-09-02)
+Privacy policy and terms of service pages.
+
+**Completed:**
+- /privacy page
+- /terms page
+- Footer links on landing page
 
 ---
 

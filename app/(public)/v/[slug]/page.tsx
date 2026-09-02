@@ -10,6 +10,7 @@ import { INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 import { TimelineProgress } from '@/components/ui/TimelineProgress';
 import { calculateCompletion } from '@/lib/domain/standards';
 import { VentureContentTabs } from './VentureContentTabs';
+import { ElevatorPitchEditable } from './ElevatorPitchEditable';
 
 // Segment definitions with stage groupings
 const SEGMENTS: { k: SegmentKey; t: string; p: string; stage: Rung }[] = [
@@ -356,21 +357,13 @@ export default async function VentureProfilePage({ params }: PageProps) {
                 )}
               </div>
 
-              {venture.pitch && (
-                <p className="text-[18px] sm:text-[22px] font-semibold text-ink leading-snug mb-4">
-                  {venture.pitch}
-                </p>
-              )}
-              {venture.problem && (
-                <div className="text-[14px] sm:text-[15px] text-ink-2 leading-relaxed mb-2">
-                  <span className="font-semibold text-ink">The problem:</span> {venture.problem}
-                </div>
-              )}
-              {venture.who && (
-                <div className="text-[14px] sm:text-[15px] text-ink-2 leading-relaxed">
-                  <span className="font-semibold text-ink">For:</span> {venture.who}
-                </div>
-              )}
+              <ElevatorPitchEditable
+                ventureId={venture.id}
+                pitch={venture.pitch}
+                problem={venture.problem}
+                who={venture.who}
+                isOwner={isOwner || false}
+              />
             </div>
 
             {/* Video on desktop - right side, larger */}
