@@ -64,7 +64,7 @@ NEXT_PUBLIC_APP_URL=https://vibed-hazel.vercel.app
 
 ---
 
-## Current Features (2026-09-01)
+## Current Features (2026-09-02)
 
 ### Authentication
 - Email/password signup and login (Supabase Auth)
@@ -72,11 +72,18 @@ NEXT_PUBLIC_APP_URL=https://vibed-hazel.vercel.app
 - Protected routes redirect to login
 
 ### Public Pages
-- **/** - Landing with content pillars (Trending Pitches, Distribution Playbooks, First Dollar Stories, Real Challenges, Building Right Now, Trending Ventures, All Time Favourites)
-- **/discover** - Filter by industry, stage, video content type, sort by trending/popular
-- **/v/[slug]** - Venture profile with tabs (Journey, Clips, Promises, Updates), Stats Bar, Elevator Pitch section
+- **/** - Landing page with:
+  - Hero with intro video for logged-out users (landscape, matches text height on desktop)
+  - Content sections: Trending Elevator Pitches, Trending Maker Moments, Trending Growth Hacks, Trending Pivot Points, Trending Ventures
+  - Mobile: horizontal scroll for sections, tagline + video only (no description)
+  - Cards ~10% smaller on desktop, ~20% smaller on mobile
+- **/discover** - Collapsible filter sections (Watch, Industry, Stage), sort by trending/popular
+- **/v/[slug]** - Venture profile with tabs (Journey, Clips, Promises, Updates), Stats Bar, Elevator Pitch section, clips sort/filter
 - **/login** - Email/password login
 - **/register** - Email/password signup with name/location fields
+- **/help** - Help Centre with searchable FAQs in 7 categories
+- **/privacy** - Privacy policy
+- **/terms** - Terms of service
 
 ### Protected Pages
 - **/start** - Create new venture (4-step wizard: name, team, country, categories)
@@ -85,6 +92,20 @@ NEXT_PUBLIC_APP_URL=https://vibed-hazel.vercel.app
 - **/following** - Followed ventures
 - **/profile** - Edit founder profile
 - **/invite/[token]** - Accept team invitation
+
+### Comments System
+- Nested comments with reply threading
+- Author display with avatar
+- Delete own comments (soft delete)
+- API: /api/clips/[id]/comments, /api/comments/[id]
+
+### Feedback/Support System
+- Floating feedback button (bottom-right corner)
+- 3-step modal: Bug Report / Feature Request / General Feedback
+- Screenshot attachment with base64 encoding
+- Auto-captures browser info and page URL
+- Email notification to team via Resend
+- Database: feedback table with status workflow (new → reviewing → in_progress → resolved → closed)
 
 ### Cards
 - **PitchCard** - Instagram-style square cards for trending pitches (play icon overlay, likes, category, stage, founder with team dropdown, followers count)
@@ -121,6 +142,13 @@ NEXT_PUBLIC_APP_URL=https://vibed-hazel.vercel.app
 - OwnerSettings, VentureCompletionControls
 - ProgressRing
 - CountrySelector, CategorySelector
+- CommentSection (nested replies, author display)
+- FeedbackWidget (floating button, 3-step modal, screenshots)
+- EndorseButton, ReasonPicker
+- FollowButton, DiscoverLink
+- PromiseEditor
+- Header (logo + search left, Discover centered, auth right)
+- SearchBar
 
 ---
 
@@ -147,12 +175,34 @@ npm run lint       # Run ESLint
   - Implemented flexible timeline system with happenedAt dates for retroactive documentation
   - Added date picker to segment editor ("When did this happen?")
   - Journey accordion now shows timeline dates prominently
+- **2026-09-02**: Comments, feedback system, UI improvements:
+  - Comments system with nested replies (migration 004)
+  - Feedback widget with screenshot support (migration 005)
+  - Help Centre with searchable FAQs (7 categories)
+  - Header reorganization (Profile button visible, Following moved to dropdown)
+  - Discover page collapsible filter sections
+  - Venture page clips sort/filter (Recent, Popular, Oldest + segment filter)
+  - Founder card links to profile page
+  - Email notification for feedback via Resend
+- **2026-09-03**: Landing page redesign:
+  - Header: logo + search left, Discover centered (bold), auth actions right
+  - Renamed sections: Trending Elevator Pitches, Trending Maker Moments, Trending Growth Hacks, Trending Pivot Points
+  - Added "Trending Ventures" section with VentureCards
+  - Mobile: horizontal scroll for all sections (hidden scrollbar)
+  - Cards smaller: ~10% desktop, ~20% mobile
+  - Reduced section spacing throughout
+  - Hero intro video for logged-out users (landscape, side-by-side on desktop)
+  - Mobile hero: tagline + video only (no description)
 
 ---
 
 ## Next Steps
-- Complete inline editing on venture page
-- Build actual follow functionality (backend)
-- Build promise creation UI
-- Add notifications for promise deadlines
-- Build shorts export with watermark
+- Profile page editable (same as founder page but user can edit)
+- Shorts export with watermark for social sharing
+- In-app notifications (real-time notification system)
+- Live chat support (future enhancement to feedback system)
+
+## Pending Migrations
+Run in Supabase SQL Editor:
+- `supabase/migrations/004_comments.sql` - Comments table
+- `supabase/migrations/005_feedback.sql` - Feedback table

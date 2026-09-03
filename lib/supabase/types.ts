@@ -311,18 +311,18 @@ export const PILLARS = [
 export type Pillar = typeof PILLARS[number];
 
 export const PILLAR_LABELS: Record<Pillar, string> = {
-  the_idea: 'The Idea',
-  building_it: 'Building It',
-  getting_customers: 'Getting Customers',
-  hard_parts: 'The Hard Parts',
+  the_idea: 'Trending Elevator Pitches',
+  building_it: 'Trending Maker Moments',
+  getting_customers: 'Trending Growth Hacks',
+  hard_parts: 'Trending Pivot Points',
   featured: 'Staff Pick',
 };
 
 export const PILLAR_DESCRIPTIONS: Record<Pillar, string> = {
-  the_idea: 'How founders found and validated their ideas',
-  building_it: 'The messy reality of building a product',
-  getting_customers: 'Distribution, launches, and first sales',
-  hard_parts: 'Setbacks, funding, and team challenges',
+  the_idea: 'The pitch that started it all',
+  building_it: 'When it finally worked',
+  getting_customers: 'The moves that drove traction',
+  hard_parts: 'When plans changed and founders adapted',
   featured: 'Editor\'s choice',
 };
 

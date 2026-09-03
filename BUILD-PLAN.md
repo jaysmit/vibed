@@ -157,8 +157,62 @@ Privacy policy and terms of service pages.
 
 ---
 
+### 15 — Comments ✅ DONE (2026-09-02)
+Comment system for clips with reply threading.
+
+**Completed:**
+- comments table (migration 004) with reply_to support
+- lib/services/comments.ts (create, delete, getByClip, getReplies)
+- CommentSection component with nested replies
+- /api/clips/[id]/comments (GET, POST)
+- /api/comments/[id] (GET replies, DELETE)
+- Soft delete pattern
+
+---
+
+### 16 — Feedback System ✅ DONE (2026-09-02)
+Bug reporting and user help functionality.
+
+**Completed:**
+- feedback table (migration 005) with status workflow
+- FeedbackWidget (floating button, 3-step modal)
+- Screenshot attachment with base64 encoding
+- Auto-capture browser info and page URL
+- Email notification via Resend
+- Enhanced /help page with searchable FAQs (7 categories)
+
+---
+
+### 17 — UI Improvements ✅ DONE (2026-09-02)
+Header reorganization and filter improvements.
+
+**Completed:**
+- Header: Profile button visible, Following moved to dropdown
+- Discover page: collapsible filter sections (Watch, Industry, Stage)
+- Venture page: clips sort/filter (Recent, Popular, Oldest + segment filter)
+- Founder card links to profile page
+
+---
+
+### 18 — Landing Page Redesign ✅ DONE (2026-09-03)
+Section naming, layout improvements, intro video.
+
+**Completed:**
+- Header restructured: logo + search left, Discover centered (bold), auth right
+- DiscoverLink component for centered nav
+- Section names: Trending Elevator Pitches, Trending Maker Moments, Trending Growth Hacks, Trending Pivot Points
+- Added "Trending Ventures" section with VentureCards (sorted by followers)
+- Mobile: horizontal scroll for all sections (scrollbar-hide utility)
+- Card sizing: ~10% smaller desktop, ~20% smaller mobile
+- Reduced section padding and gaps throughout
+- Hero intro video placeholder for logged-out users
+- Desktop: video side-by-side, height matches text block
+- Mobile: tagline + video only (description hidden)
+
+---
+
 ## Not in the MVP
 
-Comments · in-app notifications · social embeds · search beyond title matching · the podcast feed · shorts export with watermark.
+In-app notifications · social embeds · search beyond title matching · the podcast feed · shorts export with watermark.
 
-Shorts export is the first thing after this list — it is the distribution loop.
+Shorts export is the next priority — it is the distribution loop.

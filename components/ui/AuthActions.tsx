@@ -62,16 +62,6 @@ export function AuthActions() {
       <>
         {/* Desktop nav */}
         <div className="flex items-center gap-1">
-          {/* Center nav item */}
-          <Link
-            href="/discover"
-            className={`text-[14px] font-medium px-3 py-2 rounded-full hidden sm:flex items-center gap-[7px] transition-colors ${
-              isActive('/discover') ? 'text-ink bg-soft' : 'text-ink-2 hover:text-ink hover:bg-soft'
-            }`}
-          >
-            Discover
-          </Link>
-
           {/* Profile link */}
           <Link
             href="/profile"
@@ -207,14 +197,6 @@ export function AuthActions() {
   // Logged out state
   return (
     <div className="flex items-center gap-1.5">
-      <Link
-        href="/discover"
-        className={`text-[14px] font-medium px-3 py-2 rounded-full hidden sm:flex items-center gap-[7px] transition-colors ${
-          isActive('/discover') ? 'text-ink bg-soft' : 'text-ink-2 hover:text-ink hover:bg-soft'
-        }`}
-      >
-        Discover
-      </Link>
       <Link
         href="/login"
         className="text-[14px] font-medium text-ink-2 px-3 py-2 rounded-full hover:text-ink hover:bg-soft hidden sm:flex items-center gap-[7px]"

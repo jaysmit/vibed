@@ -1,6 +1,7 @@
 export { Avatar } from './Avatar';
 export { CommentSection } from './CommentSection';
 export { CompletionChecklist } from './CompletionChecklist';
+export { DiscoverLink } from './DiscoverLink';
 export { EndorseButton } from './EndorseButton';
 export { FeedbackWidget } from './FeedbackWidget';
 export { FilterPanel } from './FilterPanel';
