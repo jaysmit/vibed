@@ -21,6 +21,18 @@ When the two disagree, ask rather than guessing.
 
 Next.js 15 (App Router, TypeScript) · **Supabase** (Postgres + Auth) · Mux for video · Resend for email · **Vercel** for hosting.
 
+## Database Migrations
+
+**Never ask the user to run SQL manually.** Run migrations automatically using:
+
+```bash
+node scripts/migrate.js                           # Run all pending migrations
+node scripts/migrate.js supabase/migrations/006_cheers.sql  # Run specific file
+```
+
+Requires `SUPABASE_ACCESS_TOKEN` in `.env.local` (one-time setup).
+If missing, run `npx supabase login` or get token from https://supabase.com/dashboard/account/tokens
+
 ## Architecture rules — do not break these
 
 1. **Components never query.** They take plain objects as props. A component that fetches turns the feed into N+1.
@@ -82,7 +94,20 @@ Plain English, Australian spelling. Short sentences. Never "leverage", "empower"
 - **One vertical slice at a time**, per `BUILD-PLAN.md`. Do not scaffold the whole app in one pass.
 - **Commit per slice** with a clear message so work can be rolled back.
 - **Run `npm run typecheck` before saying you are done.** Deploy with `vercel deploy --prod --yes`.
+- **Run database migrations yourself** — never ask the user to run SQL manually. Use `node scripts/migrate.js` which connects via DATABASE_URL.
 - If a requirement here conflicts with what I have asked for in chat, say so rather than silently picking one.
+
+## Recurring Error Patterns — CHECK BEFORE DEPLOYING
+
+These are mistakes I've made before. Review this list before deploying changes:
+
+1. **`unstable_cache()` + `cookies()`**: Functions wrapped with `unstable_cache()` CANNOT call `cookies()`, `headers()`, or other dynamic data sources. Use `createCachedAdminClient()` (cookieless) instead of `createAdminClient()` for cached functions.
+
+2. **Type mismatches after adding fields**: When adding new fields to types (like adding `endorsements` to `counters`), update ALL places that define that type — including `VentureWithFounder` in `ventures-public.ts`, not just `types.ts`.
+
+3. **Unused imports**: After refactoring, check for and remove unused imports before deploying.
+
+4. **Test locally first**: Run `npm run build` locally before deploying to catch Server Component errors that `typecheck` misses.
 
 ## When conversations are compacted
 

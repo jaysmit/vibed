@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { RUNGS, type Rung } from '@/lib/domain/rungs';
 import { INDUSTRIES, INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 
@@ -15,22 +16,9 @@ const RUNG_LABELS: Record<Rung, string> = {
 };
 
 const SORT_OPTIONS = [
-  { key: 'recent', label: 'Recent', icon: '🕐' },
-  { key: 'trending', label: 'Trending', icon: '🔥' },
-  { key: 'popular', label: 'Popular', icon: '⭐' },
-];
-
-const VIDEO_CATEGORIES = [
-  { key: 'pitch', label: 'Pitch', icon: '🎤' },
-  { key: 'spark', label: 'Spark', icon: '💡' },
-  { key: 'validation', label: 'Valid.', icon: '✅' },
-  { key: 'proto', label: 'Proto', icon: '🔧' },
-  { key: 'gtm', label: 'GTM', icon: '🚀' },
-  { key: 'channel', label: 'Mktg', icon: '📣' },
-  { key: 'first', label: 'Sale', icon: '💰' },
-  { key: 'trouble', label: 'Hard', icon: '⚡' },
-  { key: 'money', label: 'Fund', icon: '💵' },
-  { key: 'team', label: 'Team', icon: '👥' },
+  { key: 'trending', label: 'Trending' },
+  { key: 'recent', label: 'Recent' },
+  { key: 'popular', label: 'Popular' },
 ];
 
 interface DiscoverFiltersProps {
@@ -38,234 +26,266 @@ interface DiscoverFiltersProps {
   currentRung: string;
   currentIndustry: string;
   currentContent: string;
+  currentMinLikes?: string;
+  currentMaxLikes?: string;
+  currentMinStreak?: string;
+  currentMaxStreak?: string;
 }
 
 export function DiscoverFilters({
   currentSort,
   currentRung,
   currentIndustry,
-  currentContent,
+  currentMinLikes = '',
+  currentMaxLikes = '',
+  currentMinStreak = '',
+  currentMaxStreak = '',
 }: DiscoverFiltersProps) {
-  const [openSections, setOpenSections] = useState({
-    watch: currentContent !== 'all',
-    industry: currentIndustry !== 'all',
-    stage: currentRung !== 'all',
-  });
+  const router = useRouter();
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  const toggleSection = (section: 'watch' | 'industry' | 'stage') => {
-    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
-  };
+  // Local state for range inputs
+  const [minLikes, setMinLikes] = useState(currentMinLikes);
+  const [maxLikes, setMaxLikes] = useState(currentMaxLikes);
+  const [minStreak, setMinStreak] = useState(currentMinStreak);
+  const [maxStreak, setMaxStreak] = useState(currentMaxStreak);
 
-  const buildUrl = (sort: string, rung: string, industry: string, content: string) => {
+  const buildUrl = (
+    sort: string,
+    rung: string,
+    industry: string,
+    minL?: string,
+    maxL?: string,
+    minS?: string,
+    maxS?: string
+  ) => {
     const params = new URLSearchParams();
-    if (sort !== 'recent') params.set('sort', sort);
+    if (sort !== 'trending') params.set('sort', sort);
     if (rung !== 'all') params.set('rung', rung);
     if (industry !== 'all') params.set('industry', industry);
-    if (content !== 'all') params.set('content', content);
+    if (minL) params.set('minLikes', minL);
+    if (maxL) params.set('maxLikes', maxL);
+    if (minS) params.set('minStreak', minS);
+    if (maxS) params.set('maxStreak', maxS);
     const query = params.toString();
     return `/discover${query ? `?${query}` : ''}`;
   };
 
-  const hasActiveFilters = currentRung !== 'all' || currentIndustry !== 'all' || currentContent !== 'all';
+  const hasActiveFilters =
+    currentRung !== 'all' ||
+    currentIndustry !== 'all' ||
+    currentMinLikes ||
+    currentMaxLikes ||
+    currentMinStreak ||
+    currentMaxStreak;
+
+  const activeFilterCount = [
+    currentRung !== 'all',
+    currentIndustry !== 'all',
+    currentMinLikes || currentMaxLikes,
+    currentMinStreak || currentMaxStreak,
+  ].filter(Boolean).length;
+
+  const applyRangeFilters = () => {
+    router.push(buildUrl(currentSort, currentRung, currentIndustry, minLikes, maxLikes, minStreak, maxStreak));
+  };
 
   return (
-    <div className="bg-soft rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8">
-      {/* Sort Row - always visible */}
-      <div className="flex items-center gap-3 mb-3">
-        <span className="text-[12px] text-ink-3 font-semibold uppercase tracking-wide w-12 flex-shrink-0">Sort</span>
-        <div className="flex gap-2 flex-wrap">
+    <div className="mb-6 sm:mb-8">
+      {/* Sort (left) and Filter (right) */}
+      <div className="flex items-center justify-between">
+        {/* Sort Options - inline pills */}
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] text-ink-3 font-medium mr-1">Sort:</span>
           {SORT_OPTIONS.map((opt) => (
             <Link
               key={opt.key}
-              href={buildUrl(opt.key, currentRung, currentIndustry, currentContent)}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
+              href={buildUrl(opt.key, currentRung, currentIndustry, currentMinLikes, currentMaxLikes, currentMinStreak, currentMaxStreak)}
+              className={`px-3 py-1.5 rounded-full text-[13px] font-semibold transition-colors ${
                 currentSort === opt.key
-                  ? 'bg-ink text-white shadow-sm'
-                  : 'bg-white text-ink-2 hover:text-ink border border-rule'
+                  ? 'bg-ink text-white'
+                  : 'bg-white text-ink-2 border border-rule hover:border-ink-3'
               }`}
             >
-              <span>{opt.icon}</span>
               {opt.label}
             </Link>
           ))}
         </div>
+
+        {/* Filter Button + Clear */}
+        <div className="flex items-center gap-3">
+          {hasActiveFilters && (
+            <Link
+              href={buildUrl(currentSort, 'all', 'all')}
+              className="text-[13px] font-medium text-ink-3 hover:text-ink flex items-center gap-1"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+              Clear
+            </Link>
+          )}
+
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={`flex items-center gap-2 px-4 py-2 border rounded-full text-[14px] font-semibold transition-colors ${
+              hasActiveFilters
+                ? 'bg-ink text-white border-ink'
+                : 'bg-white border-rule hover:border-ink-3'
+            }`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+            </svg>
+            Filter
+            {activeFilterCount > 0 && (
+              <span className="bg-go text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+            <svg
+              className={`w-4 h-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* Collapsible filter sections */}
-      <div className="border-t border-rule pt-2 space-y-1">
-        {/* Watch Content */}
-        <div>
-          <button
-            onClick={() => toggleSection('watch')}
-            className="flex items-center justify-between w-full py-2 text-left"
-          >
-            <span className="text-[12px] text-ink-3 font-semibold uppercase tracking-wide flex items-center gap-2">
-              Watch
-              {currentContent !== 'all' && (
-                <span className="text-[10px] bg-heat text-white px-1.5 py-0.5 rounded-full normal-case">
-                  {VIDEO_CATEGORIES.find(c => c.key === currentContent)?.label}
-                </span>
-              )}
-            </span>
-            <svg
-              className={`w-4 h-4 text-ink-3 transition-transform ${openSections.watch ? 'rotate-180' : ''}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          {openSections.watch && (
-            <div className="pb-2 flex gap-1.5 flex-wrap">
-              <Link
-                href={buildUrl(currentSort, currentRung, currentIndustry, 'all')}
-                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  currentContent === 'all'
-                    ? 'bg-heat text-white'
-                    : 'bg-white text-ink-3 hover:text-ink border border-rule'
-                }`}
-              >
-                All
-              </Link>
-              {VIDEO_CATEGORIES.map((cat) => (
+      {/* Filter Panel */}
+      {filterOpen && (
+        <div className="mt-4 bg-white border border-rule rounded-2xl p-5 shadow-sm">
+          <div className="grid sm:grid-cols-2 gap-6">
+            {/* Industry */}
+            <div>
+              <label className="block text-[12px] text-ink-3 font-semibold uppercase tracking-wide mb-3">
+                Industry
+              </label>
+              <div className="flex gap-2 flex-wrap">
                 <Link
-                  key={cat.key}
-                  href={buildUrl(currentSort, currentRung, currentIndustry, cat.key)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    currentContent === cat.key
-                      ? 'bg-heat text-white'
-                      : 'bg-white text-ink-3 hover:text-ink border border-rule'
-                  }`}
-                >
-                  <span>{cat.icon}</span>
-                  {cat.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Industry */}
-        <div>
-          <button
-            onClick={() => toggleSection('industry')}
-            className="flex items-center justify-between w-full py-2 text-left"
-          >
-            <span className="text-[12px] text-ink-3 font-semibold uppercase tracking-wide flex items-center gap-2">
-              Industry
-              {currentIndustry !== 'all' && (
-                <span className="text-[10px] bg-ink text-white px-1.5 py-0.5 rounded-full normal-case">
-                  {INDUSTRY_LABELS[currentIndustry as Industry]}
-                </span>
-              )}
-            </span>
-            <svg
-              className={`w-4 h-4 text-ink-3 transition-transform ${openSections.industry ? 'rotate-180' : ''}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          {openSections.industry && (
-            <div className="pb-2 flex gap-1.5 flex-wrap">
-              <Link
-                href={buildUrl(currentSort, currentRung, 'all', currentContent)}
-                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  currentIndustry === 'all'
-                    ? 'bg-ink text-white'
-                    : 'bg-white text-ink-3 hover:text-ink border border-rule'
-                }`}
-              >
-                All
-              </Link>
-              {INDUSTRIES.map((ind) => (
-                <Link
-                  key={ind}
-                  href={buildUrl(currentSort, currentRung, ind, currentContent)}
-                  className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    currentIndustry === ind
+                  href={buildUrl(currentSort, currentRung, 'all', currentMinLikes, currentMaxLikes, currentMinStreak, currentMaxStreak)}
+                  className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
+                    currentIndustry === 'all'
                       ? 'bg-ink text-white'
-                      : 'bg-white text-ink-3 hover:text-ink border border-rule'
+                      : 'bg-soft text-ink-2 hover:text-ink'
                   }`}
                 >
-                  {INDUSTRY_LABELS[ind]}
+                  All
                 </Link>
-              ))}
+                {INDUSTRIES.map((ind) => (
+                  <Link
+                    key={ind}
+                    href={buildUrl(currentSort, currentRung, ind, currentMinLikes, currentMaxLikes, currentMinStreak, currentMaxStreak)}
+                    className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
+                      currentIndustry === ind
+                        ? 'bg-ink text-white'
+                        : 'bg-soft text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    {INDUSTRY_LABELS[ind]}
+                  </Link>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Stage */}
-        <div>
-          <button
-            onClick={() => toggleSection('stage')}
-            className="flex items-center justify-between w-full py-2 text-left"
-          >
-            <span className="text-[12px] text-ink-3 font-semibold uppercase tracking-wide flex items-center gap-2">
-              Stage
-              {currentRung !== 'all' && (
-                <span className="text-[10px] bg-go-deep text-white px-1.5 py-0.5 rounded-full normal-case">
-                  {RUNG_LABELS[currentRung as Rung]}
-                </span>
-              )}
-            </span>
-            <svg
-              className={`w-4 h-4 text-ink-3 transition-transform ${openSections.stage ? 'rotate-180' : ''}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-          {openSections.stage && (
-            <div className="pb-2 flex gap-1.5 flex-wrap">
-              <Link
-                href={buildUrl(currentSort, 'all', currentIndustry, currentContent)}
-                className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  currentRung === 'all'
-                    ? 'bg-go-deep text-white'
-                    : 'bg-white text-ink-3 hover:text-ink border border-rule'
-                }`}
-              >
-                All
-              </Link>
-              {RUNGS.map((rung) => (
+            {/* Stage */}
+            <div>
+              <label className="block text-[12px] text-ink-3 font-semibold uppercase tracking-wide mb-3">
+                Stage
+              </label>
+              <div className="flex gap-2 flex-wrap">
                 <Link
-                  key={rung}
-                  href={buildUrl(currentSort, rung, currentIndustry, currentContent)}
-                  className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    currentRung === rung
+                  href={buildUrl(currentSort, 'all', currentIndustry, currentMinLikes, currentMaxLikes, currentMinStreak, currentMaxStreak)}
+                  className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
+                    currentRung === 'all'
                       ? 'bg-go-deep text-white'
-                      : 'bg-white text-ink-3 hover:text-ink border border-rule'
+                      : 'bg-soft text-ink-2 hover:text-ink'
                   }`}
                 >
-                  {RUNG_LABELS[rung]}
+                  All
                 </Link>
-              ))}
+                {RUNGS.map((rung) => (
+                  <Link
+                    key={rung}
+                    href={buildUrl(currentSort, rung, currentIndustry, currentMinLikes, currentMaxLikes, currentMinStreak, currentMaxStreak)}
+                    className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all ${
+                      currentRung === rung
+                        ? 'bg-go-deep text-white'
+                        : 'bg-soft text-ink-2 hover:text-ink'
+                    }`}
+                  >
+                    {RUNG_LABELS[rung]}
+                  </Link>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Clear filters */}
-      {hasActiveFilters && (
-        <div className="mt-2 pt-2 border-t border-rule">
-          <Link
-            href="/discover"
-            className="text-[11px] font-medium text-ink-3 hover:text-ink flex items-center gap-1"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-            Clear all filters
-          </Link>
+            {/* Min/Max Likes */}
+            <div>
+              <label className="block text-[12px] text-ink-3 font-semibold uppercase tracking-wide mb-3">
+                Followers
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minLikes}
+                  onChange={(e) => setMinLikes(e.target.value)}
+                  className="w-24 px-3 py-2 border border-rule rounded-lg text-[14px] focus:outline-none focus:border-ink-3"
+                  min="0"
+                />
+                <span className="text-ink-3">to</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxLikes}
+                  onChange={(e) => setMaxLikes(e.target.value)}
+                  className="w-24 px-3 py-2 border border-rule rounded-lg text-[14px] focus:outline-none focus:border-ink-3"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            {/* Min/Max Streak */}
+            <div>
+              <label className="block text-[12px] text-ink-3 font-semibold uppercase tracking-wide mb-3">
+                Streak (weeks)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minStreak}
+                  onChange={(e) => setMinStreak(e.target.value)}
+                  className="w-24 px-3 py-2 border border-rule rounded-lg text-[14px] focus:outline-none focus:border-ink-3"
+                  min="0"
+                />
+                <span className="text-ink-3">to</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxStreak}
+                  onChange={(e) => setMaxStreak(e.target.value)}
+                  className="w-24 px-3 py-2 border border-rule rounded-lg text-[14px] focus:outline-none focus:border-ink-3"
+                  min="0"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Apply Button for range filters */}
+          <div className="mt-5 pt-4 border-t border-rule flex justify-end">
+            <button
+              onClick={applyRangeFilters}
+              className="px-5 py-2 bg-ink text-white rounded-full text-[14px] font-semibold hover:bg-[#2a2a2a] transition-colors"
+            >
+              Apply Filters
+            </button>
+          </div>
         </div>
       )}
     </div>

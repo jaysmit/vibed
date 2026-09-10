@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server';
 import { logEvent } from './events';
 import { EVENT_TYPES } from '@/lib/supabase/types';
+import { incrementFollows, decrementFollows } from './user-trust';
 
 export async function followVenture(userId: string, ventureId: string): Promise<boolean> {
   const supabase = await createAdminClient();
@@ -53,6 +54,9 @@ export async function followVenture(userId: string, ventureId: string): Promise<
     meta: { targetType: 'venture' },
   });
 
+  // Update user trust metrics
+  await incrementFollows(userId);
+
   return true;
 }
 
@@ -95,6 +99,9 @@ export async function unfollowVenture(userId: string, ventureId: string): Promis
     ventureId: ventureId,
     meta: { targetType: 'venture' },
   });
+
+  // Update user trust metrics
+  await decrementFollows(userId);
 
   return true;
 }

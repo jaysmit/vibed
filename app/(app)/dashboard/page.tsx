@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentUserId } from '@/lib/supabase/auth';
 import { getVenturesByFounderUserId } from '@/lib/services/ventures';
-import { VentureLogo, ProgressRingCompact } from '@/components/ui';
+import { ProgressRingCompact } from '@/components/ui';
 import { calculateCompletion } from '@/lib/domain/standards';
 
 export default async function DashboardPage() {
@@ -53,11 +53,24 @@ export default async function DashboardPage() {
                 className="block bg-page border border-rule rounded-xl p-5 hover:border-ink-3 hover:shadow-sm transition-all"
               >
                 <div className="flex items-start gap-4">
-                  <VentureLogo
-                    glyph={venture.glyph}
-                    brand={venture.brand}
-                    size="md"
-                  />
+                  {/* Cover image thumbnail */}
+                  <div className="w-16 h-16 rounded-xl bg-soft overflow-hidden flex-shrink-0">
+                    {venture.links?.poster ? (
+                      <img
+                        src={venture.links.poster}
+                        alt={venture.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-ink-3">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <circle cx="8.5" cy="8.5" r="1.5" />
+                          <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
@@ -104,7 +117,6 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div className="text-center py-20 max-w-md mx-auto">
-          <div className="text-[60px] opacity-20 mb-4">🚀</div>
           <h2
             className="text-[28px] font-extrabold"
             style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}

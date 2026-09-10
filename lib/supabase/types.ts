@@ -61,9 +61,10 @@ export interface FounderWithVentures extends Founder {
 // Segment entry with flexible timeline support
 export interface SegmentEntry {
   body?: string;
-  happenedAt?: string;  // When this actually happened (ISO date, for timeline ordering)
+  happenedAt?: string | null;  // When this actually happened (ISO date, for timeline ordering)
   publishedAt?: string;  // When founder published this content
   updatedAt?: string;   // When founder last edited this
+  isPlanned?: boolean;  // True if this is a plan for the future, not completed yet
 }
 
 export interface Venture {
@@ -90,6 +91,7 @@ export interface Venture {
     clips: number;
     photos: number;
     likes: number;
+    endorsements: number;
     comments: number;
     weekNumber: number;
     streakWeeks: number;
@@ -190,6 +192,8 @@ export const EVENT_TYPES = {
   PROMISE_CREATED: 'promise.created',
   PROMISE_KEPT: 'promise.kept',
   PROMISE_BROKEN: 'promise.broken',
+  VENTURE_CHEERED: 'venture.cheered',
+  VENTURE_COMMENT_CREATED: 'venture.comment_created',
   CLIP_UPLOADED: 'clip.uploaded',
   CLIP_PUBLISHED: 'clip.published',
   TRANSCRIPT_READY: 'transcript.ready',
@@ -413,4 +417,89 @@ export interface Feedback {
   resolved_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// ============================================
+// TRUST SYSTEM
+// ============================================
+
+// Trust tiers with increasing abilities
+export const TRUST_TIERS = ['newcomer', 'member', 'contributor', 'champion'] as const;
+export type TrustTier = typeof TRUST_TIERS[number];
+
+export const TRUST_TIER_LABELS: Record<TrustTier, string> = {
+  newcomer: 'Newcomer',
+  member: 'Member',
+  contributor: 'Contributor',
+  champion: 'Champion',
+};
+
+// Requirements for each tier
+export const TRUST_TIER_REQUIREMENTS: Record<TrustTier, { daysActive: number; comments: number; follows: number }> = {
+  newcomer: { daysActive: 0, comments: 0, follows: 0 },
+  member: { daysActive: 1, comments: 0, follows: 1 },
+  contributor: { daysActive: 7, comments: 5, follows: 3 },
+  champion: { daysActive: 30, comments: 20, follows: 10 },
+};
+
+// Abilities unlocked at each tier
+export const TRUST_TIER_ABILITIES: Record<TrustTier, string[]> = {
+  newcomer: ['like'],
+  member: ['like', 'comment'],
+  contributor: ['like', 'comment', 'endorse'],
+  champion: ['like', 'comment', 'endorse (2x weight)'],
+};
+
+export interface UserTrust {
+  id: string;
+  user_id: string;
+  first_active_at: string;
+  days_active: number;
+  comments_count: number;
+  follows_count: number;
+  tier: TrustTier;
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// VENTURE LIKES
+// ============================================
+
+export interface VentureLike {
+  id: string;
+  venture_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+// ============================================
+// VENTURE ENDORSEMENTS
+// ============================================
+
+// Endorsement reason tags for ventures
+export const VENTURE_ENDORSEMENT_REASONS = [
+  'solid_idea',
+  'great_execution',
+  'inspiring_story',
+  'would_use_it',
+] as const;
+
+export type VentureEndorsementReason = typeof VENTURE_ENDORSEMENT_REASONS[number];
+
+export const VENTURE_ENDORSEMENT_REASON_LABELS: Record<VentureEndorsementReason, string> = {
+  solid_idea: 'Solid idea',
+  great_execution: 'Great execution',
+  inspiring_story: 'Inspiring story',
+  would_use_it: 'Would use it',
+};
+
+export interface VentureEndorsement {
+  id: string;
+  venture_id: string;
+  user_id: string;
+  reason: VentureEndorsementReason | null;
+  endorser_tier: 'contributor' | 'champion';
+  weight: 1 | 2;
+  created_at: string;
 }

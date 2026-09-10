@@ -10,7 +10,7 @@ export function DiscoverLink() {
   return (
     <Link
       href="/discover"
-      className={`text-[15px] font-bold px-4 py-2 rounded-full hidden sm:block transition-colors ${
+      className={`text-[18px] font-extrabold px-5 py-2.5 rounded-full hidden sm:block transition-colors ${
         isActive ? 'text-ink bg-soft' : 'text-ink hover:bg-soft'
       }`}
     >

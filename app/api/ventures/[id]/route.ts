@@ -3,6 +3,7 @@ import { getCurrentUserId } from '@/lib/supabase/auth';
 import { updateVenture, publishVenture, updateRung } from '@/lib/services/ventures';
 import { z } from 'zod';
 import { RUNGS } from '@/lib/domain/rungs';
+import { INDUSTRIES } from '@/lib/supabase/types';
 
 const UpdateVentureSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -11,6 +12,8 @@ const UpdateVentureSchema = z.object({
   who: z.string().max(500).optional(),
   why: z.string().max(500).optional(),
   rung: z.enum(RUNGS).optional(),
+  country: z.string().max(10).nullable().optional(),
+  categories: z.array(z.enum(INDUSTRIES)).max(3).optional(),
   glyph: z.string().max(20).optional(),
   brand: z.string().max(20).optional(),
   links: z.object({
@@ -20,7 +23,9 @@ const UpdateVentureSchema = z.object({
     x: z.string().optional(),
     yt: z.string().optional(),
     tiktok: z.string().optional(),
-  }).optional(),
+    linkedin: z.string().optional(),
+    poster: z.string().optional(),
+  }).passthrough().optional(),
 });
 
 export async function PATCH(

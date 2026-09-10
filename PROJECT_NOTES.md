@@ -109,7 +109,12 @@ NEXT_PUBLIC_APP_URL=https://vibed-hazel.vercel.app
 
 ### Cards
 - **PitchCard** - Instagram-style square cards for trending pitches (play icon overlay, likes, category, stage, founder with team dropdown, followers count)
-- **VentureCard** - Full cards with more info (promise progress, followers, glyph)
+- **VentureCard** - Full cards with 16:9 aspect-video poster, expandable description (3 lines + "See more"), promise progress, followers
+
+### Infinite Scroll
+- **InfiniteScrollSection** - Client component with IntersectionObserver for auto-loading
+- Horizontal scroll on ALL screen sizes with cursor-based pagination
+- API: `/api/ventures/feed?pillar=trending|recent|the_idea|etc&cursor=X&limit=6`
 
 ### Journey/Timeline System
 - **Flexible timeline**: Each segment has a "When did this happen?" date picker
@@ -193,6 +198,56 @@ npm run lint       # Run ESLint
   - Reduced section spacing throughout
   - Hero intro video for logged-out users (landscape, side-by-side on desktop)
   - Mobile hero: tagline + video only (no description)
+- **2026-09-07**: Landing page infinite scroll & card updates:
+  - Created `/api/ventures/feed` API with cursor-based pagination for pillars
+  - Built `InfiniteScrollSection` component with IntersectionObserver for infinite horizontal scroll
+  - Horizontal scroll now works on ALL screen sizes (desktop + mobile)
+  - `VentureCard` updated: 16:9 aspect-video poster ratio, expandable description (3 lines + "See more")
+  - Removed logo icons from VentureCard (no more VentureLogo on cards)
+  - Created `ShareButton` component (copy link, Twitter/X, LinkedIn, Facebook, native share)
+  - Updated `ClipsGrid` with modal for viewing clips with endorse/share buttons
+  - Rewrote intro video scripts (`reference/intro-video-script.md`, `reference/intro-video-scenes.md`) structured around four pillars: Be curious, Be inspired, Be ready, Be next
+- **2026-09-07 (PM)**: Trust-based engagement system:
+  - Created `user_trust` table tracking days_active, comments_count, follows_count, tier
+  - Four trust tiers: Newcomer (default) -> Member (1 day, 1 follow) -> Contributor (7 days, 5 comments, 3 follows) -> Champion (30 days, 20 comments, 10 follows)
+  - `venture_likes` table - anyone can like ventures (universal)
+  - `venture_endorsements` table - trust-gated (Contributor+), with reasons and weighted endorsements (Champion 2x)
+  - `LikeButton` component with optimistic updates
+  - `VentureEndorseButton` component with locked state for low tiers, reason picker dropdown
+  - `TrustBadge` component showing Member/Contributor/Champion badges
+  - Venture page now shows Like and Endorse buttons after Follow
+  - Trust metrics increment when users follow or comment
+- **2026-09-09**: Performance optimizations:
+  - **Landing page ISR**: Added `revalidate = 60` and moved auth check to client-side `HeroSection` component, making landing page statically cached with 1-minute revalidation
+  - **Cached admin client**: Created `createCachedAdminClient()` (cookieless) for use inside `unstable_cache()` functions
+  - **Cached queries**: `getTrendingVentures`, `getRecentVentures`, `getVentureBySlug`, `getClipsByVenture`, `getVentureTeam` all use `unstable_cache` (30-60s)
+  - **Middleware optimization**: Skip Supabase auth check for public paths entirely
+  - **Parallel queries**: Venture page now runs clips, team, and follow status queries in parallel (not sequential)
+  - **Fast auth check**: Created `getCurrentUserIdFast()` using `getSession()` (local JWT validation) instead of `getUser()` (network request to Supabase auth)
+  - **VentureCard/PitchCard**: Fixed-height descriptions (4 lines / 2 lines) with consistent card heights
+- **2026-09-10**: Major performance optimization session:
+  - **Bundle size reduction: 519 KB → 217 KB (58% smaller)**:
+    - Lazy-loaded VideoPlayer (Mux) via `VideoPlayerLazy.tsx` wrapper
+    - Removed VideoPlayer/VideoUploader from barrel exports
+    - Updated JourneyAccordion to use lazy VideoPlayer
+    - Added `optimizePackageImports` for @supabase/supabase-js, lucide-react, date-fns
+  - **Font optimization**:
+    - Added `display: "swap"` to all fonts (text appears immediately)
+    - Reduced Inter from 4 weights to 2 (400, 600)
+    - Added fallback fonts (Georgia, system-ui, Consolas)
+  - **Image optimization**:
+    - Converted all `<img>` to `next/image` in PitchCard and VentureCard
+    - Added AVIF format support (25-35% smaller than WebP)
+    - Added `priority` prop to first 2 cards in InfiniteScrollSection (LCP optimization)
+    - Added Mux thumbnail domain to remotePatterns
+  - **Database indexes** (migration 008):
+    - Added indexes for ventures (slug, status, founder_id, counters)
+    - Added indexes for clips (venture_id, published_at, segment_key)
+    - Added indexes for follows, founders, comments, events
+  - **Lazy-loaded FeedbackWidget** - modal code only loads when clicked
+  - **Browser-level prerendering**: Added Speculation Rules API for `/v/*`, `/discover`, `/founder/*`
+  - **Loading skeleton**: Added loading.tsx for venture page
+  - **FollowButton self-fetches**: Follow state now fetched client-side, not blocking server render
 
 ---
 

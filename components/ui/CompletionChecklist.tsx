@@ -3,32 +3,30 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { REQUIREMENT_LABELS, type PublishingRequirements } from '@/lib/domain/standards';
+import {
+  REQUIREMENT_LABELS,
+  REQUIREMENT_ACTIONS,
+  STAGE_LABELS,
+  type PublishingRequirements,
+  type StageRequirements
+} from '@/lib/domain/standards';
 
 interface CompletionChecklistProps {
   ventureId: string;
   ventureSlug: string;
   percentage: number;
   requirements: PublishingRequirements;
+  stageRequirements?: StageRequirements;
   status: 'draft' | 'live' | 'graduated' | 'closed';
   onClose: () => void;
 }
-
-const REQUIREMENT_ACTIONS: Record<keyof PublishingRequirements, { action: string; tab?: string }> = {
-  hasName: { action: 'Edit venture name', tab: 'basics' },
-  hasPitch: { action: 'Write a one-line pitch', tab: 'basics' },
-  hasCategory: { action: 'Select categories', tab: 'basics' },
-  hasCountry: { action: 'Set your location', tab: 'basics' },
-  hasProblem: { action: 'Describe the problem', tab: 'basics' },
-  hasWho: { action: 'Define your target audience', tab: 'basics' },
-  hasWhy: { action: 'Explain why them', tab: 'basics' },
-};
 
 export function CompletionChecklist({
   ventureId,
   ventureSlug,
   percentage,
   requirements,
+  stageRequirements,
   status,
   onClose,
 }: CompletionChecklistProps) {
@@ -54,7 +52,74 @@ export function CompletionChecklist({
     setIsPublishing(false);
   };
 
-  const allRequirements = Object.entries(requirements) as [keyof PublishingRequirements, boolean][];
+  // Build link for each requirement
+  const getRequirementLink = (key: keyof PublishingRequirements): string => {
+    const field = REQUIREMENT_ACTIONS[key].field;
+    if (field === 'poster' || field === 'name' || field === 'pitch') {
+      // For basics fields, check if it's the segment or the basics field
+      if (key === 'hasElevatorPitch') {
+        return `/v/${ventureSlug}/edit?segment=pitch`;
+      }
+      return `/v/${ventureSlug}/edit?field=${field}`;
+    }
+    if (field === 'spark') {
+      return `/v/${ventureSlug}/edit?segment=spark`;
+    }
+    if (field === 'pitch-video') {
+      return `/v/${ventureSlug}/edit?segment=pitch`;
+    }
+    return `/v/${ventureSlug}/edit`;
+  };
+
+  // Split requirements into basics and journey
+  const basicsRequirements: [keyof PublishingRequirements, boolean][] = [
+    ['hasName', requirements.hasName],
+    ['hasPitch', requirements.hasPitch],
+    ['hasCoverImage', requirements.hasCoverImage],
+  ];
+
+  const journeyRequirements: [keyof PublishingRequirements, boolean][] = [
+    ['hasElevatorPitch', requirements.hasElevatorPitch],
+    ['hasSparkStory', requirements.hasSparkStory],
+  ];
+
+  const renderRequirementItem = ([key, met]: [keyof PublishingRequirements, boolean]) => (
+    <div
+      key={key}
+      className={`flex items-center gap-3 p-3 rounded-xl ${
+        met ? 'bg-go-tint' : 'bg-soft'
+      }`}
+    >
+      {met ? (
+        <div className="w-6 h-6 rounded-full bg-go flex items-center justify-center flex-shrink-0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+        </div>
+      ) : (
+        <div className="w-6 h-6 rounded-full border-2 border-ink-3 flex-shrink-0" />
+      )}
+      <div className="flex-1 min-w-0">
+        <div className={`text-[14px] font-medium ${met ? 'text-go-deep' : 'text-ink'}`}>
+          {REQUIREMENT_LABELS[key]}
+        </div>
+        {!met && (
+          <div className="text-[12px] text-ink-3 truncate">
+            {REQUIREMENT_ACTIONS[key].action}
+          </div>
+        )}
+      </div>
+      {!met && (
+        <Link
+          href={getRequirementLink(key)}
+          className="text-[12px] font-semibold text-go-deep hover:underline flex-shrink-0"
+          onClick={onClose}
+        >
+          Add →
+        </Link>
+      )}
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 bg-ink/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -78,84 +143,124 @@ export function CompletionChecklist({
           <p className="text-[14px] text-ink-2 mt-2">
             {isComplete
               ? 'Your venture is ready to publish!'
-              : `${percentage}% complete — finish these items to publish your venture.`}
+              : `${percentage}% complete — finish these items to go live.`}
           </p>
         </div>
 
-        {/* Checklist */}
+        {/* Requirements */}
         <div className="p-6 space-y-3">
-          {allRequirements.map(([key, met]) => (
+          {/* Basics Section */}
+          <h3 className="text-[11px] font-bold text-ink-3 uppercase tracking-wider mb-3">
+            Basics
+          </h3>
+          {basicsRequirements.map(renderRequirementItem)}
+
+          {/* Journey Section */}
+          <div className="pt-4 mt-4 border-t border-rule">
+            <h3 className="text-[11px] font-bold text-ink-3 uppercase tracking-wider mb-3">
+              Your Journey
+            </h3>
+            {journeyRequirements.map(renderRequirementItem)}
+          </div>
+
+          {/* Optional: Pitch Video */}
+          <div className="pt-4 mt-4 border-t border-rule">
+            <h3 className="text-[11px] font-bold text-ink-3 uppercase tracking-wider mb-3">
+              Recommended
+            </h3>
+
             <div
-              key={key}
               className={`flex items-center gap-3 p-3 rounded-xl ${
-                met ? 'bg-go-tint' : 'bg-soft'
+                requirements.hasPitchVideo ? 'bg-heat-tint' : 'bg-soft'
               }`}
             >
-              {met ? (
-                <div className="w-6 h-6 rounded-full bg-go flex items-center justify-center">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                    <path d="M20 6L9 17l-5-5" />
+              {requirements.hasPitchVideo ? (
+                <div className="w-6 h-6 rounded-full bg-heat flex items-center justify-center flex-shrink-0">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                    <polygon points="5 3 19 12 5 21 5 3" />
                   </svg>
                 </div>
               ) : (
-                <div className="w-6 h-6 rounded-full border-2 border-ink-3" />
+                <div className="w-6 h-6 rounded-full border-2 border-dashed border-ink-3 flex-shrink-0" />
               )}
-              <div className="flex-1">
-                <div className={`text-[14px] font-medium ${met ? 'text-go-deep' : 'text-ink'}`}>
-                  {REQUIREMENT_LABELS[key]}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className={`text-[14px] font-medium ${requirements.hasPitchVideo ? 'text-heat' : 'text-ink'}`}>
+                    Pitch video
+                  </span>
+                  <span className="text-[10px] bg-heat-tint text-heat px-1.5 py-0.5 rounded font-medium">
+                    Optional
+                  </span>
                 </div>
-                {!met && (
+                {!requirements.hasPitchVideo && (
                   <div className="text-[12px] text-ink-3">
-                    {REQUIREMENT_ACTIONS[key].action}
+                    30-60 seconds brings your story to life
                   </div>
                 )}
               </div>
-              {!met && (
+              {!requirements.hasPitchVideo && (
                 <Link
-                  href={`/v/${ventureSlug}/edit`}
-                  className="text-[12px] font-semibold text-go-deep hover:underline"
+                  href={`/v/${ventureSlug}/edit?segment=pitch`}
+                  className="text-[12px] font-semibold text-heat hover:underline flex-shrink-0"
                   onClick={onClose}
                 >
-                  Add →
+                  Record →
                 </Link>
               )}
             </div>
-          ))}
-
-          {/* Additional items (non-required but recommended) */}
-          <div className="pt-4 mt-4 border-t border-rule">
-            <h3 className="text-[13px] font-semibold text-ink-3 mb-3">RECOMMENDED</h3>
-
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-soft">
-              <div className="w-6 h-6 rounded-full border-2 border-ink-3 border-dashed" />
-              <div className="flex-1">
-                <div className="text-[14px] font-medium text-ink">Elevator pitch video</div>
-                <div className="text-[12px] text-ink-3">Record a 30-60 second pitch</div>
-              </div>
-              <Link
-                href={`/v/${ventureSlug}/edit`}
-                className="text-[12px] font-semibold text-go-deep hover:underline"
-                onClick={onClose}
-              >
-                Upload →
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-soft mt-2">
-              <div className="w-6 h-6 rounded-full border-2 border-ink-3 border-dashed" />
-              <div className="flex-1">
-                <div className="text-[14px] font-medium text-ink">Venture logo</div>
-                <div className="text-[12px] text-ink-3">Upload a logo or pick an emoji</div>
-              </div>
-              <Link
-                href={`/v/${ventureSlug}/edit`}
-                className="text-[12px] font-semibold text-go-deep hover:underline"
-                onClick={onClose}
-              >
-                Edit →
-              </Link>
-            </div>
           </div>
+
+          {/* Future stages - Planning section */}
+          {stageRequirements && (
+            <div className="pt-4 mt-4 border-t border-rule">
+              <h3 className="text-[11px] font-bold text-ink-3 uppercase tracking-wider mb-2">
+                Plan Your Journey
+              </h3>
+              <p className="text-[12px] text-ink-2 mb-3">
+                Haven&apos;t reached these stages yet? Write your plans — the community can help.
+              </p>
+
+              <div className="space-y-2">
+                {(Object.entries(stageRequirements) as [keyof StageRequirements, boolean][]).map(([key, completed]) => {
+                  const segmentMap: Record<string, string> = {
+                    hasValidation: 'validation',
+                    hasPrototype: 'proto',
+                    hasBuild: 'build',
+                    hasLaunch: 'launch',
+                    hasFirstDollar: 'first',
+                  };
+                  const segment = segmentMap[key] || key;
+
+                  return (
+                    <div
+                      key={key}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-soft transition-colors"
+                    >
+                      {completed ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-go">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-3">
+                          <circle cx="12" cy="12" r="10" />
+                        </svg>
+                      )}
+                      <span className={`flex-1 text-[13px] ${completed ? 'text-go-deep' : 'text-ink-2'}`}>
+                        {STAGE_LABELS[key]}
+                      </span>
+                      <Link
+                        href={`/v/${ventureSlug}/edit?segment=${segment}`}
+                        className="text-[11px] text-ink-3 hover:text-ink"
+                        onClick={onClose}
+                      >
+                        {completed ? 'Edit' : 'Plan'} →
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

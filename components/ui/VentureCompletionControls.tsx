@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { ProgressRingCompact } from './ProgressRing';
 import { CompletionChecklist } from './CompletionChecklist';
-import type { PublishingRequirements } from '@/lib/domain/standards';
+import type { PublishingRequirements, StageRequirements } from '@/lib/domain/standards';
 
 interface VentureCompletionControlsProps {
   ventureId: string;
   ventureSlug: string;
   percentage: number;
   requirements: PublishingRequirements;
+  stageRequirements?: StageRequirements;
   status: 'draft' | 'live' | 'graduated' | 'closed';
 }
 
@@ -18,6 +19,7 @@ export function VentureCompletionControls({
   ventureSlug,
   percentage,
   requirements,
+  stageRequirements,
   status,
 }: VentureCompletionControlsProps) {
   const [showChecklist, setShowChecklist] = useState(false);
@@ -77,6 +79,7 @@ export function VentureCompletionControls({
           ventureSlug={ventureSlug}
           percentage={percentage}
           requirements={requirements}
+          stageRequirements={stageRequirements}
           status={status}
           onClose={() => setShowChecklist(false)}
         />

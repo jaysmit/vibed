@@ -155,7 +155,6 @@ export default function StartPage() {
     return (
       <main className="min-h-screen flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-[480px] text-center">
-          <div className="text-[48px] mb-4">🎉</div>
           <h2
             className="text-[28px] font-black tracking-tight mb-4"
             style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
@@ -273,9 +272,13 @@ export default function StartPage() {
             >
               Add your team
             </h2>
-            <p className="text-ink-2 text-[15px] mb-8">
+            <p className="text-ink-2 text-[15px] mb-4">
               Working with others? Add them now or skip this step.
             </p>
+            <div className="bg-soft p-4 rounded-xl mb-6 text-[13px] text-ink-2">
+              <p className="font-semibold text-ink mb-1">Make your team shine ✨</p>
+              <p>Followers love learning about the people behind the venture. Encourage your team to add a photo and a one-liner about what makes them interesting.</p>
+            </div>
 
             <TeamMemberAdd
               members={teamMembers}
@@ -392,7 +395,7 @@ export default function StartPage() {
         {/* Submitting state */}
         {step === 'submitting' && invitationUrls.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-[40px] mb-4">🚀</div>
+            <div className="w-8 h-8 border-2 border-go border-t-transparent rounded-full animate-spin mx-auto mb-4" />
             <h2
               className="text-[24px] font-black tracking-tight"
               style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}

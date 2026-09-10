@@ -6,6 +6,7 @@ interface PromiseClockProps {
   createdAt: Date;
   keptHistory?: boolean[]; // true = kept, false = broken
   className?: string;
+  compact?: boolean;
 }
 
 export function PromiseClock({
@@ -14,6 +15,7 @@ export function PromiseClock({
   createdAt,
   keptHistory = [],
   className = '',
+  compact = false,
 }: PromiseClockProps) {
   const now = new Date();
   const dueDate = new Date(dueAt);
@@ -43,6 +45,26 @@ export function PromiseClock({
     timeLeftText = 'Due today';
   } else if (daysLeft === 1) {
     timeLeftText = '1d left';
+  }
+
+  if (compact) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <div className="flex-1 h-[3px] bg-[#E7E7E3] rounded-full overflow-hidden">
+          <i
+            className={`block h-full rounded-full ${barClass}`}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <span
+          className={`font-mono text-[10px] whitespace-nowrap font-medium ${
+            isPastDue ? 'text-dead' : isTight ? 'text-warn' : 'text-go-deep'
+          }`}
+        >
+          {timeLeftText}
+        </span>
+      </div>
+    );
   }
 
   return (

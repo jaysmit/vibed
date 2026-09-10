@@ -1,4 +1,5 @@
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createCachedAdminClient } from '@/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
 
 export interface ClipWithContext {
   _id: string;
@@ -90,8 +91,8 @@ export async function getClipsByQuestion(questionSlug: string): Promise<ClipWith
   });
 }
 
-export async function getClipByVentureAndSegment(ventureId: string, segmentKey: string): Promise<ClipWithContext | null> {
-  const supabase = await createAdminClient();
+async function _getClipByVentureAndSegment(ventureId: string, segmentKey: string): Promise<ClipWithContext | null> {
+  const supabase = createCachedAdminClient();
 
   const { data: clip } = await supabase
     .from('clips')
@@ -143,8 +144,15 @@ export async function getClipByVentureAndSegment(ventureId: string, segmentKey: 
   };
 }
 
-export async function getClipsByVenture(ventureId: string): Promise<ClipWithContext[]> {
-  const supabase = await createAdminClient();
+// Cached - revalidates every 60 seconds
+export const getClipByVentureAndSegment = unstable_cache(
+  _getClipByVentureAndSegment,
+  ['clip-by-venture-segment'],
+  { revalidate: 60, tags: ['clips'] }
+);
+
+async function _getClipsByVenture(ventureId: string): Promise<ClipWithContext[]> {
+  const supabase = createCachedAdminClient();
 
   const { data: clips } = await supabase
     .from('clips')
@@ -194,6 +202,13 @@ export async function getClipsByVenture(ventureId: string): Promise<ClipWithCont
     };
   });
 }
+
+// Cached - revalidates every 60 seconds
+export const getClipsByVenture = unstable_cache(
+  _getClipsByVenture,
+  ['clips-by-venture'],
+  { revalidate: 60, tags: ['clips'] }
+);
 
 export async function getRecentClips(limit = 20): Promise<ClipWithContext[]> {
   const supabase = await createAdminClient();

@@ -85,12 +85,26 @@ export default async function FounderProfilePage({ params }: PageProps) {
     <main className="max-w-[900px] mx-auto px-6 py-10">
       {/* Profile Header */}
       <div className="flex flex-col sm:flex-row gap-6 mb-8">
-        <Avatar
-          name={founder.name}
-          imageUrl={founder.links?.avatar}
-          size="2xl"
-          color="#1F6F5C"
-        />
+        <div className="relative">
+          <Avatar
+            name={founder.name}
+            imageUrl={founder.links?.avatar}
+            size="2xl"
+            color="#1F6F5C"
+          />
+          {isOwner && (
+            <Link
+              href="/settings"
+              className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-page border border-rule hover:bg-soft hover:border-ink/30 transition-all shadow-sm"
+              title="Edit photo"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </Link>
+          )}
+        </div>
 
         <div className="flex-1">
           <div className="flex items-start justify-between gap-4">
@@ -237,12 +251,22 @@ export default async function FounderProfilePage({ params }: PageProps) {
                   className="block bg-page border border-rule rounded-xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all"
                 >
                   <div className="flex items-start gap-4">
-                    {/* Venture glyph/logo */}
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                      style={{ backgroundColor: venture.brand || '#F4F4F1' }}
-                    >
-                      {venture.glyph || '🚀'}
+                    {/* Venture cover image or fallback */}
+                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-soft">
+                      {(venture.links as Record<string, string | undefined>)?.poster ? (
+                        <img
+                          src={(venture.links as Record<string, string | undefined>).poster}
+                          alt={venture.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="w-full h-full flex items-center justify-center text-2xl"
+                          style={{ backgroundColor: venture.brand || '#F4F4F1' }}
+                        >
+                          {venture.glyph || '🚀'}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">

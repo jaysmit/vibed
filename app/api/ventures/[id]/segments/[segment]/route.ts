@@ -7,7 +7,8 @@ import { z } from 'zod';
 
 const UpdateSegmentSchema = z.object({
   body: z.string().max(10000),
-  happenedAt: z.string().optional(), // ISO date when this actually happened
+  happenedAt: z.string().nullable().optional(), // ISO date when this actually happened
+  isPlanned: z.boolean().optional(), // true if this is a future plan, not completed
 });
 
 export async function PUT(

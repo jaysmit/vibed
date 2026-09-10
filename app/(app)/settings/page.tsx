@@ -54,7 +54,19 @@ export default async function SettingsPage() {
       {/* Profile preview card */}
       <div className="bg-page border border-rule rounded-xl p-6 mb-6">
         <div className="flex items-start gap-4">
-          <Avatar name={founder.name} size="lg" color="#1F6F5C" />
+          <div className="relative group">
+            <Avatar name={founder.name} imageUrl={founder.links?.avatar} size="lg" color="#1F6F5C" />
+            <a
+              href="#edit-profile"
+              className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-page border border-rule hover:bg-soft hover:border-ink/30 transition-all shadow-sm"
+              title="Edit photo"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            </a>
+          </div>
           <div className="flex-1">
             <h2 className="text-[24px] font-bold">{founder.name}</h2>
             {founder.headline && (
@@ -90,6 +102,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* Edit profile */}
+      <div id="edit-profile">
       <ProfileEditor
         founderId={founder.id}
         initialName={founder.name}
@@ -100,8 +113,12 @@ export default async function SettingsPage() {
           linkedin: founder.links?.linkedin,
           twitter: founder.links?.twitter,
           website: founder.links?.website,
+          instagram: founder.links?.instagram,
+          tiktok: founder.links?.tiktok,
+          avatar: founder.links?.avatar,
         }}
       />
+      </div>
 
       {/* Account settings */}
       <div className="mt-6">

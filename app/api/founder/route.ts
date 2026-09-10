@@ -17,6 +17,9 @@ const UpdateFounderSchema = z.object({
     linkedin: z.string().url().optional().or(z.literal('')),
     twitter: z.string().url().optional().or(z.literal('')),
     website: z.string().url().optional().or(z.literal('')),
+    instagram: z.string().url().optional().or(z.literal('')),
+    tiktok: z.string().url().optional().or(z.literal('')),
+    avatar: z.string().optional().or(z.literal('')).or(z.null()),
   }).optional(),
 });
 
@@ -169,11 +172,25 @@ export async function PATCH(req: NextRequest) {
     if (data.bio !== undefined) updateData.bio = data.bio;
     if (data.location !== undefined) updateData.location = data.location;
     if (data.links) {
-      // Clean up empty strings
+      // Get existing links first
+      const { data: existingFounder } = await supabase
+        .from('founders')
+        .select('links')
+        .eq('id', founder.id)
+        .single();
+
+      const existingLinks = (existingFounder?.links || {}) as Record<string, string | undefined>;
+
+      // Merge with new links, clean up empty strings
       updateData.links = {
+        ...existingLinks,
         linkedin: data.links.linkedin || undefined,
         twitter: data.links.twitter || undefined,
         website: data.links.website || undefined,
+        instagram: data.links.instagram || undefined,
+        tiktok: data.links.tiktok || undefined,
+        // Handle avatar specially - null means remove, undefined means keep existing
+        avatar: data.links.avatar === null ? undefined : (data.links.avatar || existingLinks.avatar),
       };
     }
 

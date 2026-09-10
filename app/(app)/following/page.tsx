@@ -36,7 +36,6 @@ export default async function FollowingPage() {
                 name={venture.name}
                 pitch={venture.pitch}
                 brand={venture.brand}
-                glyph={venture.glyph}
                 rung={venture.rung}
                 status={venture.status}
                 founder={venture.founder}

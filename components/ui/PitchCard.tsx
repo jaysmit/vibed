@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Rung } from '@/lib/domain/rungs';
 import { INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 
@@ -34,6 +35,8 @@ interface PitchCardProps {
     likes?: number;
   };
   className?: string;
+  /** Set to true for above-the-fold images (first 2-3 cards) */
+  priority?: boolean;
 }
 
 const RUNG_SHORT: Record<Rung, string> = {
@@ -58,6 +61,7 @@ export function PitchCard({
   teamMembers = [],
   counters,
   className = '',
+  priority = false,
 }: PitchCardProps) {
   const [showTeam, setShowTeam] = useState(false);
   const isDead = status === 'closed';
@@ -72,10 +76,13 @@ export function PitchCard({
       >
         {/* Poster/thumbnail or white with subtle brand accent */}
         {poster ? (
-          <img
+          <Image
             src={poster}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
+            alt={name}
+            fill
+            sizes="(max-width: 680px) 50vw, (max-width: 1000px) 33vw, 25vw"
+            className="object-cover"
+            priority={priority}
           />
         ) : (
           <div className="absolute inset-0 bg-white">
@@ -98,11 +105,14 @@ export function PitchCard({
           </div>
         </div>
 
-        {/* One-liner pitch overlay at bottom */}
+        {/* One-liner pitch overlay at bottom - fixed height for 2 lines */}
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 via-black/40 to-transparent">
-          <p className="text-[12px] sm:text-[13px] text-white font-medium line-clamp-2 leading-snug">
-            {pitch}
-          </p>
+          {/* Fixed height: 2 lines × 13px × 1.375 (leading-snug) = ~36px */}
+          <div className="h-[36px]">
+            <p className="text-[12px] sm:text-[13px] text-white font-medium line-clamp-2 leading-snug">
+              {pitch}
+            </p>
+          </div>
         </div>
 
         {/* Top right: Status, Category, Likes */}
@@ -137,10 +147,12 @@ export function PitchCard({
           <div className="flex items-center gap-2">
             {/* Small avatar */}
             {founder.avatar ? (
-              <img
+              <Image
                 src={founder.avatar}
                 alt={founder.name}
-                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                width={24}
+                height={24}
+                className="rounded-full object-cover flex-shrink-0"
               />
             ) : (
               <span
@@ -172,7 +184,7 @@ export function PitchCard({
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-1.5">
                         {founder.avatar ? (
-                          <img src={founder.avatar} alt="" className="w-4 h-4 rounded-full" />
+                          <Image src={founder.avatar} alt="" width={16} height={16} className="rounded-full" />
                         ) : (
                           <span className="w-4 h-4 rounded-full text-[7px] font-semibold text-white grid place-items-center" style={{ background: brand }}>
                             {founder.name.split(' ').map((w) => w[0]).join('')}
@@ -184,7 +196,7 @@ export function PitchCard({
                       {teamMembers.map((member, i) => (
                         <div key={i} className="flex items-center gap-1.5">
                           {member.avatar ? (
-                            <img src={member.avatar} alt="" className="w-4 h-4 rounded-full" />
+                            <Image src={member.avatar} alt="" width={16} height={16} className="rounded-full" />
                           ) : (
                             <span className="w-4 h-4 rounded-full text-[7px] font-semibold text-white bg-ink-3 grid place-items-center">
                               {member.name.split(' ').map((w) => w[0]).join('')}

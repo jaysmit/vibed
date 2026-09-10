@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { logEvent } from './events';
 import { EVENT_TYPES } from '@/lib/supabase/types';
 import type { Comment, CommentWithAuthor } from '@/lib/supabase/types';
+import { incrementComments } from './user-trust';
 
 const MAX_COMMENT_LENGTH = 2000;
 
@@ -83,6 +84,9 @@ export async function createComment(
 
   // Increment comment counter on clip
   await incrementClipCommentCount(clipId);
+
+  // Update user trust metrics
+  await incrementComments(userId);
 
   // Log event
   await logEvent({
@@ -382,4 +386,249 @@ async function decrementClipCommentCount(clipId: string) {
       },
     })
     .eq('id', clipId);
+}
+
+// ============================================
+// VENTURE COMMENTS
+// ============================================
+
+export interface CreateVentureCommentInput {
+  ventureId: string;
+  content: string;
+  replyToId?: string;
+}
+
+/**
+ * Create a new comment on a venture
+ */
+export async function createVentureComment(
+  userId: string,
+  input: CreateVentureCommentInput
+): Promise<CommentWithAuthor> {
+  const supabase = await createAdminClient();
+
+  const { ventureId, content, replyToId } = input;
+
+  // Validate content
+  if (!content.trim()) {
+    throw new Error('Comment cannot be empty');
+  }
+  if (content.length > MAX_COMMENT_LENGTH) {
+    throw new Error(`Comment cannot exceed ${MAX_COMMENT_LENGTH} characters`);
+  }
+
+  // Verify venture exists
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('id')
+    .eq('id', ventureId)
+    .is('deleted_at', null)
+    .single();
+
+  if (!venture) {
+    throw new Error('Venture not found');
+  }
+
+  // Verify parent comment exists if replying
+  if (replyToId) {
+    const { data: parentComment } = await supabase
+      .from('comments')
+      .select('id')
+      .eq('id', replyToId)
+      .eq('venture_id', ventureId)
+      .is('deleted_at', null)
+      .single();
+
+    if (!parentComment) {
+      throw new Error('Parent comment not found');
+    }
+  }
+
+  // Get user's founder profile (if exists)
+  const { data: founder } = await supabase
+    .from('founders')
+    .select('id, name, slug, links')
+    .eq('user_id', userId)
+    .single();
+
+  // Insert comment
+  const { data: comment, error } = await supabase
+    .from('comments')
+    .insert({
+      venture_id: ventureId,
+      user_id: userId,
+      founder_id: founder?.id || null,
+      content: content.trim(),
+      reply_to_id: replyToId || null,
+    })
+    .select()
+    .single();
+
+  if (error || !comment) {
+    throw new Error(`Failed to create comment: ${error?.message}`);
+  }
+
+  // Increment comment counter on venture
+  await incrementVentureCommentCount(ventureId);
+
+  // Update user trust metrics
+  await incrementComments(userId);
+
+  // Log event
+  await logEvent({
+    type: EVENT_TYPES.VENTURE_COMMENT_CREATED,
+    actorId: userId,
+    ventureId,
+    meta: {
+      commentId: comment.id,
+      replyToId: replyToId || null,
+      contentPreview: content.substring(0, 100),
+    },
+  });
+
+  // Return comment with author info
+  return {
+    ...comment,
+    author: founder
+      ? {
+          id: founder.id,
+          name: founder.name,
+          slug: founder.slug,
+          avatar_url: (founder.links as Record<string, string>)?.avatar || null,
+        }
+      : null,
+  } as CommentWithAuthor;
+}
+
+/**
+ * Get comments for a venture with author info
+ */
+export async function getCommentsByVenture(
+  ventureId: string,
+  options: { limit?: number; offset?: number } = {}
+): Promise<{ comments: CommentWithAuthor[]; total: number }> {
+  const supabase = await createAdminClient();
+  const { limit = 20, offset = 0 } = options;
+
+  // Get total count for pagination
+  const { count } = await supabase
+    .from('comments')
+    .select('id', { count: 'exact', head: true })
+    .eq('venture_id', ventureId)
+    .is('deleted_at', null)
+    .is('reply_to_id', null);
+
+  // Get top-level comments with author info
+  const { data: comments } = await supabase
+    .from('comments')
+    .select(`
+      *,
+      founders (
+        id,
+        name,
+        slug,
+        links
+      )
+    `)
+    .eq('venture_id', ventureId)
+    .is('deleted_at', null)
+    .is('reply_to_id', null)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (!comments) {
+    return { comments: [], total: 0 };
+  }
+
+  // Get reply counts for each top-level comment
+  const commentIds = comments.map((c) => c.id);
+  const replyCounts: Record<string, number> = {};
+
+  if (commentIds.length > 0) {
+    const { data: repliesData } = await supabase
+      .from('comments')
+      .select('reply_to_id')
+      .in('reply_to_id', commentIds)
+      .is('deleted_at', null);
+
+    if (repliesData) {
+      for (const reply of repliesData) {
+        if (reply.reply_to_id) {
+          replyCounts[reply.reply_to_id] = (replyCounts[reply.reply_to_id] || 0) + 1;
+        }
+      }
+    }
+  }
+
+  // Format comments with author info
+  const formattedComments: CommentWithAuthor[] = comments.map((comment) => {
+    const founder = comment.founders as {
+      id: string;
+      name: string;
+      slug: string;
+      links: Record<string, string>;
+    } | null;
+
+    return {
+      id: comment.id,
+      clip_id: comment.clip_id,
+      venture_id: comment.venture_id,
+      user_id: comment.user_id,
+      founder_id: comment.founder_id,
+      content: comment.content,
+      reply_to_id: comment.reply_to_id,
+      deleted_at: comment.deleted_at,
+      created_at: comment.created_at,
+      updated_at: comment.updated_at,
+      author: founder
+        ? {
+            id: founder.id,
+            name: founder.name,
+            slug: founder.slug,
+            avatar_url: founder.links?.avatar || null,
+          }
+        : null,
+      reply_count: replyCounts[comment.id] || 0,
+    };
+  });
+
+  return { comments: formattedComments, total: count || 0 };
+}
+
+/**
+ * Get venture comment count
+ */
+export async function getVentureCommentCount(ventureId: string): Promise<number> {
+  const supabase = await createAdminClient();
+
+  const { count } = await supabase
+    .from('comments')
+    .select('id', { count: 'exact', head: true })
+    .eq('venture_id', ventureId)
+    .is('deleted_at', null);
+
+  return count || 0;
+}
+
+async function incrementVentureCommentCount(ventureId: string) {
+  const supabase = await createAdminClient();
+
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('counters')
+    .eq('id', ventureId)
+    .single();
+
+  if (!venture) return;
+
+  const counters = (venture.counters as Record<string, number>) || {};
+  await supabase
+    .from('ventures')
+    .update({
+      counters: {
+        ...counters,
+        comments: (counters.comments || 0) + 1,
+      },
+    })
+    .eq('id', ventureId);
 }

@@ -3,10 +3,10 @@
 import { useState, useRef, useCallback } from 'react';
 import type { FeedbackType, BrowserInfo } from '@/lib/supabase/types';
 
-const FEEDBACK_TYPES: { key: FeedbackType; label: string; icon: string; description: string }[] = [
-  { key: 'bug', label: 'Bug Report', icon: '🐛', description: 'Something isn\'t working' },
-  { key: 'feature', label: 'Feature Request', icon: '✨', description: 'Suggest an improvement' },
-  { key: 'general', label: 'General Feedback', icon: '💬', description: 'Share your thoughts' },
+const FEEDBACK_TYPES: { key: FeedbackType; label: string; description: string }[] = [
+  { key: 'bug', label: 'Bug Report', description: 'Something isn\'t working' },
+  { key: 'feature', label: 'Feature Request', description: 'Suggest an improvement' },
+  { key: 'general', label: 'General Feedback', description: 'Share your thoughts' },
 ];
 
 export function FeedbackWidget() {
@@ -181,7 +181,23 @@ export function FeedbackWidget() {
                       onClick={() => handleSelectType(t.key)}
                       className="w-full flex items-center gap-4 p-4 bg-soft rounded-xl hover:bg-rule transition-colors text-left"
                     >
-                      <span className="text-[24px]">{t.icon}</span>
+                      <span className="w-10 h-10 rounded-full bg-rule flex items-center justify-center flex-shrink-0">
+                        {t.key === 'bug' && (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M8 2l1.88 1.88M14.12 3.88L16 2M9 7.13v-1a3 3 0 116 0v1M12 20c-3.3 0-6-2.7-6-6v-3a6 6 0 0112 0v3c0 3.3-2.7 6-6 6zM12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M17.47 9c1.93-.2 3.53-1.9 3.53-4M6 13H3M21 13h-3M6 17l-3 1M18 17l3 1" />
+                          </svg>
+                        )}
+                        {t.key === 'feature' && (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                          </svg>
+                        )}
+                        {t.key === 'general' && (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                          </svg>
+                        )}
+                      </span>
                       <div>
                         <div className="font-semibold text-[15px]">{t.label}</div>
                         <div className="text-[13px] text-ink-3">{t.description}</div>
@@ -336,7 +352,11 @@ export function FeedbackWidget() {
               {/* Step 3: Success */}
               {step === 'success' && (
                 <div className="text-center py-6">
-                  <div className="text-[48px] mb-4">🎉</div>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-go-tint flex items-center justify-center">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-go-deep">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  </div>
                   <h3 className="text-[20px] font-bold mb-2">Thanks for your feedback!</h3>
                   <p className="text-[14px] text-ink-2 mb-6">
                     We appreciate you taking the time to help us improve Vibed.

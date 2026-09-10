@@ -38,6 +38,8 @@ export interface UpdateVentureInput {
   name?: string;
   pitch?: string;
   industry?: Industry;
+  country?: string | null;
+  categories?: Industry[];
   problem?: string;
   who?: string;
   why?: string;
@@ -50,12 +52,14 @@ export interface UpdateVentureInput {
     x?: string;
     yt?: string;
     tiktok?: string;
+    poster?: string;
   };
 }
 
 export interface UpdateSegmentInput {
   body: string;
-  happenedAt?: string; // ISO date when this actually happened
+  happenedAt?: string | null; // ISO date when this actually happened
+  isPlanned?: boolean; // true if this is a plan for the future
 }
 
 export async function createVenture(input: CreateVentureInput) {
@@ -291,6 +295,7 @@ export async function getVenturesByFounderUserId(userId: string) {
     ...venture,
     _id: venture.id,
     founderId: venture.founder_id,
+    links: (venture.links as Record<string, string | undefined>) || {},
     founder: {
       name: founder.name,
       slug: founder.slug,
@@ -356,18 +361,20 @@ export async function updateSegment(
     return null;
   }
 
-  const segments = (venture.segments || {}) as Record<string, { body?: string; happenedAt?: string; publishedAt?: string; updatedAt?: string }>;
+  const segments = (venture.segments || {}) as Record<string, { body?: string; happenedAt?: string | null; publishedAt?: string; updatedAt?: string; isPlanned?: boolean }>;
   const isNew = !segments[segmentKey]?.body;
 
   // Update segment with flexible timeline support
-  // happenedAt: when this actually happened (defaults to today for new entries)
+  // happenedAt: when this actually happened (null if planning)
   // publishedAt: when founder first published this content
   // updatedAt: when founder last edited this
+  // isPlanned: true if this is a future plan, not completed yet
   segments[segmentKey] = {
     body: input.body,
-    happenedAt: input.happenedAt || segments[segmentKey]?.happenedAt || new Date().toISOString().split('T')[0],
+    happenedAt: input.isPlanned ? null : (input.happenedAt || segments[segmentKey]?.happenedAt || new Date().toISOString().split('T')[0]),
     publishedAt: segments[segmentKey]?.publishedAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    isPlanned: input.isPlanned || false,
   };
 
   const { error } = await supabase

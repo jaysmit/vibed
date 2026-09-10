@@ -1,4 +1,5 @@
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createCachedAdminClient } from '@/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
 import type { Rung } from '@/lib/domain/rungs';
 import type { Industry } from '@/lib/supabase/types';
 
@@ -29,6 +30,7 @@ export interface VentureWithFounder {
     clips: number;
     photos: number;
     likes: number;
+    endorsements: number;
     comments: number;
     weekNumber: number;
     streakWeeks: number;
@@ -45,9 +47,11 @@ export interface VentureWithFounder {
     user_id: string;
     name: string;
     slug: string;
+    headline?: string;
     bio?: string;
     location?: string;
     avatar?: string;
+    links?: Record<string, string | undefined>;
   };
   _redirect?: string;
 }
@@ -113,15 +117,18 @@ function mapVenture(v: Record<string, unknown>, founder: Record<string, unknown>
       user_id: (founder?.user_id as string) || '',
       name: (founder?.name as string) || 'Unknown',
       slug: (founder?.slug as string) || '',
+      headline: founder?.headline as string | undefined,
       bio: founder?.bio as string | undefined,
       location: founder?.location as string | undefined,
       avatar: (founder?.links as Record<string, string> | undefined)?.avatar,
+      links: founder?.links as Record<string, string | undefined>,
     },
   };
 }
 
-export async function getPublishedVentures(): Promise<VentureWithFounder[]> {
-  const supabase = await createAdminClient();
+// Internal function that actually fetches (uses cookieless client for caching)
+async function _getPublishedVentures(): Promise<VentureWithFounder[]> {
+  const supabase = createCachedAdminClient();
 
   const { data: ventures } = await supabase
     .from('ventures')
@@ -135,6 +142,61 @@ export async function getPublishedVentures(): Promise<VentureWithFounder[]> {
 
   return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
 }
+
+// Cached version - revalidates every 60 seconds
+export const getPublishedVentures = unstable_cache(
+  _getPublishedVentures,
+  ['published-ventures'],
+  { revalidate: 60, tags: ['ventures'] }
+);
+
+// Fast query for landing page - only fetches top N by followers (trending)
+async function _getTrendingVentures(limit: number = 8): Promise<VentureWithFounder[]> {
+  const supabase = createCachedAdminClient();
+
+  const { data: ventures } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .in('status', ['live', 'graduated', 'closed'])
+    .not('published_at', 'is', null)
+    .is('deleted_at', null)
+    .order('counters->followers', { ascending: false })
+    .limit(limit);
+
+  if (!ventures || ventures.length === 0) return [];
+
+  return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
+}
+
+export const getTrendingVentures = unstable_cache(
+  _getTrendingVentures,
+  ['trending-ventures'],
+  { revalidate: 60, tags: ['ventures'] }
+);
+
+// Fast query for recent ventures
+async function _getRecentVentures(limit: number = 8): Promise<VentureWithFounder[]> {
+  const supabase = createCachedAdminClient();
+
+  const { data: ventures } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .in('status', ['live', 'graduated', 'closed'])
+    .not('published_at', 'is', null)
+    .is('deleted_at', null)
+    .order('published_at', { ascending: false })
+    .limit(limit);
+
+  if (!ventures || ventures.length === 0) return [];
+
+  return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
+}
+
+export const getRecentVentures = unstable_cache(
+  _getRecentVentures,
+  ['recent-ventures'],
+  { revalidate: 60, tags: ['ventures'] }
+);
 
 export async function getVenturesByRung(rung: Rung): Promise<VentureWithFounder[]> {
   const supabase = await createAdminClient();
@@ -153,8 +215,9 @@ export async function getVenturesByRung(rung: Rung): Promise<VentureWithFounder[
   return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
 }
 
-export async function getVentureBySlug(slug: string, viewerUserId?: string | null): Promise<VentureWithFounder | null> {
-  const supabase = await createAdminClient();
+// Internal function for fetching venture by slug (uses cookieless client for caching)
+async function _getVentureBySlugInternal(slug: string): Promise<VentureWithFounder | null> {
+  const supabase = createCachedAdminClient();
 
   // Try by slug first
   const { data: venture } = await supabase
@@ -183,15 +246,30 @@ export async function getVentureBySlug(slug: string, viewerUserId?: string | nul
     return null;
   }
 
-  const founder = venture.founders as Record<string, unknown>;
-  const isOwner = viewerUserId && founder?.user_id === viewerUserId;
+  return mapVenture(venture, venture.founders as Record<string, unknown>);
+}
+
+// Cached venture fetch - revalidates every 30 seconds
+const getCachedVentureBySlug = unstable_cache(
+  _getVentureBySlugInternal,
+  ['venture-by-slug'],
+  { revalidate: 30, tags: ['ventures'] }
+);
+
+// Public function with owner/draft check (can't cache this part since it depends on viewer)
+export async function getVentureBySlug(slug: string, viewerUserId?: string | null): Promise<VentureWithFounder | null> {
+  const venture = await getCachedVentureBySlug(slug);
+
+  if (!venture) return null;
+
+  const isOwner = viewerUserId && venture.founder?.user_id === viewerUserId;
 
   // Draft ventures return null (404) for non-owners
   if (venture.status === 'draft' && !isOwner) {
     return null;
   }
 
-  return mapVenture(venture, founder);
+  return venture;
 }
 
 export async function getFeaturedVenture(): Promise<VentureWithFounder | null> {
@@ -259,3 +337,71 @@ export async function getVenturesByIds(ids: string[]): Promise<VentureWithFounde
 
   return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
 }
+
+// Team member with founder profile data
+export interface TeamMemberWithProfile {
+  id: string;
+  role: 'founder' | 'partner' | 'team_member';
+  founder: {
+    id: string;
+    name: string;
+    slug: string;
+    headline?: string;
+    bio?: string;
+    location?: string;
+    avatar?: string;
+    links?: Record<string, string | undefined>;
+  } | null;
+  // For invited members who haven't joined yet
+  first_name?: string;
+  last_name?: string;
+  status: string;
+}
+
+async function _getVentureTeam(ventureId: string): Promise<TeamMemberWithProfile[]> {
+  const supabase = createCachedAdminClient();
+
+  try {
+    // Get team members for this venture
+    const { data: members } = await supabase
+      .from('venture_members')
+      .select('*, founders(*)')
+      .eq('venture_id', ventureId)
+      .in('status', ['accepted', 'pending'])
+      .order('is_master', { ascending: false })
+      .order('created_at', { ascending: true });
+
+    if (!members || members.length === 0) return [];
+
+    return members.map((m) => {
+      const founder = m.founders as Record<string, unknown> | null;
+      return {
+        id: m.id,
+        role: m.role,
+        first_name: m.first_name,
+        last_name: m.last_name,
+        status: m.status,
+        founder: founder ? {
+          id: founder.id as string,
+          name: founder.name as string,
+          slug: founder.slug as string,
+          headline: founder.headline as string | undefined,
+          bio: founder.bio as string | undefined,
+          location: founder.location as string | undefined,
+          avatar: (founder.links as Record<string, string> | undefined)?.avatar,
+          links: founder.links as Record<string, string | undefined>,
+        } : null,
+      };
+    });
+  } catch {
+    // Table might not exist yet
+    return [];
+  }
+}
+
+// Cached - revalidates every 60 seconds
+export const getVentureTeam = unstable_cache(
+  _getVentureTeam,
+  ['venture-team'],
+  { revalidate: 60, tags: ['team'] }
+);

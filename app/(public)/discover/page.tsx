@@ -5,29 +5,29 @@ import { RUNGS, type Rung } from '@/lib/domain/rungs';
 import { INDUSTRIES, type Industry } from '@/lib/supabase/types';
 import { DiscoverFilters } from './DiscoverFilters';
 
-const VIDEO_CATEGORIES_LABELS: Record<string, string> = {
-  pitch: 'Elevator Pitch',
-  spark: 'The Spark',
-  validation: 'Validation',
-  proto: 'Prototype',
-  gtm: 'Go To Market',
-  channel: 'Marketing',
-  first: 'First Sale',
-  trouble: 'Challenges',
-  money: 'Funding',
-  team: 'Team Building',
-};
-
 interface PageProps {
-  searchParams: Promise<{ sort?: string; rung?: string; industry?: string; content?: string }>;
+  searchParams: Promise<{
+    sort?: string;
+    rung?: string;
+    industry?: string;
+    content?: string;
+    minLikes?: string;
+    maxLikes?: string;
+    minStreak?: string;
+    maxStreak?: string;
+  }>;
 }
 
 export default async function DiscoverPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const currentSort = params.sort || 'recent';
+  const currentSort = params.sort || 'trending';
   const currentRung = params.rung || 'all';
   const currentIndustry = params.industry || 'all';
   const currentContent = params.content || 'all';
+  const currentMinLikes = params.minLikes || '';
+  const currentMaxLikes = params.maxLikes || '';
+  const currentMinStreak = params.minStreak || '';
+  const currentMaxStreak = params.maxStreak || '';
 
   let ventures = await getPublishedVentures();
 
@@ -50,11 +50,39 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
     });
   }
 
+  // Filter by followers (likes)
+  if (currentMinLikes) {
+    const min = parseInt(currentMinLikes, 10);
+    if (!isNaN(min)) {
+      ventures = ventures.filter((v) => (v.counters?.followers || 0) >= min);
+    }
+  }
+  if (currentMaxLikes) {
+    const max = parseInt(currentMaxLikes, 10);
+    if (!isNaN(max)) {
+      ventures = ventures.filter((v) => (v.counters?.followers || 0) <= max);
+    }
+  }
+
+  // Filter by streak (weeks)
+  if (currentMinStreak) {
+    const min = parseInt(currentMinStreak, 10);
+    if (!isNaN(min)) {
+      ventures = ventures.filter((v) => (v.counters?.streakWeeks || 0) >= min);
+    }
+  }
+  if (currentMaxStreak) {
+    const max = parseInt(currentMaxStreak, 10);
+    if (!isNaN(max)) {
+      ventures = ventures.filter((v) => (v.counters?.streakWeeks || 0) <= max);
+    }
+  }
+
   // Sort
   if (currentSort === 'popular') {
-    ventures = [...ventures].sort((a, b) => b.counters.followers - a.counters.followers);
+    ventures = [...ventures].sort((a, b) => (b.counters?.followers || 0) - (a.counters?.followers || 0));
   } else if (currentSort === 'trending') {
-    ventures = [...ventures].sort((a, b) => b.counters.trendingScore - a.counters.trendingScore);
+    ventures = [...ventures].sort((a, b) => (b.counters?.trendingScore || 0) - (a.counters?.trendingScore || 0));
   }
 
   return (
@@ -72,24 +100,23 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
         </p>
       </div>
 
-      {/* Collapsible Filters Panel */}
+      {/* Sort & Filter Controls */}
       <DiscoverFilters
         currentSort={currentSort}
         currentRung={currentRung}
         currentIndustry={currentIndustry}
         currentContent={currentContent}
+        currentMinLikes={currentMinLikes}
+        currentMaxLikes={currentMaxLikes}
+        currentMinStreak={currentMinStreak}
+        currentMaxStreak={currentMaxStreak}
       />
 
       {/* Results count */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
+      <div className="mb-4 sm:mb-6">
         <span className="text-[13px] sm:text-[14px] text-ink-3">
           <b className="text-ink font-semibold">{ventures.length}</b> {ventures.length === 1 ? 'venture' : 'ventures'} found
         </span>
-        {currentContent !== 'all' && (
-          <span className="text-[12px] bg-heat-tint text-heat px-2 py-1 rounded-full font-medium">
-            Showing ventures with {VIDEO_CATEGORIES_LABELS[currentContent]} content
-          </span>
-        )}
       </div>
 
       {/* Ventures grid */}
@@ -101,7 +128,6 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
             name={v.name}
             pitch={v.pitch}
             brand={v.brand}
-            glyph={v.glyph}
             poster={v.links?.poster}
             rung={v.rung}
             industry={v.industry}
@@ -116,7 +142,6 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
 
       {ventures.length === 0 && (
         <div className="text-center py-16 sm:py-20 max-w-md mx-auto">
-          <div className="text-[48px] sm:text-[60px] opacity-20 mb-4">🔍</div>
           <h2 className="text-[20px] sm:text-[24px] font-extrabold font-display">No ventures found</h2>
           <p className="text-ink-2 mt-2 text-[14px] sm:text-base">
             Try adjusting your filters or check back later.

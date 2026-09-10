@@ -1,63 +1,132 @@
 // Standards and completion calculation for ventures
 
-import type { Venture, Industry } from '@/lib/supabase/types';
+import type { Venture } from '@/lib/supabase/types';
 
-// Publishing requirements (7 items = 100%)
+// Publishing requirements - split into basics and journey
 export interface PublishingRequirements {
+  // Basics (from the basics tab)
   hasName: boolean;
-  hasPitch: boolean;
-  hasCategory: boolean;
-  hasCountry: boolean;
-  hasProblem: boolean;
-  hasWho: boolean;
-  hasWhy: boolean;
+  hasPitch: boolean;           // One-line pitch
+  hasCoverImage: boolean;      // Hero/banner image
+
+  // Journey essentials
+  hasElevatorPitch: boolean;   // The pitch segment written
+  hasSparkStory: boolean;      // The spark segment written
+
+  // Optional but tracked
+  hasPitchVideo: boolean;      // Elevator pitch video
+}
+
+// Additional segments that are recommended based on venture stage
+export interface StageRequirements {
+  hasValidation: boolean;
+  hasPrototype: boolean;
+  hasBuild: boolean;
+  hasLaunch: boolean;
+  hasFirstDollar: boolean;
 }
 
 export interface CompletionStatus {
   requirements: PublishingRequirements;
+  stageRequirements: StageRequirements;
   completedCount: number;
   totalCount: number;
   percentage: number;
   isComplete: boolean;
+  recommendations: string[];
 }
+
+// Core requirements needed to publish (5 items = 100%)
+const CORE_REQUIREMENTS: (keyof PublishingRequirements)[] = [
+  'hasName',
+  'hasPitch',
+  'hasCoverImage',
+  'hasElevatorPitch',
+  'hasSparkStory',
+];
 
 // Calculate completion status for a venture
 export function calculateCompletion(venture: Partial<Venture>): CompletionStatus {
+  const segments = venture.segments || {};
+  const links = venture.links || {};
+
+  // All requirements
   const requirements: PublishingRequirements = {
-    hasName: Boolean(venture.name && venture.name.trim()),
-    hasPitch: Boolean(venture.pitch && venture.pitch.trim()),
-    hasCategory: Boolean(
-      (venture.categories && venture.categories.length > 0) ||
-      (venture.industry && venture.industry !== 'other')
-    ),
-    hasCountry: Boolean(venture.country && venture.country.trim()),
-    hasProblem: Boolean(venture.problem && venture.problem.trim()),
-    hasWho: Boolean(venture.who && venture.who.trim()),
-    hasWhy: Boolean(venture.why && venture.why.trim()),
+    // Basics
+    hasName: Boolean(venture.name?.trim()),
+    hasPitch: Boolean(venture.pitch?.trim()),
+    hasCoverImage: Boolean(links.poster),
+
+    // Journey essentials
+    hasElevatorPitch: Boolean(segments.pitch?.body?.trim()),
+    hasSparkStory: Boolean(segments.spark?.body?.trim()),
+
+    // Optional
+    hasPitchVideo: false, // Will be set from clips data if available
   };
 
-  const completedCount = Object.values(requirements).filter(Boolean).length;
-  const totalCount = Object.keys(requirements).length;
-  const percentage = Math.round((completedCount / totalCount) * 100);
+  // Stage-based requirements (not required for publishing but tracked)
+  const stageRequirements: StageRequirements = {
+    hasValidation: Boolean(segments.validation?.body?.trim()),
+    hasPrototype: Boolean(segments.proto?.body?.trim()),
+    hasBuild: Boolean(segments.build?.body?.trim()),
+    hasLaunch: Boolean(segments.launch?.body?.trim()),
+    hasFirstDollar: Boolean(segments.first?.body?.trim()),
+  };
+
+  // Count core requirements (excluding video which is optional)
+  const coreComplete = CORE_REQUIREMENTS.filter(key => requirements[key]).length;
+  const totalCount = CORE_REQUIREMENTS.length;
+
+  const percentage = Math.round((coreComplete / totalCount) * 100);
+  const isComplete = coreComplete === totalCount;
+
+  // Generate recommendations
+  const recommendations: string[] = [];
+  if (!requirements.hasPitchVideo) {
+    recommendations.push('Add a 30-60 second pitch video to bring your story to life');
+  }
+  if (isComplete && !stageRequirements.hasValidation) {
+    recommendations.push('Share how you\'re validating your idea - the community can help!');
+  }
 
   return {
     requirements,
-    completedCount,
+    stageRequirements,
+    completedCount: coreComplete,
     totalCount,
     percentage,
-    isComplete: completedCount === totalCount,
+    isComplete,
+    recommendations,
   };
 }
 
-// Get requirement labels
+// Get requirement labels for display
 export const REQUIREMENT_LABELS: Record<keyof PublishingRequirements, string> = {
   hasName: 'Venture name',
   hasPitch: 'One-line pitch',
-  hasCategory: 'At least 1 category',
-  hasCountry: 'Country/location',
-  hasProblem: 'Problem statement',
-  hasWho: 'Who it\'s for',
-  hasWhy: 'Why them',
+  hasCoverImage: 'Cover image',
+  hasElevatorPitch: 'Elevator pitch story',
+  hasSparkStory: 'Your spark story',
+  hasPitchVideo: 'Pitch video',
+};
+
+export const REQUIREMENT_ACTIONS: Record<keyof PublishingRequirements, { action: string; field: string }> = {
+  hasName: { action: 'Give your venture a name', field: 'name' },
+  hasPitch: { action: 'Write a one-line pitch', field: 'pitch' },
+  hasCoverImage: { action: 'Upload a cover image', field: 'poster' },
+  hasElevatorPitch: { action: 'Explain what you\'re building', field: 'pitch' },
+  hasSparkStory: { action: 'Tell us what made you start', field: 'spark' },
+  hasPitchVideo: { action: 'Record a 30-60 second pitch', field: 'pitch-video' },
+};
+
+// Stage requirement labels
+export const STAGE_LABELS: Record<keyof StageRequirements, string> = {
+  hasValidation: 'Validation',
+  hasPrototype: 'First Prototype',
+  hasBuild: 'The Build',
+  hasLaunch: 'Launch',
+  hasFirstDollar: 'First Dollar',
 };
 
 // Get color based on progress percentage

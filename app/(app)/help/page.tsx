@@ -6,7 +6,6 @@ import Link from 'next/link';
 const FAQ_CATEGORIES = [
   {
     name: 'Getting Started',
-    icon: '🚀',
     items: [
       {
         q: 'What is Vibed?',
@@ -24,7 +23,6 @@ const FAQ_CATEGORIES = [
   },
   {
     name: 'Your Venture',
-    icon: '💼',
     items: [
       {
         q: 'What are segments?',
@@ -46,7 +44,6 @@ const FAQ_CATEGORIES = [
   },
   {
     name: 'Promises & Accountability',
-    icon: '🎯',
     items: [
       {
         q: 'What are promises?',
@@ -64,7 +61,6 @@ const FAQ_CATEGORIES = [
   },
   {
     name: 'Clips & Videos',
-    icon: '🎬',
     items: [
       {
         q: 'What are clips?',
@@ -82,7 +78,6 @@ const FAQ_CATEGORIES = [
   },
   {
     name: 'Team & Collaboration',
-    icon: '👥',
     items: [
       {
         q: 'How do I add team members?',
@@ -100,7 +95,6 @@ const FAQ_CATEGORIES = [
   },
   {
     name: 'Following & Discovery',
-    icon: '🔍',
     items: [
       {
         q: 'How do I find ventures to follow?',
@@ -118,7 +112,6 @@ const FAQ_CATEGORIES = [
   },
   {
     name: 'Account & Settings',
-    icon: '⚙️',
     items: [
       {
         q: 'How do I change my email or password?',
@@ -208,7 +201,6 @@ export default function HelpPage() {
                 }
                 className="w-full p-4 flex items-center gap-3 hover:bg-soft transition-colors"
               >
-                <span className="text-[20px]">{category.icon}</span>
                 <span className="font-semibold text-[16px] flex-1 text-left">{category.name}</span>
                 <span className="text-[13px] text-ink-3 mr-2">{category.items.length} questions</span>
                 <svg

@@ -84,6 +84,22 @@ const sampleVentures = [
     who: 'B2B SaaS founders who need enterprise features like SSO, SCIM, and audit logs to close bigger deals.',
     why: 'They\'re losing enterprise deals because they don\'t have the security features big companies require.',
     rung: 'traction',
+    segments: {
+      pitch: {
+        body: `Every B2B SaaS founder hits the same wall: a Fortune 500 prospect says "we love your product, but you need SSO and SCIM before we can sign."
+
+Building enterprise auth takes 6-12 months and costs hundreds of thousands. Most startups lose the deal. We've closed $2M in ARR from founders who would have lost those enterprise contracts.
+
+WorkOS is drop-in enterprise infrastructure. Five lines of code gives you SSO, directory sync, and audit logs. We handle the security certifications. You close the deal.
+
+We're charging $500/month per enterprise customer they onboard - they're paying us a fraction of what those contracts are worth. 340 companies are live, 40% month-over-month growth. We're raising to expand our sales team and add compliance features.`,
+        happenedAt: '2024-06-15',
+      },
+      spark: {
+        body: 'At my last startup TechFlow, we spent 8 months building SSO just to close one deal. I watched three competitors die because they couldn\'t afford to build it. That\'s broken.',
+        happenedAt: '2023-11-01',
+      },
+    },
   },
   {
     founderSlug: 'sarah-chen',
@@ -100,6 +116,22 @@ const sampleVentures = [
     who: 'Engineering teams at mid-size companies (50-500 employees).',
     why: 'They want to ship faster but are drowning in manual processes.',
     rung: 'exit',
+    segments: {
+      pitch: {
+        body: `Engineers are expensive. The average salary is $180K, and 40% of their time goes to repetitive tasks: deployments, code reviews, incident response runbooks.
+
+TechFlow automates the boring stuff. Connect your GitHub, Slack, and infrastructure - we learn your workflows and automate them. One customer saved 120 engineering hours per month. That's a full headcount.
+
+We had 2,400 teams using us, $8M ARR, growing 25% quarter over quarter. We were acquired by Atlassian in 2022 for $45M - they wanted our workflow engine for Jira.
+
+This was my first real win. Took 4 years from idea to exit.`,
+        happenedAt: '2022-03-20',
+      },
+      spark: {
+        body: 'I was an engineering manager watching my team do the same deployment steps 50 times a week. I wrote a script to automate it. Then another. Then I realised every team had the same problem.',
+        happenedAt: '2018-02-10',
+      },
+    },
   },
   // Marcus Williams' ventures
   {
@@ -117,6 +149,24 @@ const sampleVentures = [
     who: 'Freelancers, contractors, and small agencies who invoice businesses.',
     why: 'Cash flow problems kill more small businesses than lack of profit.',
     rung: 'scaling',
+    segments: {
+      pitch: {
+        body: `82% of small businesses fail because of cash flow problems. Not because they're unprofitable - because they can't collect what they're owed fast enough.
+
+The average freelancer waits 47 days to get paid. They invoice, then chase, then wait. Meanwhile, they're paying rent on credit cards.
+
+Payflow advances invoices instantly. Freelancer sends invoice through us, gets paid same day. We collect from the client on normal terms. We take 3% - they'd pay more than that in late fees and stress.
+
+We've advanced £12M in invoices. Default rate is 0.3% because we verify clients before advancing. Growing 35% month over month. 8,000 freelancers on the platform.
+
+We're raising £3M to expand across Europe and add a business credit line product.`,
+        happenedAt: '2024-04-10',
+      },
+      spark: {
+        body: 'Ten years at Goldman showed me banks don\'t care about small businesses. My sister nearly lost her design agency waiting for a client to pay. The bank wouldn\'t help. I quit the next month.',
+        happenedAt: '2022-08-15',
+      },
+    },
   },
   // Emma Rodriguez's ventures
   {
@@ -134,6 +184,26 @@ const sampleVentures = [
     who: 'Environmentally-conscious renters in urban areas who want to use renewable energy.',
     why: 'They care about climate change but have zero options to actually do something about their electricity.',
     rung: 'traction',
+    segments: {
+      pitch: {
+        body: `77 million American households want solar but can't install panels. They rent. They live in apartments. Their roof faces the wrong way.
+
+These people would pay more for clean energy but have literally no option. Until now.
+
+GreenGrid lets anyone subscribe to a local solar farm. You pick a farm in your region, and their power offsets your electric bill. Average customer saves $30/month while going 100% renewable.
+
+We partner with solar farm operators who have excess capacity. They get guaranteed revenue. Customers get cheaper, cleaner power. We take 15% of the savings.
+
+12,000 subscribers across Texas, Arizona, and California. $180K MRR. Unit economics are strong - CAC is $45, LTV is $800.
+
+We're raising to expand to 10 more states and sign more farm partnerships.`,
+        happenedAt: '2024-05-22',
+      },
+      spark: {
+        body: 'I moved to Austin, wanted solar, and my landlord said no. Tried three different green energy programs - all were scams or not actually renewable. I figured there had to be a better way.',
+        happenedAt: '2023-03-01',
+      },
+    },
   },
   // Raj Patel's ventures
   {
@@ -151,6 +221,24 @@ const sampleVentures = [
     who: 'Knowledge workers in creative and analytical roles.',
     why: 'They want AI to handle the boring parts of their job so they can focus on what they\'re actually good at.',
     rung: 'validation',
+    segments: {
+      pitch: {
+        body: `Everyone's selling AI that "replaces" workers. But talk to anyone using these tools - they spend half their time fixing AI mistakes.
+
+The real opportunity isn't replacement. It's augmentation. Handle the tedious 20% of someone's job so they can focus on the creative 80%.
+
+Synthia is an AI assistant that learns your specific workflows. A lawyer's Synthia handles document discovery and cite-checking. A marketer's Synthia handles data pulls and first-draft reports. It learns what you'd do, and does the boring version.
+
+We're in private beta with 50 users across law, marketing, and consulting. Average user saves 8 hours per week. They're paying $200/month and saying it's underpriced.
+
+We're raising seed funding to build out the platform and expand to more professions.`,
+        happenedAt: '2024-07-01',
+      },
+      spark: {
+        body: 'At Google, I built AI that could do incredible things - but it always needed a human to check the output. The magic wasn\'t in replacing people. It was in making them faster.',
+        happenedAt: '2024-01-15',
+      },
+    },
   },
   {
     founderSlug: 'raj-patel',
@@ -167,6 +255,22 @@ const sampleVentures = [
     who: 'Marketing and sales teams who need quick answers from their data.',
     why: 'They can\'t wait 2 weeks for the data team to answer a simple question.',
     rung: 'idea',
+    segments: {
+      pitch: {
+        body: `Marketing teams have a simple question: "Which campaign drove the most revenue last month?" They submit a ticket. Wait two weeks. Get a spreadsheet they don't understand.
+
+DataLens was meant to be natural language analytics. Ask a question in plain English, get a chart.
+
+We built it. The AI worked. But we couldn't get the data integrations right - every company's data is a mess, and cleaning it took more time than the analytics saved.
+
+Shutting down after 8 months. Key lesson: the hard problem wasn't AI, it was data plumbing. Someone should solve that first.`,
+        happenedAt: '2023-08-01',
+      },
+      spark: {
+        body: 'I watched marketing teams at Google wait weeks for simple analytics. Thought I could automate it. I was wrong about the approach, not the problem.',
+        happenedAt: '2022-12-01',
+      },
+    },
   },
   // Lisa Nakamura's ventures
   {
@@ -184,6 +288,24 @@ const sampleVentures = [
     who: 'Patients with chronic conditions who need regular communication with their healthcare team.',
     why: 'Poor communication leads to worse health outcomes and unnecessary ER visits.',
     rung: 'traction',
+    segments: {
+      pitch: {
+        body: `I spent 15 years in the ER watching the same thing: patients coming in for problems that a simple message could have prevented. "I wasn't sure if this was normal." "I couldn't reach anyone." "The office said call back Monday."
+
+30% of ER visits are avoidable with better communication. That's $32 billion in wasted healthcare spending annually.
+
+MedConnect is async messaging between patients and care teams - but built for how healthcare actually works. Messages route to the right person. Urgent flags work. It integrates with their existing systems.
+
+We're live in 45 clinics across Japan. Patient satisfaction scores went up 40%. Unnecessary appointments dropped 25%. Clinics pay $500/month per provider.
+
+We're raising to expand across Asia and add AI triage to route messages even faster.`,
+        happenedAt: '2024-03-15',
+      },
+      spark: {
+        body: 'A patient died because they couldn\'t reach us over a weekend. A simple question could have saved them. I resigned the next week and started building.',
+        happenedAt: '2022-09-20',
+      },
+    },
   },
 ];
 
@@ -373,6 +495,7 @@ export async function POST(req: Request) {
           who: venture.who,
           why: venture.why,
           rung: venture.rung,
+          segments: venture.segments || {},
         };
 
         // Try adding country and categories (may fail if columns don't exist)
@@ -416,7 +539,7 @@ export async function POST(req: Request) {
         who: venture.who,
         why: venture.why,
         rung: venture.rung,
-        segments: {},
+        segments: venture.segments || {},
         links: {},
         counters: {
           followers: Math.floor(Math.random() * 500) + 50,

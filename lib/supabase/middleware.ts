@@ -1,10 +1,23 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+// Protected routes that require authentication
+const PROTECTED_PATHS = ['/dashboard', '/start', '/following', '/settings', '/profile'];
+
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  const pathname = request.nextUrl.pathname;
+
+  // Check if this is a protected path BEFORE creating Supabase client
+  const isProtectedPath = PROTECTED_PATHS.some((path) => pathname.startsWith(path))
+    || pathname.endsWith('/edit');
+
+  // For public paths, skip auth check entirely - just pass through
+  if (!isProtectedPath) {
+    return NextResponse.next({ request });
+  }
+
+  // Only create Supabase client for protected paths
+  let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,9 +31,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
@@ -29,23 +40,13 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Check session locally (no network call) - fast JWT validation
-  // getSession() validates the JWT signature locally using the anon key
-  // Only use getUser() in pages where you need guaranteed fresh user data
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  // Check session - local JWT validation
+  const { data: { session } } = await supabase.auth.getSession();
 
-  // Protected routes - redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/start', '/following', '/settings', '/profile'];
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  ) || request.nextUrl.pathname.endsWith('/edit');
-
-  if (isProtectedPath && !session) {
+  if (!session) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
-    url.searchParams.set('redirect', request.nextUrl.pathname);
+    url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
 

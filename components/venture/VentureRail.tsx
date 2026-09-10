@@ -55,7 +55,6 @@ export function VentureRail({ ventures, rail }: VentureRailProps) {
             name={v.name}
             pitch={v.pitch}
             brand={v.brand}
-            glyph={v.glyph}
             rung={v.rung}
             status={v.status}
             founder={v.founder}

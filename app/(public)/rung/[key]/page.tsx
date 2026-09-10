@@ -46,7 +46,6 @@ export default async function RungPage({ params }: PageProps) {
               name={v.name}
               pitch={v.pitch}
               brand={v.brand}
-              glyph={v.glyph}
               rung={v.rung}
               status={v.status}
               founder={v.founder}

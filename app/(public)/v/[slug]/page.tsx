@@ -1,10 +1,12 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { VentureLogo, RungTag, PromiseClock, Avatar, OwnerSettings, VideoPlayer, VentureCompletionControls, JourneyAccordion, FollowButton } from '@/components/ui';
-import { getVentureBySlug } from '@/lib/services/ventures-public';
-import { getClipByVentureAndSegment, getClipsByVenture } from '@/lib/services/clips-public';
-import { getCurrentUserId } from '@/lib/supabase/auth';
-import { isFollowingVenture } from '@/lib/services/follows';
+import { RungTag, PromiseClock, Avatar, OwnerSettings, VentureCompletionControls, JourneyAccordion, FollowButton, CheerButton, CommentButton, OwnerActionBar, ShareButton, LikeButton, VentureEndorseButton } from '@/components/ui';
+import { VideoPlayer } from '@/components/ui/VideoPlayerLazy';
+import { calculateEngagementItems } from '@/lib/domain/engagement';
+import { getVentureBySlug, getVentureTeam } from '@/lib/services/ventures-public';
+import { getClipsByVenture } from '@/lib/services/clips-public';
+import { getCurrentUserIdFast } from '@/lib/supabase/auth';
+// Follow state now fetched client-side by FollowButton for faster page loads
 import { type SegmentKey, RUNGS, type Rung } from '@/lib/domain/rungs';
 import { INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 import { TimelineProgress } from '@/components/ui/TimelineProgress';
@@ -48,8 +50,13 @@ interface PageProps {
 
 export default async function VentureProfilePage({ params }: PageProps) {
   const { slug } = await params;
-  const userId = await getCurrentUserId();
-  const venture = await getVentureBySlug(slug, userId);
+
+  // Parallel: fetch user and venture at the same time
+  // Using getCurrentUserIdFast for speed (local JWT check, no network request)
+  const [userId, venture] = await Promise.all([
+    getCurrentUserIdFast(),
+    getVentureBySlug(slug, null), // Don't pass userId here, check draft access below
+  ]);
 
   if (!venture) {
     notFound();
@@ -61,20 +68,24 @@ export default async function VentureProfilePage({ params }: PageProps) {
   }
 
   const isDead = venture.status === 'closed';
-  const isGraduated = venture.status === 'graduated';
   const isOwner = userId && venture.founder.user_id === userId;
 
-  // Check if current user is following this venture
-  const isFollowing = userId && !isOwner ? await isFollowingVenture(userId, venture.id) : false;
+  // Draft ventures return 404 for non-owners
+  if (venture.status === 'draft' && !isOwner) {
+    notFound();
+  }
 
   // Calculate completion for owner view
   const completion = isOwner ? calculateCompletion(venture) : null;
 
-  // Get the elevator pitch video clip and all clips for this venture
-  const [pitchClip, allClips] = await Promise.all([
-    getClipByVentureAndSegment(venture.id, 'pitch'),
+  // Fetch clips and team in parallel - follow status now fetched client-side by FollowButton
+  const [allClips, teamMembers] = await Promise.all([
     getClipsByVenture(venture.id),
+    getVentureTeam(venture.id),
   ]);
+
+  // Get pitch clip from allClips instead of separate query
+  const pitchClip = allClips.find(clip => clip.segment_key === 'pitch') || null;
 
   // Create a map of clips by segment key for easy lookup
   const clipsBySegment = new Map(
@@ -164,7 +175,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
     <>
       {/* Draft banner for owners */}
       {isOwner && venture.status === 'draft' && (
-        <div className="bg-warn-tint border-b border-warn/30 px-4 sm:px-6 py-2 sm:py-3">
+        <div id="venture-draft-banner" className="bg-warn-tint border-b border-warn/30 px-4 sm:px-6 py-2 sm:py-3">
           <div className="max-w-[1180px] mx-auto flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-[12px] sm:text-[14px] text-warn font-medium min-w-0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
@@ -182,24 +193,125 @@ export default async function VentureProfilePage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Profile Header - Logo left, info right */}
-      <div className="bg-page border-b border-rule">
-        <div className="max-w-[700px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex gap-5 sm:gap-8 items-start">
-            {/* Circular Logo - Left */}
-            <VentureLogo
-              glyph={venture.glyph}
-              brand={venture.brand}
-              size="xl"
-              className="rounded-full border-4 border-page shadow-lg flex-shrink-0"
-            />
+      {/* Owner action bar for published ventures */}
+      {isOwner && venture.status === 'live' && (() => {
+        const engagementData = calculateEngagementItems(venture.slug, {
+          segmentsWithContent: writtenSegments.length,
+          totalSegments: SEGMENTS.length,
+          clipsCount: allClips.length,
+          hasPromise: !!venture.promise,
+          promisesKept: (venture.counters as Record<string, number>)?.promisesKept || 0,
+          followersCount: venture.counters?.followers || 0,
+          hasWebsite: !!venture.links?.site,
+          hasPoster: !!venture.links?.poster,
+          teamSize: teamMembers.length,
+        });
+        return (
+          <OwnerActionBar
+            ventureSlug={venture.slug}
+            ventureName={venture.name}
+            segments={SEGMENTS.map(seg => ({
+              key: seg.k,
+              title: seg.t,
+              hasContent: !!(segments instanceof Map ? segments.get(seg.k) : segments[seg.k])?.body,
+              hasClip: clipsBySegment.has(seg.k),
+            }))}
+            clipsCount={allClips.length}
+            hasPromise={!!venture.promise}
+            engagementScore={engagementData.totalScore}
+            engagementMax={engagementData.maxScore}
+            engagementItems={engagementData.items}
+          />
+        );
+      })()}
 
-            {/* Info - Right */}
-            <div className="flex-1 min-w-0">
+      {/* Profile Header with Cover Image */}
+      <div id="venture-header" className="bg-page border-b border-rule">
+        {/* Mobile: Full-width cover image - clickable to website */}
+        {venture.links?.poster && (
+          venture.links?.site ? (
+            <a
+              href={venture.links.site.startsWith('http') ? venture.links.site : `https://${venture.links.site}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              id="venture-cover-mobile"
+              className="sm:hidden block w-full h-[200px] bg-soft overflow-hidden relative group"
+            >
+              <img
+                src={venture.links.poster}
+                alt={`${venture.name} cover`}
+                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm text-ink text-[12px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  Visit Website
+                </span>
+              </div>
+            </a>
+          ) : (
+            <div id="venture-cover-mobile" className="sm:hidden w-full h-[200px] bg-soft overflow-hidden">
+              <img
+                src={venture.links.poster}
+                alt={`${venture.name} cover`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )
+        )}
+
+        <div className="max-w-[1180px] mx-auto">
+          {/* Desktop: 50/50 layout with cover and info */}
+          <div id="venture-header-desktop" className="hidden sm:flex">
+            {/* Cover image - left side, clickable to website */}
+            {venture.links?.poster ? (
+              venture.links?.site ? (
+                <a
+                  href={venture.links.site.startsWith('http') ? venture.links.site : `https://${venture.links.site}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  id="venture-cover-image"
+                  className="w-1/2 h-[280px] bg-soft overflow-hidden flex-shrink-0 relative group cursor-pointer"
+                >
+                  <img
+                    src={venture.links.poster}
+                    alt={`${venture.name} cover`}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm text-ink text-[13px] font-semibold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                      Visit Website
+                    </span>
+                  </div>
+                </a>
+              ) : (
+                <div id="venture-cover-image" className="w-1/2 h-[280px] bg-soft overflow-hidden flex-shrink-0">
+                  <img
+                    src={venture.links.poster}
+                    alt={`${venture.name} cover`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )
+            ) : (
+              <div className="w-1/2 h-[280px] bg-soft flex-shrink-0" />
+            )}
+
+            {/* Venture info - right side */}
+            <div id="venture-info-desktop" className="w-1/2 px-6 py-8 flex flex-col justify-center">
               {/* Name and stage */}
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 <h1
-                  className="text-[22px] sm:text-[28px] font-black tracking-tight"
+                  className="text-[28px] font-black tracking-tight"
                   style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
                 >
                   {venture.name}
@@ -208,54 +320,271 @@ export default async function VentureProfilePage({ params }: PageProps) {
               </div>
 
               {/* Pitch */}
-              <p className="text-[13px] sm:text-[14px] text-ink-2 mb-4 line-clamp-2">{venture.pitch}</p>
+              <p className="text-[14px] text-ink-2 mb-4 line-clamp-2">{venture.pitch}</p>
 
               {/* Action buttons */}
               <div className="flex gap-2 flex-wrap">
-                {isOwner && completion && (
-                  <>
-                    <VentureCompletionControls
-                      ventureId={venture.id}
-                      ventureSlug={venture.slug}
-                      percentage={completion.percentage}
-                      requirements={completion.requirements}
-                      status={venture.status}
-                    />
-                    <OwnerSettings
-                      ventureId={venture.id}
-                      ventureSlug={venture.slug}
-                      ventureName={venture.name}
-                      status={venture.status}
-                    />
-                  </>
+                {/* Visit Website - most prominent for visitors */}
+                {venture.links?.site && (
+                  <a
+                    href={venture.links.site.startsWith('http') ? venture.links.site : `https://${venture.links.site}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-[13px] font-semibold bg-ink text-white px-6 py-2 rounded-lg hover:bg-go-deep transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    Visit Website
+                  </a>
+                )}
+                {/* Draft ventures: show completion controls to help publish */}
+                {isOwner && completion && venture.status === 'draft' && (
+                  <VentureCompletionControls
+                    ventureId={venture.id}
+                    ventureSlug={venture.slug}
+                    percentage={completion.percentage}
+                    requirements={completion.requirements}
+                    stageRequirements={completion.stageRequirements}
+                    status={venture.status}
+                  />
+                )}
+                {/* Owner settings always visible */}
+                {isOwner && (
+                  <OwnerSettings
+                    ventureId={venture.id}
+                    ventureSlug={venture.slug}
+                    ventureName={venture.name}
+                    status={venture.status}
+                  />
                 )}
                 {!isOwner && (
                   <>
                     <FollowButton
                       ventureId={venture.id}
-                      initialFollowing={isFollowing}
-                      className="px-6 py-2 rounded-lg"
+                                            className="px-6 py-2 rounded-lg"
                     />
-                    <button className="text-[13px] font-semibold border border-rule-2 px-6 py-2 rounded-lg hover:border-ink hover:bg-soft transition-colors">
-                      Share
-                    </button>
+                    <LikeButton
+                      ventureId={venture.id}
+                      initialCount={venture.counters?.likes || 0}
+                    />
+                    <VentureEndorseButton
+                      ventureId={venture.id}
+                      initialCount={venture.counters?.endorsements || 0}
+                    />
+                    <ShareButton
+                      url={`https://vibed-hazel.vercel.app/v/${venture.slug}`}
+                      title={venture.name}
+                      description={venture.pitch}
+                    />
                   </>
                 )}
                 {isOwner && venture.status !== 'draft' && (
-                  <button className="text-[13px] font-semibold border border-rule-2 px-6 py-2 rounded-lg hover:border-ink hover:bg-soft transition-colors">
-                    Share
-                  </button>
+                  <ShareButton
+                    url={`https://vibed-hazel.vercel.app/v/${venture.slug}`}
+                    title={venture.name}
+                    description={venture.pitch}
+                  />
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Mobile: Venture info below cover */}
+          <div id="venture-info-mobile" className="sm:hidden px-4 py-6">
+            {/* Name and stage */}
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h1
+                className="text-[22px] font-black tracking-tight"
+                style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
+              >
+                {venture.name}
+              </h1>
+              <RungTag rung={venture.rung} isDead={isDead} />
+            </div>
+
+            {/* Pitch */}
+            <p className="text-[13px] text-ink-2 mb-4 line-clamp-2">{venture.pitch}</p>
+
+            {/* Action buttons */}
+            <div className="flex gap-2 flex-wrap">
+              {/* Visit Website - most prominent for visitors */}
+              {venture.links?.site && (
+                <a
+                  href={venture.links.site.startsWith('http') ? venture.links.site : `https://${venture.links.site}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[13px] font-semibold bg-ink text-white px-5 py-2 rounded-lg hover:bg-go-deep transition-colors"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                  Visit Website
+                </a>
+              )}
+              {/* Draft ventures: show completion controls to help publish */}
+              {isOwner && completion && venture.status === 'draft' && (
+                <VentureCompletionControls
+                  ventureId={venture.id}
+                  ventureSlug={venture.slug}
+                  percentage={completion.percentage}
+                  requirements={completion.requirements}
+                  stageRequirements={completion.stageRequirements}
+                  status={venture.status}
+                />
+              )}
+              {/* Owner settings always visible */}
+              {isOwner && (
+                <OwnerSettings
+                  ventureId={venture.id}
+                  ventureSlug={venture.slug}
+                  ventureName={venture.name}
+                  status={venture.status}
+                />
+              )}
+              {!isOwner && (
+                <>
+                  <FollowButton
+                    ventureId={venture.id}
+                                        className="px-6 py-2 rounded-lg"
+                  />
+                  <LikeButton
+                    ventureId={venture.id}
+                    initialCount={venture.counters?.likes || 0}
+                  />
+                  <VentureEndorseButton
+                    ventureId={venture.id}
+                    initialCount={venture.counters?.endorsements || 0}
+                  />
+                  <ShareButton
+                    url={`https://vibed-hazel.vercel.app/v/${venture.slug}`}
+                    title={venture.name}
+                    description={venture.pitch}
+                  />
+                </>
+              )}
+              {isOwner && venture.status !== 'draft' && (
+                <ShareButton
+                  url={`https://vibed-hazel.vercel.app/v/${venture.slug}`}
+                  title={venture.name}
+                  description={venture.pitch}
+                />
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Stats Bar - Key venture info */}
-      <div className="bg-page border-b border-rule">
-        <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-3">
-          <div className="flex flex-wrap justify-between gap-x-4 gap-y-2 text-[11px] sm:text-[12px]">
+      <div id="venture-stats-bar" className="bg-page border-b border-rule">
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-3 space-y-3">
+          {/* Row 1: Website & Social Links */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] sm:text-[12px]">
+            <span className="text-ink-3 font-medium">Links:</span>
+            {(venture.links?.site || venture.links?.ig || venture.links?.x || venture.links?.tiktok || venture.links?.linkedin) ? (
+              <>
+                {/* Website */}
+                {venture.links?.site && (
+                  <a
+                    href={venture.links.site.startsWith('http') ? venture.links.site : `https://${venture.links.site}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 bg-go-tint text-go-deep px-2.5 py-1 rounded-full hover:bg-go/20 transition-colors font-semibold"
+                    title="Visit website"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
+                    {venture.links.site.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                  </a>
+                )}
+                {/* Instagram */}
+                {venture.links?.ig && (
+                  <a
+                    href={venture.links.ig.startsWith('http') ? venture.links.ig : `https://${venture.links.ig}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 bg-soft hover:bg-rule px-2.5 py-1 rounded-full transition-colors"
+                    title="Instagram"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="2" width="20" height="20" rx="5" />
+                      <circle cx="12" cy="12" r="4" />
+                      <circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none" />
+                    </svg>
+                    <span className="font-medium">Instagram</span>
+                  </a>
+                )}
+                {/* TikTok */}
+                {venture.links?.tiktok && (
+                  <a
+                    href={venture.links.tiktok.startsWith('http') ? venture.links.tiktok : `https://${venture.links.tiktok}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 bg-soft hover:bg-rule px-2.5 py-1 rounded-full transition-colors"
+                    title="TikTok"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                    </svg>
+                    <span className="font-medium">TikTok</span>
+                  </a>
+                )}
+                {/* X/Twitter */}
+                {venture.links?.x && (
+                  <a
+                    href={venture.links.x.startsWith('http') ? venture.links.x : `https://${venture.links.x}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 bg-soft hover:bg-rule px-2.5 py-1 rounded-full transition-colors"
+                    title="X / Twitter"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    <span className="font-medium">X</span>
+                  </a>
+                )}
+                {/* LinkedIn */}
+                {venture.links?.linkedin && (
+                  <a
+                    href={venture.links.linkedin.startsWith('http') ? venture.links.linkedin : `https://${venture.links.linkedin}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 bg-soft hover:bg-rule px-2.5 py-1 rounded-full transition-colors"
+                    title="LinkedIn"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                    <span className="font-medium">LinkedIn</span>
+                  </a>
+                )}
+              </>
+            ) : (
+              /* No links - show prompt */
+              isOwner ? (
+                <Link
+                  href={`/v/${venture.slug}/edit?tab=basics`}
+                  className="flex items-center gap-1.5 text-go-deep hover:underline font-semibold"
+                >
+                  Add website & socials →
+                </Link>
+              ) : (
+                <span className="text-ink-3 italic">
+                  No links added yet
+                </span>
+              )
+            )}
+          </div>
+
+          {/* Row 2: Stats */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] sm:text-[12px]">
             {/* Week count */}
             <div className="flex items-center gap-1.5">
               <span className="text-ink-3">Week</span>
@@ -274,13 +603,33 @@ export default async function VentureProfilePage({ params }: PageProps) {
               <span className="text-ink-3">clips</span>
             </div>
 
-            {/* Industry */}
-            {venture.industry && (
-              <div className="flex items-center gap-1.5">
+            {/* Industry/Categories */}
+            {((venture.categories && venture.categories.length > 0) || (venture.industry && venture.industry !== 'other')) ? (
+              <div className="flex items-center gap-1.5 group relative">
                 <span className="text-ink-3">Industry:</span>
-                <span className="font-semibold text-heat">{INDUSTRY_LABELS[venture.industry as Industry] || venture.industry}</span>
+                <span className="font-semibold text-heat">
+                  {venture.categories && venture.categories.length > 0
+                    ? venture.categories.map((cat: Industry) => INDUSTRY_LABELS[cat] || cat).join(', ')
+                    : INDUSTRY_LABELS[venture.industry as Industry] || venture.industry}
+                </span>
+                {isOwner && (
+                  <Link
+                    href={`/v/${venture.slug}/edit?tab=basics&field=industry`}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-go-deep hover:underline ml-1"
+                  >
+                    Edit
+                  </Link>
+                )}
               </div>
-            )}
+            ) : isOwner ? (
+              <Link
+                href={`/v/${venture.slug}/edit?tab=basics&field=industry`}
+                className="flex items-center gap-1.5 text-go-deep hover:underline"
+              >
+                <span className="text-ink-3">Industry:</span>
+                <span className="font-semibold">Add industry →</span>
+              </Link>
+            ) : null}
 
             {/* Country/Location */}
             {venture.country && (
@@ -318,7 +667,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
       </div>
 
       {/* Elevator Pitch Section - Full width, text left, video right */}
-      <div className="bg-soft border-b border-rule">
+      <div id="venture-elevator-pitch" className="bg-soft border-b border-rule">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
           {/* Mobile: Title then video then text */}
           {/* Desktop: Title inline left, video takes up right side spanning full height */}
@@ -348,7 +697,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
                     <span className="text-[11px] text-ink-3 mt-1">Coming soon</span>
                     {isOwner && (
                       <Link
-                        href={`/v/${venture.slug}/edit`}
+                        href={`/v/${venture.slug}/edit?segment=pitch`}
                         className="mt-3 text-[11px] font-semibold text-go-deep hover:underline"
                       >
                         Upload video →
@@ -386,7 +735,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
                   <span className="text-[12px] text-ink-3 mt-1">Coming soon</span>
                   {isOwner && (
                     <Link
-                      href={`/v/${venture.slug}/edit`}
+                      href={`/v/${venture.slug}/edit?segment=pitch`}
                       className="mt-3 text-[12px] font-semibold text-go-deep hover:underline"
                     >
                       Upload video →
@@ -399,15 +748,15 @@ export default async function VentureProfilePage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 overflow-x-hidden">
+      <div id="venture-main-container" className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 overflow-x-hidden">
 
-        {/* Main Grid */}
-        <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start pb-20">
-          {/* Main Content */}
-          <div className="min-w-0 overflow-x-hidden">
+        {/* Main Content Area - full width */}
+        <div id="venture-content-area" className="pb-20">
+          {/* Promise & Progress Section */}
+          <div id="venture-promise-section" className="overflow-x-hidden">
             {/* Promise Card - Prominent */}
             {venture.promise && !isDead && (
-              <div className="bg-warn-tint border border-warn/30 rounded-[16px] p-5 mb-6">
+              <div id="active-promise" className="bg-warn-tint border border-warn/30 rounded-[16px] p-5 mb-6">
                 <PromiseClock
                   text={venture.promise.text}
                   dueAt={venture.promise.dueAt}
@@ -427,6 +776,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
             />
 
             {/* Tabbed Content: The Journey, Clips, Latest Updates */}
+            <div id="venture-tabs-section">
             <VentureContentTabs
               journeyContent={
                 <JourneyAccordion
@@ -448,107 +798,149 @@ export default async function VentureProfilePage({ params }: PageProps) {
                     created_at: clip.created_at,
                   }))}
                   ventureName={venture.name}
+                  ventureSlug={venture.slug}
                 />
               }
               promisesContent={
-                <div className="space-y-4">
-                  {/* Current active promise */}
-                  {venture.promise && !isDead && (
-                    <div className="bg-warn-tint border border-warn/30 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-[11px] font-semibold bg-warn text-white px-2 py-0.5 rounded-full">ACTIVE</span>
-                        <span className="text-[12px] text-ink-3">
-                          Due {new Date(venture.promise.dueAt).toLocaleDateString('en-AU', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
+                <div className="space-y-6">
+                  {/* Currently Building - Active Goal */}
+                  {venture.promise && !isDead ? (
+                    <div className="bg-go-tint border border-go/30 rounded-xl p-5">
+                      <div className="flex items-start justify-between gap-4 mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[11px] font-semibold bg-go text-white px-2 py-0.5 rounded-full">
+                              BUILDING NOW
+                            </span>
+                          </div>
+                          <p className="text-[18px] font-bold text-ink leading-snug">{venture.promise.text}</p>
+                        </div>
+                        {/* Deadline badge */}
+                        <div className="flex-shrink-0 text-right">
+                          <div className="text-[11px] text-ink-3 mb-1">Target</div>
+                          <div className="text-[14px] font-bold text-go-deep">
+                            {new Date(venture.promise.dueAt).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })}
+                          </div>
+                          <div className="text-[11px] text-ink-3 mt-1">
+                            {Math.max(0, Math.floor((new Date(venture.promise.dueAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days left
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-[16px] font-semibold text-ink mb-3">{venture.promise.text}</p>
-                      <div className="flex items-center gap-4">
-                        <button className="text-[12px] font-semibold bg-go text-white px-4 py-2 rounded-lg hover:bg-go-deep transition-colors flex items-center gap-1.5">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-                          </svg>
-                          Cheer them on
-                        </button>
-                        <span className="text-[12px] text-ink-3">
-                          {Math.floor((new Date(venture.promise.dueAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days left
-                        </span>
+
+                      {/* Encourage section */}
+                      <div className="flex items-center gap-3 pt-4 border-t border-go/20">
+                        <CheerButton ventureId={venture.id} className="flex-1" />
+                        <CommentButton ventureId={venture.id} />
                       </div>
+                    </div>
+                  ) : (
+                    <div className="bg-soft border border-rule rounded-xl p-5 text-center">
+                      <div className="text-[40px] mb-3">🚀</div>
+                      <h3 className="text-[16px] font-bold mb-2">What are they building next?</h3>
+                      <p className="text-[13px] text-ink-3 mb-4">
+                        No active goal right now. Check back soon or follow to get notified.
+                      </p>
+                      {isOwner && (
+                        <Link
+                          href={`/v/${venture.slug}/edit`}
+                          className="inline-block text-[13px] font-semibold bg-go text-white py-2 px-5 rounded-lg hover:bg-go-deep transition-colors"
+                        >
+                          Share what you&apos;re working on →
+                        </Link>
+                      )}
                     </div>
                   )}
 
-                  {/* Promise history */}
-                  <div>
-                    <h3 className="text-[14px] font-bold mb-3">Promise Timeline</h3>
-                    {venture.promiseHistory && venture.promiseHistory.length > 0 ? (
+                  {/* Track Record */}
+                  {venture.promiseHistory && venture.promiseHistory.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-[15px] font-bold">Track Record</h3>
+                        <div className="flex items-center gap-3 text-[12px]">
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-go"></span>
+                            <span className="text-ink-2">{venture.promiseHistory.filter(p => p.kept).length} completed</span>
+                          </span>
+                          {venture.promiseHistory.filter(p => !p.kept).length > 0 && (
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-dead"></span>
+                              <span className="text-ink-3">{venture.promiseHistory.filter(p => !p.kept).length} missed</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
                       <div className="relative">
                         {/* Timeline line */}
-                        <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-rule" />
+                        <div className="absolute left-[11px] top-3 bottom-3 w-0.5 bg-rule" />
 
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           {venture.promiseHistory.map((p, i) => (
                             <div key={i} className="flex gap-4 relative">
                               {/* Status dot */}
                               <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 ${
-                                p.kept ? 'bg-go-tint' : 'bg-dead-tint'
+                                p.kept ? 'bg-go' : 'bg-dead'
                               }`}>
                                 {p.kept ? (
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#017A4C" strokeWidth="3">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
                                     <path d="M20 6L9 17l-5-5" />
                                   </svg>
                                 ) : (
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B03A28" strokeWidth="3">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
                                     <path d="M18 6L6 18M6 6l12 12" />
                                   </svg>
                                 )}
                               </div>
                               {/* Content */}
                               <div className="flex-1 bg-page border border-rule rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-1">
+                                <div className="flex items-center justify-between gap-2 mb-1">
                                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
                                     p.kept ? 'bg-go-tint text-go-deep' : 'bg-dead-tint text-dead'
                                   }`}>
-                                    {p.kept ? 'KEPT' : 'MISSED'}
+                                    {p.kept ? 'COMPLETED' : 'MISSED'}
+                                  </span>
+                                  <span className="text-[10px] text-ink-3">
+                                    {new Date(p.resolvedAt).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' })}
                                   </span>
                                 </div>
-                                <p className="text-[13px] text-ink">{(p as {text?: string}).text || 'Promise'}</p>
+                                <p className="text-[13px] text-ink">{p.text}</p>
+                                {p.note && (
+                                  <p className="text-[12px] text-ink-3 mt-2 italic">&quot;{p.note}&quot;</p>
+                                )}
                               </div>
                             </div>
                           ))}
                         </div>
                       </div>
-                    ) : (
-                      <div className="py-8 text-center border-2 border-dashed border-rule rounded-xl">
-                        <div className="text-[32px] mb-2">🎯</div>
-                        <p className="text-[14px] text-ink-3">No promises made yet</p>
-                        <p className="text-[12px] text-ink-3 mt-1">Founders set public deadlines to keep themselves accountable</p>
-                        {isOwner && (
-                          <Link
-                            href={`/v/${venture.slug}/edit`}
-                            className="inline-block mt-4 text-[12px] font-semibold text-go-deep hover:underline"
-                          >
-                            Make your first promise →
-                          </Link>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
-                  {/* Rewards section */}
-                  <div className="bg-soft rounded-xl p-4 mt-6">
-                    <h3 className="text-[14px] font-bold mb-2 flex items-center gap-2">
-                      <span>🏆</span> Promise Rewards
+                  {/* Empty state when no history */}
+                  {(!venture.promiseHistory || venture.promiseHistory.length === 0) && !venture.promise && (
+                    <div className="py-6 text-center">
+                      <p className="text-[13px] text-ink-3">
+                        When {venture.name} sets goals and completes them, their track record will appear here.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* How it works */}
+                  <div className="bg-soft rounded-xl p-4">
+                    <h3 className="text-[13px] font-bold mb-3 flex items-center gap-2">
+                      <span>💡</span> How Progress Works
                     </h3>
-                    <p className="text-[12px] text-ink-2 mb-3">
-                      Founders who keep their promises get featured! Cheers from followers count towards rewards.
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <div className="bg-page rounded-lg p-2.5 text-center">
-                        <div className="font-bold text-go-deep">5+ cheers</div>
-                        <div className="text-ink-3">Trending badge</div>
+                    <div className="grid sm:grid-cols-3 gap-3 text-[12px]">
+                      <div className="bg-page rounded-lg p-3">
+                        <div className="font-bold text-ink mb-1">1. Set a goal</div>
+                        <div className="text-ink-3">Share what you&apos;re building with an optional deadline</div>
                       </div>
-                      <div className="bg-page rounded-lg p-2.5 text-center">
-                        <div className="font-bold text-go-deep">10+ kept</div>
-                        <div className="text-ink-3">Featured on home</div>
+                      <div className="bg-page rounded-lg p-3">
+                        <div className="font-bold text-ink mb-1">2. Get cheers</div>
+                        <div className="text-ink-3">Followers encourage you and stay updated</div>
+                      </div>
+                      <div className="bg-page rounded-lg p-3">
+                        <div className="font-bold text-ink mb-1">3. Build track record</div>
+                        <div className="text-ink-3">Complete goals to show you ship</div>
                       </div>
                     </div>
                   </div>
@@ -575,213 +967,260 @@ export default async function VentureProfilePage({ params }: PageProps) {
                 </div>
               }
             />
-          </div>
+            </div>
 
-          {/* Sidebar */}
-          <aside className="lg:sticky lg:top-[88px] lg:self-start flex flex-col gap-4">
-            {/* Founder card */}
-            <Link
-              href={`/founder/${venture.founder.slug}`}
-              className="block bg-page border border-rule rounded-[14px] p-[18px] shadow-sm hover:border-ink/30 hover:shadow-md transition-all"
-            >
-              <div className="flex gap-3 items-start">
-                <Avatar name={venture.founder.name} color={venture.brand} size="lg" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-display text-[17px] font-bold">{venture.founder.name}</div>
-                  {venture.founder.location && (
-                    <div className="text-[12.5px] text-ink-3">{venture.founder.location}</div>
-                  )}
-                </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-3 flex-shrink-0">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </div>
-              {venture.founder.bio && (
-                <p className="text-[13px] text-ink-2 mt-3 leading-relaxed">{venture.founder.bio}</p>
-              )}
-            </Link>
-
-            {/* Industry */}
-            {venture.industry && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-heat-tint rounded-[10px]">
-                <span className="text-[12px] text-ink-3">Industry:</span>
-                <span className="text-[13px] font-semibold text-heat">
-                  {INDUSTRY_LABELS[venture.industry as Industry] || venture.industry}
-                </span>
-              </div>
-            )}
-
-            {/* Links card */}
-            {venture.links?.site && (
-              <div className="bg-page border border-rule rounded-[14px] p-[18px] shadow-sm">
-                <div className="text-[10.5px] tracking-[0.11em] uppercase text-ink-3 font-bold mb-[11px]">
-                  Links
-                </div>
-                <a
-                  href={`https://${venture.links.site}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 w-full bg-ink text-white rounded-xl p-[14px_15px] hover:bg-go-deep transition-colors"
+            {/* Meet the Team Section */}
+            <div id="venture-team-section" className="mt-10 pt-8 border-t border-rule">
+              <div className="flex items-center justify-between mb-6">
+                <h2
+                  className="text-[20px] font-bold tracking-tight"
+                  style={{ fontVariationSettings: "'SOFT' 70, 'WONK' 1" }}
                 >
-                  <div className="w-[34px] h-[34px] rounded-lg bg-white/15 grid place-items-center">
-                    <svg
-                      width="17"
-                      height="17"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0">
-                    <b className="block text-[15px] font-semibold truncate">{venture.links.site}</b>
-                    <span className="text-[11.5px] text-white/60">
-                      {venture.links.siteStatus === 'live'
-                        ? 'Live'
-                        : venture.links.siteStatus === 'waitlist'
-                        ? 'Waitlist'
-                        : venture.links.siteStatus === 'closed'
-                        ? 'Closed'
-                        : ''}
-                    </span>
-                  </div>
-                  <span className="ml-auto text-white/70">→</span>
-                </a>
-
-                {/* Social links */}
-                <div className="flex gap-2 mt-3 flex-wrap">
-                  {venture.links.ig && (
-                    <a
-                      href={`https://instagram.com/${venture.links.ig}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-[7px] border border-rule rounded-full px-3 py-[7px] text-[12px] text-ink-2 font-medium hover:border-ink hover:text-ink hover:bg-soft transition-colors"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                      </svg>
-                      @{venture.links.ig}
-                    </a>
-                  )}
-                  {venture.links.x && (
-                    <a
-                      href={`https://x.com/${venture.links.x}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-[7px] border border-rule rounded-full px-3 py-[7px] text-[12px] text-ink-2 font-medium hover:border-ink hover:text-ink hover:bg-soft transition-colors"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                      </svg>
-                      @{venture.links.x}
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Clips preview - square like Instagram */}
-            {venture.counters.clips > 0 && (
-              <div className="bg-page border border-rule rounded-[14px] p-[18px] shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-[13px] font-bold">Recent Clips</h3>
-                  <Link href={`/v/${slug}/clips`} className="text-[12px] text-go-deep hover:underline">
-                    See all →
+                  Meet the Team
+                </h2>
+                {isOwner && (
+                  <Link
+                    href={`/v/${venture.slug}/edit`}
+                    className="text-[12px] text-go-deep hover:underline"
+                  >
+                    Manage team →
                   </Link>
-                </div>
-                <div className="grid grid-cols-3 gap-1">
-                  {/* Show actual clips or placeholders - square */}
-                  {allClips.slice(0, 3).map((clip) => (
-                    <div
-                      key={clip._id}
-                      className="aspect-square bg-soft rounded-md overflow-hidden relative group cursor-pointer"
-                    >
-                      {clip.playback_id ? (
-                        <>
-                          <VideoPlayer
-                            playbackId={clip.playback_id}
-                            title={clip.title}
-                            thumbTime={clip.thumbTime}
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg>
-                          </div>
-                        </>
+                )}
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {/* Main founder */}
+                <Link
+                  href={`/founder/${venture.founder.slug}`}
+                  className="block bg-page border border-rule rounded-xl p-5 hover:border-ink/20 hover:shadow-sm transition-all cursor-pointer"
+                >
+                  <div className="flex gap-4 items-start">
+                    <Avatar
+                      name={venture.founder.name}
+                      imageUrl={venture.founder.avatar}
+                      color={venture.brand}
+                      size="xl"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-[16px]">{venture.founder.name}</span>
+                        <span className="text-[10px] font-semibold bg-go-tint text-go-deep px-1.5 py-0.5 rounded">
+                          Founder
+                        </span>
+                      </div>
+                      {/* Headline - the one-liner */}
+                      {venture.founder.headline ? (
+                        <p className="text-[13px] text-ink-2 mt-1 font-medium">{venture.founder.headline}</p>
                       ) : (
-                        <div className="h-full flex items-center justify-center">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-3">
-                            <polygon points="5 3 19 12 5 21 5 3" />
+                        <p className="text-[13px] text-ink-3 mt-1 italic">Building something worth watching</p>
+                      )}
+                      {venture.founder.location && (
+                        <p className="text-[12px] text-ink-3 mt-2 flex items-center gap-1">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                            <circle cx="12" cy="10" r="3" />
                           </svg>
-                        </div>
+                          {venture.founder.location}
+                        </p>
                       )}
                     </div>
-                  ))}
-                  {/* Placeholders if less than 3 clips */}
-                  {Array.from({ length: Math.max(0, 3 - allClips.length) }).map((_, i) => (
-                    <div
-                      key={`placeholder-${i}`}
-                      className="aspect-square bg-soft rounded-md flex items-center justify-center border border-dashed border-rule"
+                  </div>
+
+                  {/* Bio */}
+                  {venture.founder.bio ? (
+                    <p className="text-[13px] text-ink-2 mt-4 line-clamp-3">{venture.founder.bio}</p>
+                  ) : (
+                    <p className="text-[13px] text-ink-3 mt-4 italic">No bio yet — ask them what drives them!</p>
+                  )}
+
+                  {/* Social links & View profile */}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-rule">
+                    <div className="flex items-center gap-3">
+                      {venture.founder.links?.linkedin && (
+                        <a href={venture.founder.links.linkedin} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-[#0A66C2] transition-colors">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {venture.founder.links?.twitter && (
+                        <a href={venture.founder.links.twitter} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-ink transition-colors">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {venture.founder.links?.instagram && (
+                        <a href={venture.founder.links.instagram} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-[#E4405F] transition-colors">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                          </svg>
+                        </a>
+                      )}
+                      {venture.founder.links?.website && (
+                        <a href={venture.founder.links.website} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-go-deep transition-colors">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                          </svg>
+                        </a>
+                      )}
+                      {!venture.founder.links?.linkedin && !venture.founder.links?.twitter && !venture.founder.links?.instagram && !venture.founder.links?.website && (
+                        <span className="text-[11px] text-ink-3 italic">No socials linked yet</span>
+                      )}
+                    </div>
+                    <span className="text-[12px] font-semibold text-go-deep">
+                      View full profile →
+                    </span>
+                  </div>
+                </Link>
+
+                {/* Other team members */}
+                {teamMembers
+                  .filter((m) => m.founder && m.founder.id !== venture.founder.id)
+                  .map((member) => (
+                    <Link
+                      key={member.id}
+                      href={`/founder/${member.founder!.slug}`}
+                      className="block bg-page border border-rule rounded-xl p-5 hover:border-ink/20 hover:shadow-sm transition-all cursor-pointer"
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-3">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
+                      <div className="flex gap-4 items-start">
+                        <Avatar
+                          name={member.founder!.name}
+                          imageUrl={member.founder!.avatar}
+                          color="#5A2EC4"
+                          size="xl"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-[16px]">{member.founder!.name}</span>
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                              member.role === 'partner' ? 'bg-heat-tint text-heat' : 'bg-soft text-ink-2'
+                            }`}>
+                              {member.role === 'partner' ? 'Partner' : 'Team'}
+                            </span>
+                          </div>
+                          {/* Headline - the one-liner */}
+                          {member.founder!.headline ? (
+                            <p className="text-[13px] text-ink-2 mt-1 font-medium">{member.founder!.headline}</p>
+                          ) : (
+                            <p className="text-[13px] text-ink-3 mt-1 italic">Building something worth watching</p>
+                          )}
+                          {member.founder!.location && (
+                            <p className="text-[12px] text-ink-3 mt-2 flex items-center gap-1">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                              </svg>
+                              {member.founder!.location}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bio */}
+                      {member.founder!.bio ? (
+                        <p className="text-[13px] text-ink-2 mt-4 line-clamp-3">{member.founder!.bio}</p>
+                      ) : (
+                        <p className="text-[13px] text-ink-3 mt-4 italic">No bio yet — ask them what drives them!</p>
+                      )}
+
+                      {/* Social links & View profile */}
+                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-rule">
+                        <div className="flex items-center gap-3">
+                          {member.founder!.links?.linkedin && (
+                            <a href={member.founder!.links.linkedin} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-[#0A66C2] transition-colors">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                              </svg>
+                            </a>
+                          )}
+                          {member.founder!.links?.twitter && (
+                            <a href={member.founder!.links.twitter} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-ink transition-colors">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                              </svg>
+                            </a>
+                          )}
+                          {member.founder!.links?.instagram && (
+                            <a href={member.founder!.links.instagram} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-[#E4405F] transition-colors">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                              </svg>
+                            </a>
+                          )}
+                          {member.founder!.links?.website && (
+                            <a href={member.founder!.links.website} target="_blank" rel="noopener noreferrer" className="text-ink-3 hover:text-go-deep transition-colors">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                              </svg>
+                            </a>
+                          )}
+                          {!member.founder!.links?.linkedin && !member.founder!.links?.twitter && !member.founder!.links?.instagram && !member.founder!.links?.website && (
+                            <span className="text-[11px] text-ink-3 italic">No socials linked yet</span>
+                          )}
+                        </div>
+                        <span className="text-[12px] font-semibold text-go-deep">
+                          View full profile →
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+
+                {/* Pending invitations (owner only) */}
+                {isOwner && teamMembers
+                  .filter((m) => m.status === 'pending')
+                  .map((member) => (
+                    <div
+                      key={member.id}
+                      className="bg-soft border border-dashed border-rule rounded-xl p-4"
+                    >
+                      <div className="flex gap-3 items-start">
+                        <div className="w-12 h-12 rounded-full bg-rule flex items-center justify-center">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-ink-3">
+                            <circle cx="12" cy="7" r="4" />
+                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-[14px] text-ink-3">
+                              {member.first_name} {member.last_name}
+                            </span>
+                            <span className="text-[10px] font-semibold bg-warn-tint text-warn px-1.5 py-0.5 rounded">
+                              Pending
+                            </span>
+                          </div>
+                          <p className="text-[12px] text-ink-3 mt-1">Invitation sent</p>
+                        </div>
+                      </div>
                     </div>
                   ))}
+              </div>
+
+              {/* Empty state for solo founders */}
+              {teamMembers.length === 0 && !isOwner && (
+                <div className="text-center py-6">
+                  <p className="text-[14px] text-ink-3">Solo founder building something awesome</p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Standards card */}
-            {venture.standards && (
-              <div className="border border-go-tint bg-go-tint rounded-[14px] p-[16px_18px]">
-                <div className="flex items-center gap-2 text-[13.5px] font-bold text-go-deep">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-                    <path d="M22 4L12 14.01l-3-3" />
-                  </svg>
-                  Standards: {venture.standards.met}/{venture.standards.of}
+              {/* Encourage adding team for owners */}
+              {isOwner && teamMembers.filter((m) => m.founder && m.founder.id !== venture.founder.id).length === 0 && (
+                <div className="mt-4 p-4 bg-soft rounded-xl border border-dashed border-rule text-center">
+                  <p className="text-[13px] text-ink-2 mb-2">Working with others?</p>
+                  <Link
+                    href={`/v/${venture.slug}/edit`}
+                    className="text-[13px] font-semibold text-go-deep hover:underline"
+                  >
+                    Add team members →
+                  </Link>
                 </div>
-                <ul className="mt-[10px] flex flex-col gap-[5px]">
-                  {['Has a pitch', 'Has segments', 'Active promise', 'Posted this week'].map(
-                    (item, i) => (
-                      <li
-                        key={item}
-                        className="text-[12.5px] text-go-deep flex gap-2 opacity-90"
-                      >
-                        <em className="not-italic">{i < (venture.standards?.met ?? 0) ? '✓' : '○'}</em>
-                        {item}
-                      </li>
-                    )
-                  )}
-                </ul>
-              </div>
-            )}
+              )}
+            </div>
+          </div>
 
-            {isDead && (
-              <div className="border border-dead-tint bg-dead-tint rounded-[14px] p-4 text-center">
-                <div className="text-[24px] mb-2">💔</div>
-                <div className="text-[14px] font-semibold text-dead">This venture has closed</div>
-                <p className="text-[12px] text-ink-2 mt-1">
-                  The founder has moved on, but their story remains.
-                </p>
-              </div>
-            )}
-
-            {isGraduated && (
-              <div className="border border-go bg-go-tint rounded-[14px] p-4 text-center">
-                <div className="text-[24px] mb-2">🎓</div>
-                <div className="text-[14px] font-semibold text-go-deep">Graduated!</div>
-                <p className="text-[12px] text-ink-2 mt-1">
-                  This venture has graduated from the Vibed journey.
-                </p>
-              </div>
-            )}
-          </aside>
         </div>
       </div>
     </>

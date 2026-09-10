@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { VideoPlayer } from '@/components/ui';
+import { EndorseButton, ShareButton } from '@/components/ui';
+import { VideoPlayer } from '@/components/ui/VideoPlayerLazy';
 
 interface Clip {
   _id: string;
@@ -20,6 +21,7 @@ interface Clip {
 interface ClipsGridProps {
   clips: Clip[];
   ventureName: string;
+  ventureSlug?: string;
 }
 
 type SortOption = 'recent' | 'popular' | 'oldest';
@@ -48,10 +50,11 @@ const SEGMENT_LABELS: Record<string, string> = {
   next: 'Next',
 };
 
-export function ClipsGrid({ clips, ventureName }: ClipsGridProps) {
+export function ClipsGrid({ clips, ventureName, ventureSlug }: ClipsGridProps) {
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [filterSegment, setFilterSegment] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedClip, setSelectedClip] = useState<Clip | null>(null);
 
   // Get unique segments from clips
   const segments = [...new Set(clips.map((c) => c.segment_key).filter(Boolean))];
@@ -77,6 +80,81 @@ export function ClipsGrid({ clips, ventureName }: ClipsGridProps) {
 
   return (
     <div>
+      {/* Clip Modal */}
+      {selectedClip && selectedClip.playback_id && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedClip(null)}
+        >
+          <div
+            className="bg-page rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Video */}
+            <div className="aspect-video bg-ink">
+              <VideoPlayer
+                playbackId={selectedClip.playback_id}
+                title={selectedClip.title}
+                thumbTime={selectedClip.thumbTime}
+              />
+            </div>
+
+            {/* Info & Actions */}
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-bold text-[16px]">{selectedClip.title}</h3>
+                  {selectedClip.segment_key && (
+                    <span className="text-[12px] text-ink-3">
+                      {SEGMENT_LABELS[selectedClip.segment_key] || selectedClip.segment_key}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedClip(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-soft transition-colors"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Stats */}
+              <div className="flex items-center gap-4 text-[13px] text-ink-2 mb-4">
+                <span className="flex items-center gap-1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  {selectedClip.counters?.views || 0} views
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                  {selectedClip.counters?.likes || 0} likes
+                </span>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3 pt-4 border-t border-rule">
+                <EndorseButton
+                  clipId={selectedClip._id}
+                  initialCount={selectedClip.counters?.likes || 0}
+                  size="md"
+                />
+                <ShareButton
+                  url={ventureSlug ? `https://vibed-hazel.vercel.app/v/${ventureSlug}?clip=${selectedClip._id}` : undefined}
+                  title={`${selectedClip.title} - ${ventureName}`}
+                  variant="icon"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sort and Filter controls */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-2">
@@ -159,6 +237,7 @@ export function ClipsGrid({ clips, ventureName }: ClipsGridProps) {
             <div
               key={clip._id}
               className="aspect-square bg-soft rounded-sm sm:rounded-lg overflow-hidden relative group cursor-pointer"
+              onClick={() => setSelectedClip(clip)}
             >
               {clip.playback_id ? (
                 <>
@@ -168,7 +247,7 @@ export function ClipsGrid({ clips, ventureName }: ClipsGridProps) {
                     thumbTime={clip.thumbTime}
                   />
                   {/* Play icon overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none">
                     <svg
                       width="24"
                       height="24"

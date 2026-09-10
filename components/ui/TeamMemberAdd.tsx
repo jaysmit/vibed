@@ -348,6 +348,12 @@ export function TeamMemberAdd({
           >
             Add to team
           </button>
+
+          <div className="mt-3 p-3 bg-go-tint rounded-lg">
+            <p className="text-[12px] text-go-deep">
+              <strong>Tip:</strong> When they join, encourage them to complete their profile with a photo and a one-liner about what makes them interesting (previous role, superpower, or fun fact).
+            </p>
+          </div>
         </div>
       )}
     </div>

@@ -46,11 +46,11 @@ export function VentureContentTabs({
           onClick={() => setActiveTab('promises')}
           className={`flex-1 py-3 text-[11px] sm:text-[14px] font-semibold border-b-2 transition-colors text-center ${
             activeTab === 'promises'
-              ? 'border-warn text-warn'
+              ? 'border-go text-go-deep'
               : 'border-transparent text-ink-3 hover:text-ink'
           }`}
         >
-          Promises
+          Progress
         </button>
         <button
           onClick={() => setActiveTab('updates')}

@@ -56,11 +56,35 @@ const RUNG_LABELS: Record<Rung, string> = {
   alumni: 'Alumni',
 };
 
-export function RungTag({ rung, isDead = false }: { rung: Rung; isDead?: boolean }) {
+interface RungTagProps {
+  rung: Rung;
+  isDead?: boolean;
+  size?: 'xs' | 'sm' | 'md';
+}
+
+export function RungTag({ rung, isDead = false, size = 'md' }: RungTagProps) {
+  if (size === 'xs') {
+    // Extra small - subtle, just the ladder icon with minimal styling
+    return (
+      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm rounded px-1.5 py-0.5">
+        <RungLadder rung={rung} isDead={isDead} className="scale-[0.65]" />
+        <span className="text-[8px] font-medium text-ink-3 uppercase tracking-wide">
+          {RUNG_LABELS[rung]}
+        </span>
+      </div>
+    );
+  }
+
+  const isSmall = size === 'sm';
+
   return (
-    <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-full px-[11px] py-1.5 shadow-sm">
-      <RungLadder rung={rung} isDead={isDead} />
-      <span className="text-[11px] font-semibold tracking-wide uppercase text-ink-2">
+    <div className={`flex items-center bg-white/95 backdrop-blur-sm rounded-full shadow-sm ${
+      isSmall ? 'gap-1.5 px-2 py-1' : 'gap-2 px-[11px] py-1.5'
+    }`}>
+      <RungLadder rung={rung} isDead={isDead} className={isSmall ? 'scale-[0.8]' : ''} />
+      <span className={`font-semibold tracking-wide uppercase text-ink-2 ${
+        isSmall ? 'text-[9px]' : 'text-[11px]'
+      }`}>
         {RUNG_LABELS[rung]}
       </span>
     </div>
