@@ -80,11 +80,16 @@ export function InfiniteScrollSection({
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;
 
+    // DEBUG: Track load time for each section
+    const debugLabel = `[${pillar}] loadMore`;
+    console.time(debugLabel);
+    console.log(`[${pillar}] Starting fetch... offset=${offset}, cursor=${cursor}`);
+
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
         pillar,
-        limit: '6',
+        limit: '4',
       });
       // Use offset for trending, cursor for others
       if (pillar === 'trending') {
@@ -93,10 +98,15 @@ export function InfiniteScrollSection({
         params.set('cursor', cursor);
       }
 
+      const fetchStart = performance.now();
       const res = await fetch(`/api/ventures/feed?${params}`);
+      const fetchEnd = performance.now();
+      console.log(`[${pillar}] Fetch took ${(fetchEnd - fetchStart).toFixed(0)}ms`);
+
       if (!res.ok) throw new Error('Failed to fetch');
 
       const data = await res.json();
+      console.log(`[${pillar}] Got ${data.ventures.length} ventures, hasMore=${data.hasMore}`);
 
       if (data.ventures.length > 0) {
         // Deduplicate by slug to prevent duplicates
@@ -105,9 +115,11 @@ export function InfiniteScrollSection({
           const newVentures = data.ventures.filter((v: Venture) => !existingSlugs.has(v.slug));
           if (newVentures.length === 0) {
             // All returned ventures are duplicates, stop loading
+            console.log(`[${pillar}] All duplicates, stopping`);
             setHasMore(false);
             return prev;
           }
+          console.log(`[${pillar}] Added ${newVentures.length} new ventures`);
           return [...prev, ...newVentures];
         });
         setCursor(data.nextCursor);
@@ -119,10 +131,11 @@ export function InfiniteScrollSection({
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error loading more ventures:', error);
+      console.error(`[${pillar}] Error loading more ventures:`, error);
       setHasMore(false);
     } finally {
       setIsLoading(false);
+      console.timeEnd(debugLabel);
     }
   }, [pillar, cursor, offset, isLoading, hasMore]);
 
@@ -134,8 +147,23 @@ export function InfiniteScrollSection({
     }
   }, [initialVentures, pillar]);
 
-  // DISABLED: IntersectionObserver was causing 6 API calls on page navigation
-  // Users can click "Load more" button instead. This is more predictable.
+  // Horizontal scroll detection - load more when user scrolls near the end
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      // Check if user has scrolled near the end (within 200px)
+      const scrollRight = container.scrollWidth - container.scrollLeft - container.clientWidth;
+      if (scrollRight < 200 && hasMore && !isLoading) {
+        console.log(`[${pillar}] Scroll triggered load (${scrollRight}px from end)`);
+        loadMore();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [hasMore, isLoading, loadMore, pillar]);
 
   // Convert vertical mouse wheel to horizontal scroll when hovering
   useEffect(() => {

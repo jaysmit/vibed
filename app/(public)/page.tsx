@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { InfiniteScrollSection } from '@/components/ui';
 import {
   getTrendingVentures,
+  getLandingPageVentures,
   type VentureWithFounder,
 } from '@/lib/services/ventures-public';
 import {
@@ -34,9 +35,11 @@ function transformVenture(v: VentureWithFounder) {
 }
 
 export default async function HomePage() {
-  // Fetch trending ventures for the main section
-  // Other sections start empty - users click "Load more" to fetch via API
+  // Fetch trending ventures for the main section (DO NOT TOUCH - working perfectly)
   const trendingVentures = await getTrendingVentures(4);
+
+  // Fetch data for other sections (single query for all)
+  const landingData = await getLandingPageVentures(4);
 
   return (
     <main className="max-w-[1180px] mx-auto px-4 sm:px-6">
@@ -53,13 +56,13 @@ export default async function HomePage() {
         useFullCards
       />
 
-      {/* Other sections start empty - click "Load more" to fetch */}
+      {/* First 3 sections load with SSR data (4 cards each) */}
       <InfiniteScrollSection
         title="Trending Elevator Pitches"
         description="The best pitches right now"
         linkHref="/discover"
         pillar="recent"
-        initialVentures={[]}
+        initialVentures={landingData.recent.map(transformVenture)}
       />
 
       <InfiniteScrollSection
@@ -67,7 +70,7 @@ export default async function HomePage() {
         description={PILLAR_DESCRIPTIONS.the_idea}
         linkHref="/discover?pillar=the_idea"
         pillar="the_idea"
-        initialVentures={[]}
+        initialVentures={landingData.the_idea.map(transformVenture)}
       />
 
       <InfiniteScrollSection
@@ -75,9 +78,10 @@ export default async function HomePage() {
         description={PILLAR_DESCRIPTIONS.building_it}
         linkHref="/discover?pillar=building_it"
         pillar="building_it"
-        initialVentures={[]}
+        initialVentures={landingData.building_it.map(transformVenture)}
       />
 
+      {/* Remaining sections load on demand */}
       <InfiniteScrollSection
         title={PILLAR_LABELS.getting_customers}
         description={PILLAR_DESCRIPTIONS.getting_customers}
