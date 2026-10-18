@@ -67,6 +67,20 @@ export interface SegmentEntry {
   isPlanned?: boolean;  // True if this is a plan for the future, not completed yet
 }
 
+// Venture links type with known fields
+export interface VentureLinks {
+  site?: string;
+  siteStatus?: string;
+  ig?: string;
+  x?: string;
+  yt?: string;
+  tiktok?: string;
+  linkedin?: string;
+  poster?: string;      // Main/primary image (backward compatible)
+  gallery?: string[];   // Additional images (up to 9 more, for total of 10)
+  [key: string]: string | string[] | undefined;  // Allow additional fields
+}
+
 export interface Venture {
   id: string;
   founder_id: string;
@@ -74,6 +88,7 @@ export interface Venture {
   slug_history: string[];
   name: string;
   pitch: string;
+  tagline: string | null;  // Short one-liner displayed on cover images
   brand: string;
   glyph: string;
   rung: string;
@@ -85,7 +100,7 @@ export interface Venture {
   who: string | null;
   why: string | null;
   segments: Record<string, SegmentEntry>;
-  links: Record<string, string | undefined>;
+  links: VentureLinks;
   counters: {
     followers: number;
     clips: number;
@@ -333,9 +348,9 @@ export const PILLAR_DESCRIPTIONS: Record<Pillar, string> = {
 // Which segments belong to which pillar
 export const PILLAR_SEGMENTS: Record<Exclude<Pillar, 'featured'>, string[]> = {
   the_idea: ['pitch', 'spark', 'validation'],
-  building_it: ['proto', 'build', 'beta'],
-  getting_customers: ['gtm', 'launch', 'channel', 'first', 'audience'],
-  hard_parts: ['trouble', 'money', 'team', 'scale'],
+  building_it: ['proto', 'build', 'beta', 'audience'],
+  getting_customers: ['gtm', 'launch', 'firstuser', 'channel', 'first', 'retention'],
+  hard_parts: ['trouble', 'money', 'team', 'pivot', 'shutdown'],
 };
 
 export interface StaffPick {

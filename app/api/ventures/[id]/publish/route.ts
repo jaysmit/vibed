@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getCurrentUserId } from '@/lib/supabase/auth';
 import { publishVenture } from '@/lib/services/ventures';
 
@@ -19,6 +20,9 @@ export async function POST(
     if (!result) {
       return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
     }
+
+    // Revalidate cached venture data
+    revalidateTag('ventures');
 
     return NextResponse.json(result);
   } catch (error) {

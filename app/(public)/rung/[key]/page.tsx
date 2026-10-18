@@ -9,7 +9,7 @@ const RUNG_INFO: Record<Rung, { label: string; description: string }> = {
   live: { label: 'Live', description: 'Out in the world, looking for users.' },
   first: { label: 'First dollar', description: 'Someone paid. The first validation that matters.' },
   growing: { label: 'Growing', description: 'Finding what works and doing more of it.' },
-  alumni: { label: 'Alumni', description: 'The ones who made it through.' },
+  now: { label: 'Now', description: 'Where things stand today.' },
 };
 
 interface PageProps {

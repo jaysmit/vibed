@@ -109,6 +109,22 @@ These are mistakes I've made before. Review this list before deploying changes:
 
 4. **Test locally first**: Run `npm run build` locally before deploying to catch Server Component errors that `typecheck` misses.
 
+5. **Components with onClick MUST have 'use client'**: Any component that has an `onClick` handler (or any event handler) MUST have `'use client'` at the top. Server Components cannot serialize functions. Error: "Event handlers cannot be passed to Client Component props". This often appears only in production, not locally.
+
+6. **Check Vercel logs for runtime errors**: Production errors are often hidden. Run `vercel logs --level error --limit 20` to see actual errors. The browser console shows a generic "digest" error but Vercel logs show the real issue.
+
+7. **Don't display same data in multiple sections**: When the landing page has multiple sections that might use the same data source, either use different data or show empty state. Showing the same ventures in "Trending Ventures" and "Trending Elevator Pitches" creates duplicates.
+
+8. **Avatar/Image sizing with Next.js Image**: Always use inline `style={{ width: X, height: X }}` along with `width` and `height` props to force dimensions. CSS classes alone may not override Next.js Image's default sizing. Add `minWidth` and `maxWidth` for stubborn cases.
+
+9. **Mobile-first responsive design**: When fixing mobile issues, use `flex-col sm:flex-row` pattern for stacking on mobile. Use smaller text sizes on mobile: `text-[22px] sm:text-[32px]`. Test mobile view after every UI change.
+
+10. **Infinite scroll deduplication**: When appending items in infinite scroll, ALWAYS deduplicate by unique key (slug). Use `Set` to track existing items: `const existingSlugs = new Set(prev.map(v => v.slug))`. Stop loading if all returned items are duplicates.
+
+11. **JSONB cursor pagination doesn't work**: You can't use `lt()` or `gt()` on JSONB fields (like `counters->followers`) for cursor-based pagination. Use offset-based pagination instead: `query.range(offset, offset + limit - 1)`.
+
+12. **Limit initial data fetch**: On landing pages, don't fetch more items than you'll display initially. Fetching 8 items when only showing 4 can cause duplicates when infinite scroll kicks in.
+
 ## When conversations are compacted
 
 When a conversation runs out of context and gets summarized, **always update reference files before ending**:

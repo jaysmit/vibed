@@ -12,7 +12,7 @@ const RUNG_LABELS: Record<Rung, string> = {
   live: 'Live',
   first: 'First $',
   growing: 'Growing',
-  alumni: 'Alumni',
+  now: 'Now',
 };
 
 const SORT_OPTIONS = [

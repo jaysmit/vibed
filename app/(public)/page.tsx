@@ -1,14 +1,17 @@
 import Link from 'next/link';
 import { InfiniteScrollSection } from '@/components/ui';
-import { getTrendingVentures, getRecentVentures, type VentureWithFounder } from '@/lib/services/ventures-public';
+import {
+  getTrendingVentures,
+  type VentureWithFounder,
+} from '@/lib/services/ventures-public';
 import {
   PILLAR_LABELS,
   PILLAR_DESCRIPTIONS,
 } from '@/lib/domain/pillars';
 import { HeroSection } from './HeroSection';
 
-// Revalidate every 60 seconds (ISR)
-export const revalidate = 60;
+// Force dynamic rendering to avoid stale cache from build
+export const dynamic = 'force-dynamic';
 
 // Transform venture for InfiniteScrollSection
 function transformVenture(v: VentureWithFounder) {
@@ -16,6 +19,7 @@ function transformVenture(v: VentureWithFounder) {
     slug: v.slug,
     name: v.name,
     pitch: v.pitch,
+    tagline: v.tagline,
     brand: v.brand,
     glyph: v.glyph,
     rung: v.rung,
@@ -30,26 +34,16 @@ function transformVenture(v: VentureWithFounder) {
 }
 
 export default async function HomePage() {
-  // Fetch only what we need - in parallel (no auth check needed - hero handles it client-side)
-  const [trendingVentures, recentVentures] = await Promise.all([
-    getTrendingVentures(4),
-    getRecentVentures(4),
-  ]);
-
-  // Use trending ventures as fallback for all pillars (faster than filtering all ventures)
-  const pillarVentures = {
-    the_idea: trendingVentures.slice(0, 4),
-    building_it: trendingVentures.slice(0, 4),
-    getting_customers: trendingVentures.slice(0, 4),
-    hard_parts: trendingVentures.slice(0, 4),
-  };
+  // Fetch trending ventures for the main section
+  // Other sections start empty - users click "Load more" to fetch via API
+  const trendingVentures = await getTrendingVentures(4);
 
   return (
     <main className="max-w-[1180px] mx-auto px-4 sm:px-6">
       {/* Hero - client component handles auth check */}
       <HeroSection />
 
-      {/* Trending Ventures - TOP SECTION */}
+      {/* Trending Ventures - has SSR data */}
       <InfiniteScrollSection
         title="Trending Ventures"
         description="The ones everyone's watching"
@@ -59,50 +53,45 @@ export default async function HomePage() {
         useFullCards
       />
 
-      {/* Most Popular - All ventures sorted by recent */}
+      {/* Other sections start empty - click "Load more" to fetch */}
       <InfiniteScrollSection
-        title="Most Popular"
-        description="Recently active ventures"
+        title="Trending Elevator Pitches"
+        description="The best pitches right now"
         linkHref="/discover"
         pillar="recent"
-        initialVentures={recentVentures.map(transformVenture)}
-        useFullCards
+        initialVentures={[]}
       />
 
-      {/* The Idea */}
       <InfiniteScrollSection
         title={PILLAR_LABELS.the_idea}
         description={PILLAR_DESCRIPTIONS.the_idea}
         linkHref="/discover?pillar=the_idea"
         pillar="the_idea"
-        initialVentures={pillarVentures.the_idea.map(transformVenture)}
+        initialVentures={[]}
       />
 
-      {/* Building It */}
       <InfiniteScrollSection
         title={PILLAR_LABELS.building_it}
         description={PILLAR_DESCRIPTIONS.building_it}
         linkHref="/discover?pillar=building_it"
         pillar="building_it"
-        initialVentures={pillarVentures.building_it.map(transformVenture)}
+        initialVentures={[]}
       />
 
-      {/* Getting Customers */}
       <InfiniteScrollSection
         title={PILLAR_LABELS.getting_customers}
         description={PILLAR_DESCRIPTIONS.getting_customers}
         linkHref="/discover?pillar=getting_customers"
         pillar="getting_customers"
-        initialVentures={pillarVentures.getting_customers.map(transformVenture)}
+        initialVentures={[]}
       />
 
-      {/* The Hard Parts - Pivot Points */}
       <InfiniteScrollSection
         title={PILLAR_LABELS.hard_parts}
         description={PILLAR_DESCRIPTIONS.hard_parts}
         linkHref="/discover?pillar=hard_parts"
         pillar="hard_parts"
-        initialVentures={pillarVentures.hard_parts.map(transformVenture)}
+        initialVentures={[]}
       />
 
       {/* CTA */}

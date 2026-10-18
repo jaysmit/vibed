@@ -88,11 +88,13 @@ export async function createMasterMember(ventureId: string, founderId: string): 
 export async function getTeamMembers(ventureId: string): Promise<TeamMemberWithDetails[]> {
   const supabase = await createAdminClient();
 
+  // Use explicit foreign key hint since venture_members has two FKs to founders
+  // (founder_id and invited_by). We want the founder_id relationship.
   const { data: members, error } = await supabase
     .from('venture_members')
     .select(`
       *,
-      founder:founders(id, name, slug, avatar_key)
+      founder:founders!venture_members_founder_id_fkey(id, name, slug, avatar_key)
     `)
     .eq('venture_id', ventureId)
     .neq('status', 'removed')

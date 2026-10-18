@@ -127,6 +127,7 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
             slug={v.slug}
             name={v.name}
             pitch={v.pitch}
+            tagline={v.tagline}
             brand={v.brand}
             poster={v.links?.poster}
             rung={v.rung}

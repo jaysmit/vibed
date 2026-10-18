@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { createAdminClient } from '@/lib/supabase/server';
-import { getCurrentUserId } from '@/lib/supabase/auth';
+import { getCurrentUserIdFast } from '@/lib/supabase/auth';
+import { getFounderBySlug } from '@/lib/services/founders-public';
 import { Avatar, ProgressRing } from '@/components/ui';
 import { calculateCompletion } from '@/lib/domain/standards';
-import { TEAM_ROLE_LABELS, type TeamRole, type Venture } from '@/lib/supabase/types';
+import { TEAM_ROLE_LABELS, type TeamRole } from '@/lib/supabase/types';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -12,84 +12,37 @@ interface PageProps {
 
 export default async function FounderProfilePage({ params }: PageProps) {
   const { slug } = await params;
-  const supabase = await createAdminClient();
-  const currentUserId = await getCurrentUserId();
 
-  // Get founder by slug
-  const { data: founder } = await supabase
-    .from('founders')
-    .select('*')
-    .eq('slug', slug)
-    .single();
+  // Parallel fetch: founder data (cached) and current user (fast, no network call)
+  const [founder, currentUserId] = await Promise.all([
+    getFounderBySlug(slug),
+    getCurrentUserIdFast(),
+  ]);
 
   if (!founder) {
     notFound();
   }
 
-  // Check if this is the current user's profile
   const isOwner = currentUserId && founder.user_id === currentUserId;
 
-  // Get ventures where founder is the creator
-  const { data: ownVentures } = await supabase
-    .from('ventures')
-    .select('*')
-    .eq('founder_id', founder.id)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
-
-  // Try to get team memberships (may not exist yet)
-  let teamMemberships: { venture_id: string; role: TeamRole; venture?: Venture }[] = [];
-  try {
-    const { data: memberships } = await supabase
-      .from('venture_members')
-      .select('venture_id, role')
-      .eq('founder_id', founder.id)
-      .eq('status', 'accepted');
-
-    if (memberships && memberships.length > 0) {
-      // Get the ventures for these memberships
-      const ventureIds = memberships.map(m => m.venture_id);
-      const { data: memberVentures } = await supabase
-        .from('ventures')
-        .select('*')
-        .in('id', ventureIds)
-        .is('deleted_at', null);
-
-      teamMemberships = memberships.map(m => ({
-        ...m,
-        venture: memberVentures?.find(v => v.id === m.venture_id),
-      }));
-    }
-  } catch {
-    // Table doesn't exist yet, ignore
-  }
-
-  // Combine ventures: own ventures + team memberships
-  const allVentures: (Venture & { role: string; isOwner: boolean })[] = [
-    ...(ownVentures || []).map(v => ({ ...v, role: 'founder', isOwner: true })),
-    ...teamMemberships
-      .filter(m => m.venture && !ownVentures?.some(v => v.id === m.venture_id))
-      .map(m => ({ ...m.venture!, role: m.role, isOwner: false })),
-  ];
-
-  // Filter: only show published ventures to non-owners
+  // Filter ventures for visibility
   const visibleVentures = isOwner
-    ? allVentures
-    : allVentures.filter(v => v.status === 'live' || v.status === 'graduated');
+    ? founder.ventures
+    : founder.ventures.filter(v => v.status === 'live' || v.status === 'graduated');
 
   // Stats
-  const activeCount = allVentures.filter(v => v.status === 'live' || v.status === 'draft').length;
-  const exitedCount = allVentures.filter(v => v.status === 'graduated').length;
+  const activeCount = founder.ventures.filter(v => v.status === 'live' || v.status === 'draft').length;
+  const exitedCount = founder.ventures.filter(v => v.status === 'graduated').length;
 
   return (
     <main className="max-w-[900px] mx-auto px-6 py-10">
       {/* Profile Header */}
       <div className="flex flex-col sm:flex-row gap-6 mb-8">
-        <div className="relative">
+        <div data-avatar="founder-page-container" className="relative">
           <Avatar
             name={founder.name}
             imageUrl={founder.links?.avatar}
-            size="2xl"
+            size="xl"
             color="#1F6F5C"
           />
           {isOwner && (
@@ -194,7 +147,7 @@ export default async function FounderProfilePage({ params }: PageProps) {
       {/* Stats bar */}
       <div className="flex gap-8 py-4 border-y border-rule mb-8">
         <div>
-          <div className="text-[28px] font-bold font-mono">{allVentures.length}</div>
+          <div className="text-[28px] font-bold font-mono">{founder.ventures.length}</div>
           <div className="text-[12px] text-ink-3 uppercase tracking-wide">Ventures</div>
         </div>
         <div>

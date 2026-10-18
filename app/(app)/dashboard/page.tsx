@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   const ventures = await getVenturesByFounderUserId(userId);
 
   return (
-    <main className="max-w-[1000px] mx-auto px-6 py-10">
+    <main className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

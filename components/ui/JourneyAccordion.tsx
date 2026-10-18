@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { VideoPlayer } from './VideoPlayerLazy';
+import { NudgeButton } from './NudgeButton';
 
 interface SegmentClip {
   playback_id?: string;
@@ -20,6 +21,7 @@ interface JourneySegment {
   happenedAt?: string;  // When this actually happened (for timeline ordering)
   publishedAt?: string;
   updatedAt?: string;
+  isPlanned?: boolean;  // True if this is a plan, false if posted
   clip?: SegmentClip;
 }
 
@@ -36,9 +38,10 @@ interface JourneyAccordionProps {
   ventureName: string;
   isOwner?: boolean;
   ventureSlug?: string;
+  ventureId?: string;
 }
 
-export function JourneyAccordion({ stages, ventureName, isOwner, ventureSlug }: JourneyAccordionProps) {
+export function JourneyAccordion({ stages, ventureName, isOwner, ventureSlug, ventureId }: JourneyAccordionProps) {
   const router = useRouter();
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
@@ -170,15 +173,14 @@ export function JourneyAccordion({ stages, ventureName, isOwner, ventureSlug }: 
                                 Write this
                               </span>
                             )
+                          ) : ventureId ? (
+                            <NudgeButton
+                              ventureId={ventureId}
+                              segmentKey={seg.key}
+                              segmentTitle={seg.title}
+                            />
                           ) : (
-                            <>
-                              <div className="w-8 h-8 rounded bg-rule/50 flex items-center justify-center">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-3">
-                                  <polygon points="5 3 19 12 5 21 5 3" />
-                                </svg>
-                              </div>
-                              <span className="text-[11px] text-ink-3 italic hidden sm:block">Not written yet</span>
-                            </>
+                            <span className="text-[11px] text-ink-3 italic hidden sm:block">Not written yet</span>
                           )}
                         </div>
                       </div>
@@ -209,7 +211,18 @@ export function JourneyAccordion({ stages, ventureName, isOwner, ventureSlug }: 
                         </span>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-[14px] font-semibold">{seg.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-[14px] font-semibold">{seg.title}</h4>
+                          {seg.isPlanned ? (
+                            <span className="text-[10px] font-medium text-heat bg-heat-tint px-1.5 py-0.5 rounded">
+                              plan created
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-go-deep bg-go-tint px-1.5 py-0.5 rounded">
+                              posted
+                            </span>
+                          )}
+                        </div>
                         {!isOpen && hasContent && (
                           <p className="text-[12px] text-ink-2 truncate mt-0.5">{seg.content?.slice(0, 80)}...</p>
                         )}

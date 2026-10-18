@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ImageCropper } from '@/components/ui';
 
 interface ProfileEditorProps {
   founderId: string;
@@ -42,47 +43,10 @@ export function ProfileEditor({
   const [avatar, setAvatar] = useState(initialLinks.avatar || '');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [error, setError] = useState('');
+  const [cropperImage, setCropperImage] = useState<File | null>(null);
 
-  // Compress image using canvas
-  const compressImage = (file: File, maxWidth: number, quality: number): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          // Scale down if wider than maxWidth
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Failed to get canvas context'));
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-          resolve(compressedBase64);
-        };
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // Handle avatar upload
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle avatar file selection - shows cropper
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -91,13 +55,19 @@ export function ProfileEditor({
       return;
     }
 
+    setError('');
+    setCropperImage(file);
+    // Reset the input so the same file can be selected again
+    e.target.value = '';
+  };
+
+  // Handle cropped image upload
+  const handleCropComplete = async (croppedBase64: string) => {
+    setCropperImage(null);
     setUploadingAvatar(true);
     setError('');
 
     try {
-      // Compress to 400px for avatar
-      const compressedImage = await compressImage(file, 400, 0.85);
-
       const res = await fetch('/api/founder', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -108,13 +78,13 @@ export function ProfileEditor({
             website: website.trim(),
             instagram: instagram.trim(),
             tiktok: tiktok.trim(),
-            avatar: compressedImage,
+            avatar: croppedBase64,
           },
         }),
       });
 
       if (res.ok) {
-        setAvatar(compressedImage);
+        setAvatar(croppedBase64);
         router.refresh();
       } else {
         setError('Failed to upload avatar');
@@ -232,31 +202,35 @@ export function ProfileEditor({
         <div className="flex items-center gap-6 mb-6 pb-6 border-b border-rule">
           <div className="relative">
             {/* Gradient ring wrapper */}
-            <div className="p-[3px] bg-gradient-to-tr from-go via-heat to-go-deep rounded-full">
+            <div data-avatar="settings-avatar-wrapper" className="p-[2px] bg-gradient-to-tr from-go via-heat to-go-deep rounded-full">
               {avatar ? (
                 <img
+                  data-avatar="settings-avatar-image"
                   src={avatar}
                   alt="Profile"
-                  className="w-[120px] h-[120px] rounded-full object-cover border-[3px] border-page"
+                  width={48}
+                  height={48}
+                  style={{ width: 48, height: 48, minWidth: 48, maxWidth: 48 }}
+                  className="rounded-full object-cover border-[2px] border-page"
                 />
               ) : (
-                <div className="w-[120px] h-[120px] rounded-full bg-soft flex items-center justify-center text-4xl font-bold text-ink-3 border-[3px] border-page">
+                <div data-avatar="settings-avatar-initials" style={{ width: 48, height: 48 }} className="rounded-full bg-soft flex items-center justify-center text-lg font-bold text-ink-3 border-[2px] border-page">
                   {initialName.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
-            <label className="absolute bottom-1 right-1 w-9 h-9 bg-go rounded-full flex items-center justify-center cursor-pointer hover:bg-[#04B76B] transition-colors shadow-lg border-2 border-page">
+            <label className="absolute bottom-0 right-0 w-7 h-7 bg-go rounded-full flex items-center justify-center cursor-pointer hover:bg-[#04B76B] transition-colors shadow-lg border-2 border-page">
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleAvatarUpload}
+                onChange={handleAvatarSelect}
                 className="hidden"
                 disabled={uploadingAvatar}
               />
               {uploadingAvatar ? (
-                <div className="w-4 h-4 border-2 border-[#00301E] border-t-transparent rounded-full animate-spin" />
+                <div className="w-3 h-3 border-2 border-[#00301E] border-t-transparent rounded-full animate-spin" />
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00301E" strokeWidth="2.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00301E" strokeWidth="2.5">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                   <circle cx="12" cy="13" r="4" />
                 </svg>
@@ -312,6 +286,18 @@ export function ProfileEditor({
             </div>
           </div>
         </div>
+
+        {/* Image Cropper Modal - must be inside this return for non-editing state */}
+        {cropperImage && (
+          <ImageCropper
+            image={cropperImage}
+            aspectRatio={1}
+            outputWidth={400}
+            quality={0.9}
+            onCropComplete={handleCropComplete}
+            onCancel={() => setCropperImage(null)}
+          />
+        )}
       </div>
     );
   }
@@ -346,7 +332,7 @@ export function ProfileEditor({
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleAvatarUpload}
+                  onChange={handleAvatarSelect}
                   className="hidden"
                   disabled={uploadingAvatar}
                 />
@@ -486,6 +472,18 @@ export function ProfileEditor({
           </button>
         </div>
       </div>
+
+      {/* Image Cropper Modal */}
+      {cropperImage && (
+        <ImageCropper
+          image={cropperImage}
+          aspectRatio={1}
+          outputWidth={400}
+          quality={0.9}
+          onCropComplete={handleCropComplete}
+          onCancel={() => setCropperImage(null)}
+        />
+      )}
     </div>
   );
 }

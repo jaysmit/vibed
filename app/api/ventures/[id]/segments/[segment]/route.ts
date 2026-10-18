@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getCurrentUserId } from '@/lib/supabase/auth';
 import { updateSegment } from '@/lib/services/ventures';
 import { SEGMENT_KEYS } from '@/lib/domain/rungs';
@@ -41,6 +42,9 @@ export async function PUT(
     if (!result) {
       return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
     }
+
+    // Revalidate cached venture data
+    revalidateTag('ventures');
 
     return NextResponse.json({ success: true });
   } catch (error) {

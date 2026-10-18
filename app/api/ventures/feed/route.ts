@@ -7,7 +7,8 @@ import type { Pillar } from '@/lib/supabase/types';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const pillar = searchParams.get('pillar') as Exclude<Pillar, 'featured'> | 'trending' | 'recent' | null;
-  const cursor = searchParams.get('cursor'); // Last venture ID for cursor-based pagination
+  const cursor = searchParams.get('cursor'); // Last venture published_at for cursor-based pagination
+  const offset = parseInt(searchParams.get('offset') || '0'); // Offset for trending (can't cursor on JSONB)
   const limit = Math.min(parseInt(searchParams.get('limit') || '8'), 20);
 
   const supabase = await createClient();
@@ -19,12 +20,14 @@ export async function GET(request: NextRequest) {
     .eq('status', 'live')
     .is('deleted_at', null);
 
-  // Apply cursor for pagination
-  if (cursor) {
-    // For trending, we can't easily do cursor-based on JSONB, so skip cursor
-    if (pillar !== 'trending') {
-      query = query.lt('published_at', cursor);
+  // Apply cursor/offset for pagination
+  if (pillar === 'trending') {
+    // For trending, use offset-based pagination since we can't cursor on JSONB
+    if (offset > 0) {
+      query = query.range(offset, offset + limit - 1);
     }
+  } else if (cursor) {
+    query = query.lt('published_at', cursor);
   }
 
   // Apply ordering
@@ -39,7 +42,10 @@ export async function GET(request: NextRequest) {
   // For pillar sections, fetch more than needed for filtering
   // For trending/recent, just fetch the limit
   const isSpecialPillar = pillar === 'trending' || pillar === 'recent';
-  query = query.limit(pillar && !isSpecialPillar ? limit * 3 : limit);
+  if (pillar !== 'trending' || offset === 0) {
+    // Only apply limit if not using range (trending with offset)
+    query = query.limit(pillar && !isSpecialPillar ? limit * 3 : limit);
+  }
 
   const { data: ventures, error } = await query;
 
@@ -66,12 +72,14 @@ export async function GET(request: NextRequest) {
   // Limit to requested amount
   filteredVentures = filteredVentures.slice(0, limit);
 
-  // Determine next cursor
+  // Determine next cursor/offset
   const lastVenture = filteredVentures[filteredVentures.length - 1];
   let nextCursor: string | null = null;
+  let nextOffset: number | null = null;
   if (lastVenture && filteredVentures.length === limit) {
     if (pillar === 'trending') {
-      nextCursor = String((lastVenture.counters as Record<string, number>)?.followers || 0);
+      // Use offset for trending since we can't cursor on JSONB
+      nextOffset = offset + filteredVentures.length;
     } else {
       nextCursor = lastVenture.published_at || null;
     }
@@ -89,6 +97,7 @@ export async function GET(request: NextRequest) {
       slug: v.slug,
       name: v.name,
       pitch: v.pitch,
+      tagline: (v as Record<string, unknown>).tagline || null,
       brand: v.brand,
       glyph: v.glyph,
       rung: v.rung,
@@ -109,6 +118,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     ventures: transformed,
     nextCursor,
+    nextOffset,
     hasMore: filteredVentures.length === limit,
   });
 }

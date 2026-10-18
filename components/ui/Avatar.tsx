@@ -4,18 +4,18 @@ interface AvatarProps {
   name: string;
   imageUrl?: string | null;
   color?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'profile';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'profile';
   className?: string;
 }
 
 const sizes = {
-  sm: { container: 'w-5 h-5', text: 'text-[9.5px]', px: 20 },
-  md: { container: 'w-8 h-8', text: 'text-[11px]', px: 32 },
-  lg: { container: 'w-12 h-12', text: 'text-[15px]', px: 48 },
-  xl: { container: 'w-16 h-16', text: 'text-[20px]', px: 64 },
-  '2xl': { container: 'w-24 h-24', text: 'text-[28px]', px: 96 },
-  // Instagram-style profile avatar - 150px with gradient ring
-  profile: { container: 'w-[150px] h-[150px]', text: 'text-[48px]', px: 150 },
+  sm: { px: 20, text: 'text-[9.5px]' },
+  md: { px: 32, text: 'text-[11px]' },
+  lg: { px: 40, text: 'text-[13px]' },
+  xl: { px: 48, text: 'text-[15px]' },
+  '2xl': { px: 56, text: 'text-[18px]' },
+  '3xl': { px: 80, text: 'text-[24px]' },
+  profile: { px: 80, text: 'text-[24px]' },
 };
 
 export function Avatar({ name, imageUrl, color = '#5A2EC4', size = 'md', className = '' }: AvatarProps) {
@@ -27,52 +27,71 @@ export function Avatar({ name, imageUrl, color = '#5A2EC4', size = 'md', classNa
     .slice(0, 2);
 
   const sizeConfig = sizes[size];
-
-  // Profile size gets Instagram-style gradient ring
   const isProfile = size === 'profile';
-  const ringClass = isProfile ? 'p-[3px] bg-gradient-to-tr from-go via-heat to-go-deep rounded-full' : '';
+
+  // Profile size: 48px image + 3px white border + 3px gradient = 54px total
+  const profileOuterSize = sizeConfig.px + 12;
 
   if (imageUrl) {
-    const imageElement = (
-      <span className={`${sizeConfig.container} rounded-full overflow-hidden relative flex-shrink-0 ${isProfile ? 'border-[3px] border-page' : ''}`}>
-        <Image
-          src={imageUrl}
-          alt={name}
-          width={sizeConfig.px}
-          height={sizeConfig.px}
-          className="w-full h-full object-cover"
-          unoptimized={imageUrl.startsWith('http')}
-        />
-      </span>
-    );
-
     if (isProfile) {
       return (
-        <span className={`${ringClass} ${className}`}>
-          {imageElement}
+        <span
+          data-avatar="avatar-profile"
+          className={`inline-flex items-center justify-center rounded-full bg-gradient-to-tr from-go via-heat to-go-deep flex-shrink-0 ${className}`}
+          style={{ width: profileOuterSize, height: profileOuterSize }}
+        >
+          <Image
+            src={imageUrl}
+            alt={name}
+            width={sizeConfig.px}
+            height={sizeConfig.px}
+            style={{ width: sizeConfig.px, height: sizeConfig.px }}
+            className="rounded-full object-cover border-[3px] border-page"
+            unoptimized={imageUrl.startsWith('http')}
+          />
         </span>
       );
     }
 
-    return <span className={className}>{imageElement}</span>;
+    return (
+      <Image
+        data-avatar={`avatar-${size}`}
+        src={imageUrl}
+        alt={name}
+        width={sizeConfig.px}
+        height={sizeConfig.px}
+        style={{ width: sizeConfig.px, height: sizeConfig.px, minWidth: sizeConfig.px }}
+        className={`rounded-full object-cover flex-shrink-0 ${className}`}
+        unoptimized={imageUrl.startsWith('http')}
+      />
+    );
   }
 
-  const initialsElement = (
-    <span
-      className={`${sizeConfig.container} ${sizeConfig.text} rounded-full grid place-items-center font-semibold text-white font-mono flex-shrink-0 ${isProfile ? 'border-[3px] border-page' : ''}`}
-      style={{ background: color }}
-    >
-      {initials}
-    </span>
-  );
-
+  // Initials fallback
   if (isProfile) {
     return (
-      <span className={`${ringClass} ${className}`}>
-        {initialsElement}
+      <span
+        data-avatar="avatar-profile"
+        className={`inline-flex items-center justify-center rounded-full bg-gradient-to-tr from-go via-heat to-go-deep flex-shrink-0 ${className}`}
+        style={{ width: profileOuterSize, height: profileOuterSize }}
+      >
+        <span
+          className={`${sizeConfig.text} rounded-full grid place-items-center font-semibold text-white font-mono border-[3px] border-page`}
+          style={{ background: color, width: sizeConfig.px, height: sizeConfig.px }}
+        >
+          {initials}
+        </span>
       </span>
     );
   }
 
-  return <span className={className}>{initialsElement}</span>;
+  return (
+    <span
+      data-avatar={`avatar-${size}`}
+      className={`${sizeConfig.text} rounded-full grid place-items-center font-semibold text-white font-mono flex-shrink-0 ${className}`}
+      style={{ background: color, width: sizeConfig.px, height: sizeConfig.px, minWidth: sizeConfig.px }}
+    >
+      {initials}
+    </span>
+  );
 }

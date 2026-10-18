@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { RungTag, PromiseClock, Avatar, OwnerSettings, VentureCompletionControls, JourneyAccordion, FollowButton, CheerButton, CommentButton, OwnerActionBar, ShareButton, LikeButton, VentureEndorseButton } from '@/components/ui';
+import { RungTag, PromiseClock, Avatar, OwnerSettings, VentureCompletionControls, JourneyAccordion, FollowButton, CheerButton, CommentButton, OwnerActionBar, ShareButton, LikeButton, VentureEndorseButton, VentureGallery } from '@/components/ui';
 import { VideoPlayer } from '@/components/ui/VideoPlayerLazy';
 import { calculateEngagementItems } from '@/lib/domain/engagement';
 import { getVentureBySlug, getVentureTeam } from '@/lib/services/ventures-public';
@@ -16,23 +16,34 @@ import { ElevatorPitchEditable } from './ElevatorPitchEditable';
 import { ClipsGrid } from './ClipsGrid';
 
 // Segment definitions with stage groupings
-const SEGMENTS: { k: SegmentKey; t: string; p: string; stage: Rung }[] = [
-  { k: 'pitch', t: 'The elevator pitch', p: 'What it is, in thirty seconds.', stage: 'idea' },
+// Note: 'pitch' is excluded - it's displayed in the Elevator Pitch section, not the timeline
+// Note: 'pivot' and 'shutdown' are universal segments that can happen at any stage
+const SEGMENTS: { k: SegmentKey; t: string; p: string; stage: Rung; universal?: boolean }[] = [
+  // Idea stage
   { k: 'spark', t: 'The spark', p: 'The moment the problem became worth solving.', stage: 'idea' },
   { k: 'validation', t: 'Validation', p: 'Who you talked to before building anything.', stage: 'idea' },
-  { k: 'audience', t: 'Building an audience', p: 'The waitlist, the shortlist, the first people watching.', stage: 'building' },
+  // Building stage
   { k: 'proto', t: 'Prototype', p: 'The first ugly version.', stage: 'building' },
+  { k: 'audience', t: 'Building an audience', p: 'The waitlist, the shortlist, the first people watching.', stage: 'building' },
   { k: 'build', t: 'Development', p: 'Building the real thing.', stage: 'building' },
-  { k: 'beta', t: 'Private beta', p: 'First testers and what they broke.', stage: 'live' },
-  { k: 'gtm', t: 'Go to market', p: 'Kickstarter, pre-orders, launch strategy.', stage: 'live' },
+  { k: 'beta', t: 'Private beta', p: 'First testers and what they broke.', stage: 'building' },
+  { k: 'gtm', t: 'Go to market', p: 'Kickstarter, pre-orders, launch strategy.', stage: 'building' },
+  // Live stage
   { k: 'launch', t: 'Launch day', p: 'What actually happened.', stage: 'live' },
+  { k: 'firstuser', t: 'First real user', p: 'The first person who used it without being asked.', stage: 'live' },
+  // First Dollar stage
   { k: 'first', t: 'First sale', p: 'The first time a stranger paid.', stage: 'first' },
-  { k: 'channel', t: 'Finding a channel', p: 'The thing that started working repeatedly.', stage: 'growing' },
+  { k: 'channel', t: 'Finding a channel', p: 'The thing that started working repeatedly.', stage: 'first' },
+  // Growing stage
   { k: 'trouble', t: 'What nearly killed it', p: 'The setback you did not see coming.', stage: 'growing' },
   { k: 'money', t: 'Money and runway', p: 'How you are paying for this.', stage: 'growing' },
   { k: 'team', t: 'Getting help', p: 'First hire, contractor or co-founder.', stage: 'growing' },
-  { k: 'scale', t: 'Small to big', p: 'What broke when it grew.', stage: 'growing' },
-  { k: 'next', t: 'What is next', p: 'The part not written yet.', stage: 'alumni' },
+  { k: 'retention', t: 'Keeping them', p: 'How you turned first users into repeat users.', stage: 'growing' },
+  // Now stage
+  { k: 'next', t: 'What is next', p: 'The part not written yet.', stage: 'now' },
+  // Universal segments (can happen at any stage)
+  { k: 'pivot', t: 'The pivot', p: 'When you changed direction and why.', stage: 'now', universal: true },
+  { k: 'shutdown', t: 'Shutting down', p: 'How and why it ended, and what you learned.', stage: 'now', universal: true },
 ];
 
 const RUNG_LABELS: Record<Rung, string> = {
@@ -41,7 +52,7 @@ const RUNG_LABELS: Record<Rung, string> = {
   live: 'Live',
   first: 'First Dollar',
   growing: 'Growing',
-  alumni: 'Alumni',
+  now: 'Now',
 };
 
 interface PageProps {
@@ -51,12 +62,9 @@ interface PageProps {
 export default async function VentureProfilePage({ params }: PageProps) {
   const { slug } = await params;
 
-  // Parallel: fetch user and venture at the same time
-  // Using getCurrentUserIdFast for speed (local JWT check, no network request)
-  const [userId, venture] = await Promise.all([
-    getCurrentUserIdFast(),
-    getVentureBySlug(slug, null), // Don't pass userId here, check draft access below
-  ]);
+  // Get userId first (fast local JWT check), then fetch venture with owner check
+  const userId = await getCurrentUserIdFast();
+  const venture = await getVentureBySlug(slug, userId);
 
   if (!venture) {
     notFound();
@@ -69,11 +77,6 @@ export default async function VentureProfilePage({ params }: PageProps) {
 
   const isDead = venture.status === 'closed';
   const isOwner = userId && venture.founder.user_id === userId;
-
-  // Draft ventures return 404 for non-owners
-  if (venture.status === 'draft' && !isOwner) {
-    notFound();
-  }
 
   // Calculate completion for owner view
   const completion = isOwner ? calculateCompletion(venture) : null;
@@ -143,6 +146,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
           happenedAt: content?.happenedAt,  // When this actually happened (for timeline ordering)
           publishedAt: content?.publishedAt,
           updatedAt: content?.updatedAt,
+          isPlanned: content?.isPlanned ?? false,  // True if this is a plan, false if posted
           clip: clip ? {
             playback_id: clip.playback_id,
             title: clip.title,
@@ -225,86 +229,34 @@ export default async function VentureProfilePage({ params }: PageProps) {
         );
       })()}
 
-      {/* Profile Header with Cover Image */}
+      {/* Profile Header with Photo Gallery */}
       <div id="venture-header" className="bg-page border-b border-rule">
-        {/* Mobile: Full-width cover image - clickable to website */}
-        {venture.links?.poster && (
-          venture.links?.site ? (
-            <a
-              href={venture.links.site.startsWith('http') ? venture.links.site : `https://${venture.links.site}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              id="venture-cover-mobile"
-              className="sm:hidden block w-full h-[200px] bg-soft overflow-hidden relative group"
-            >
-              <img
-                src={venture.links.poster}
-                alt={`${venture.name} cover`}
-                className="w-full h-full object-cover transition-transform group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm text-ink text-[12px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                  Visit Website
-                </span>
-              </div>
-            </a>
-          ) : (
-            <div id="venture-cover-mobile" className="sm:hidden w-full h-[200px] bg-soft overflow-hidden">
-              <img
-                src={venture.links.poster}
-                alt={`${venture.name} cover`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )
-        )}
+        {/* Mobile: Gallery at top */}
+        <div className="sm:hidden">
+          <VentureGallery
+            poster={venture.links?.poster || null}
+            gallery={Array.isArray(venture.links?.gallery) ? venture.links.gallery : []}
+            ventureName={venture.name}
+            siteUrl={venture.links?.site}
+          />
+        </div>
 
         <div className="max-w-[1180px] mx-auto">
-          {/* Desktop: 50/50 layout with cover and info */}
+          {/* Desktop: 50/50 layout with gallery and info */}
           <div id="venture-header-desktop" className="hidden sm:flex">
-            {/* Cover image - left side, clickable to website */}
-            {venture.links?.poster ? (
-              venture.links?.site ? (
-                <a
-                  href={venture.links.site.startsWith('http') ? venture.links.site : `https://${venture.links.site}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  id="venture-cover-image"
-                  className="w-1/2 h-[280px] bg-soft overflow-hidden flex-shrink-0 relative group cursor-pointer"
-                >
-                  <img
-                    src={venture.links.poster}
-                    alt={`${venture.name} cover`}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm text-ink text-[13px] font-semibold px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                        <polyline points="15 3 21 3 21 9" />
-                        <line x1="10" y1="14" x2="21" y2="3" />
-                      </svg>
-                      Visit Website
-                    </span>
-                  </div>
-                </a>
+            {/* Gallery - left side */}
+            <div className="w-1/2 flex-shrink-0">
+              {(venture.links?.poster || (Array.isArray(venture.links?.gallery) && venture.links.gallery.length > 0)) ? (
+                <VentureGallery
+                  poster={venture.links?.poster || null}
+                  gallery={Array.isArray(venture.links?.gallery) ? venture.links.gallery : []}
+                  ventureName={venture.name}
+                  siteUrl={venture.links?.site}
+                />
               ) : (
-                <div id="venture-cover-image" className="w-1/2 h-[280px] bg-soft overflow-hidden flex-shrink-0">
-                  <img
-                    src={venture.links.poster}
-                    alt={`${venture.name} cover`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )
-            ) : (
-              <div className="w-1/2 h-[280px] bg-soft flex-shrink-0" />
-            )}
+                <div className="h-[280px] bg-soft" />
+              )}
+            </div>
 
             {/* Venture info - right side */}
             <div id="venture-info-desktop" className="w-1/2 px-6 py-8 flex flex-col justify-center">
@@ -710,8 +662,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
               <ElevatorPitchEditable
                 ventureId={venture.id}
                 pitch={venture.pitch}
-                problem={venture.problem}
-                who={venture.who}
+                elevatorPitch={venture.problem}
                 isOwner={isOwner || false}
               />
             </div>
@@ -784,6 +735,7 @@ export default async function VentureProfilePage({ params }: PageProps) {
                   ventureName={venture.name}
                   isOwner={isOwner || false}
                   ventureSlug={venture.slug}
+                  ventureId={venture.id}
                 />
               }
               clipsContent={

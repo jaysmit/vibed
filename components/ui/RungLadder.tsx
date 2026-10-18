@@ -53,7 +53,7 @@ const RUNG_LABELS: Record<Rung, string> = {
   live: 'Live',
   first: 'First dollar',
   growing: 'Growing',
-  alumni: 'Alumni',
+  now: 'Now',
 };
 
 interface RungTagProps {

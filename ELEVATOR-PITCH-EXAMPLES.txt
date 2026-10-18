@@ -1,0 +1,83 @@
+ELEVATOR PITCH EXAMPLES
+Copy and adapt these for your venture.
+
+================================================================================
+TEMPLATE STRUCTURE
+================================================================================
+
+1. HOOK - The problem, with a specific stat or scenario
+2. PAIN - Why this hurts (cost, time, emotion)
+3. SOLUTION - What you built, in plain terms
+4. HOW IT WORKS - The mechanism, simply explained
+5. TRACTION - Numbers that prove it's working
+6. ASK - What you're raising for (optional)
+
+================================================================================
+EXAMPLE 1: WORKOS (Enterprise SaaS)
+================================================================================
+
+Every B2B SaaS founder hits the same wall: a Fortune 500 prospect says "we love your product, but you need SSO and SCIM before we can sign."
+
+Building enterprise auth takes 6-12 months and costs hundreds of thousands. Most startups lose the deal. We've closed $2M in ARR from founders who would have lost those enterprise contracts.
+
+WorkOS is drop-in enterprise infrastructure. Five lines of code gives you SSO, directory sync, and audit logs. We handle the security certifications. You close the deal.
+
+We're charging $500/month per enterprise customer they onboard - they're paying us a fraction of what those contracts are worth. 340 companies are live, 40% month-over-month growth. We're raising to expand our sales team and add compliance features.
+
+================================================================================
+EXAMPLE 2: PAYFLOW (Fintech)
+================================================================================
+
+82% of small businesses fail because of cash flow problems. Not because they're unprofitable - because they can't collect what they're owed fast enough.
+
+The average freelancer waits 47 days to get paid. They invoice, then chase, then wait. Meanwhile, they're paying rent on credit cards.
+
+Payflow advances invoices instantly. Freelancer sends invoice through us, gets paid same day. We collect from the client on normal terms. We take 3% - they'd pay more than that in late fees and stress.
+
+We've advanced £12M in invoices. Default rate is 0.3% because we verify clients before advancing. Growing 35% month over month. 8,000 freelancers on the platform.
+
+We're raising £3M to expand across Europe and add a business credit line product.
+
+================================================================================
+EXAMPLE 3: GREENGRID (Climate/Consumer)
+================================================================================
+
+77 million American households want solar but can't install panels. They rent. They live in apartments. Their roof faces the wrong way.
+
+These people would pay more for clean energy but have literally no option. Until now.
+
+GreenGrid lets anyone subscribe to a local solar farm. You pick a farm in your region, and their power offsets your electric bill. Average customer saves $30/month while going 100% renewable.
+
+We partner with solar farm operators who have excess capacity. They get guaranteed revenue. Customers get cheaper, cleaner power. We take 15% of the savings.
+
+12,000 subscribers across Texas, Arizona, and California. $180K MRR. Unit economics are strong - CAC is $45, LTV is $800.
+
+We're raising to expand to 10 more states and sign more farm partnerships.
+
+================================================================================
+EXAMPLE 4: SYNTHIA (AI/B2B)
+================================================================================
+
+Everyone's selling AI that "replaces" workers. But talk to anyone using these tools - they spend half their time fixing AI mistakes.
+
+The real opportunity isn't replacement. It's augmentation. Handle the tedious 20% of someone's job so they can focus on the creative 80%.
+
+Synthia is an AI assistant that learns your specific workflows. A lawyer's Synthia handles document discovery and cite-checking. A marketer's Synthia handles data pulls and first-draft reports. It learns what you'd do, and does the boring version.
+
+We're in private beta with 50 users across law, marketing, and consulting. Average user saves 8 hours per week. They're paying $200/month and saying it's underpriced.
+
+We're raising seed funding to build out the platform and expand to more professions.
+
+================================================================================
+EXAMPLE 5: MEDCONNECT (Healthcare)
+================================================================================
+
+I spent 15 years in the ER watching the same thing: patients coming in for problems that a simple message could have prevented. "I wasn't sure if this was normal." "I couldn't reach anyone." "The office said call back Monday."
+
+30% of ER visits are avoidable with better communication. That's $32 billion in wasted healthcare spending annually.
+
+MedConnect is async messaging between patients and care teams - but built for how healthcare actually works. Messages route to the right person. Urgent flags work. It integrates with their existing systems.
+
+We're live in 45 clinics across Japan. Patient satisfaction scores went up 40%. Unnecessary appointments dropped 25%. Clinics pay $500/month per provider.
+
+We're raising to expand across Asia and add AI triage to route messages even faster.

@@ -54,13 +54,14 @@ export default function RootLayout({
     >
       <head>
         {/* Speculation Rules: Browser prerenders pages user is likely to visit */}
+        {/* Note: /discover removed - it triggers 6 API calls which slows things down */}
         <script
           type="speculationrules"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               prerender: [{
                 where: {
-                  href_matches: ["/v/*", "/discover", "/founder/*"]
+                  href_matches: ["/v/*", "/founder/*"]
                 },
                 eagerness: "moderate"
               }],

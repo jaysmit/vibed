@@ -45,7 +45,7 @@ const RUNG_SHORT: Record<Rung, string> = {
   live: 'Live',
   first: '$1',
   growing: 'Growing',
-  alumni: 'Alumni',
+  now: 'Now',
 };
 
 export function PitchCard({
@@ -148,16 +148,19 @@ export function PitchCard({
             {/* Small avatar */}
             {founder.avatar ? (
               <Image
+                data-avatar="pitchcard-avatar-image"
                 src={founder.avatar}
                 alt={founder.name}
                 width={24}
                 height={24}
+                style={{ width: 24, height: 24, minWidth: 24, maxWidth: 24 }}
                 className="rounded-full object-cover flex-shrink-0"
               />
             ) : (
               <span
+                data-avatar="pitchcard-avatar-initials"
                 className="w-6 h-6 rounded-full grid place-items-center text-[9px] font-semibold text-white flex-shrink-0"
-                style={{ background: brand }}
+                style={{ background: brand, width: 24, height: 24, minWidth: 24, maxWidth: 24 }}
               >
                 {founder.name.split(' ').map((w) => w[0]).join('')}
               </span>
@@ -184,9 +187,9 @@ export function PitchCard({
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-1.5">
                         {founder.avatar ? (
-                          <Image src={founder.avatar} alt="" width={16} height={16} className="rounded-full" />
+                          <Image src={founder.avatar} alt="" width={16} height={16} style={{ width: 16, height: 16, minWidth: 16, maxWidth: 16 }} className="rounded-full" />
                         ) : (
-                          <span className="w-4 h-4 rounded-full text-[7px] font-semibold text-white grid place-items-center" style={{ background: brand }}>
+                          <span className="w-4 h-4 rounded-full text-[7px] font-semibold text-white grid place-items-center" style={{ background: brand, width: 16, height: 16, minWidth: 16, maxWidth: 16 }}>
                             {founder.name.split(' ').map((w) => w[0]).join('')}
                           </span>
                         )}
@@ -196,9 +199,9 @@ export function PitchCard({
                       {teamMembers.map((member, i) => (
                         <div key={i} className="flex items-center gap-1.5">
                           {member.avatar ? (
-                            <Image src={member.avatar} alt="" width={16} height={16} className="rounded-full" />
+                            <Image src={member.avatar} alt="" width={16} height={16} style={{ width: 16, height: 16, minWidth: 16, maxWidth: 16 }} className="rounded-full" />
                           ) : (
-                            <span className="w-4 h-4 rounded-full text-[7px] font-semibold text-white bg-ink-3 grid place-items-center">
+                            <span className="w-4 h-4 rounded-full text-[7px] font-semibold text-white bg-ink-3 grid place-items-center" style={{ width: 16, height: 16, minWidth: 16, maxWidth: 16 }}>
                               {member.name.split(' ').map((w) => w[0]).join('')}
                             </span>
                           )}

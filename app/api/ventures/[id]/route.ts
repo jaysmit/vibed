@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { getCurrentUserId } from '@/lib/supabase/auth';
 import { updateVenture, publishVenture, updateRung } from '@/lib/services/ventures';
 import { z } from 'zod';
@@ -56,6 +57,9 @@ export async function PATCH(
       return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
     }
 
+    // Revalidate cached venture data
+    revalidateTag('ventures');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -85,6 +89,9 @@ export async function POST(
     if (!result) {
       return NextResponse.json({ error: 'Not found or unauthorized' }, { status: 404 });
     }
+
+    // Revalidate cached venture data
+    revalidateTag('ventures');
 
     return NextResponse.json(result);
   }

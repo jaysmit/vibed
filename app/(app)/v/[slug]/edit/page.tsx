@@ -7,48 +7,54 @@ import { createClient } from '@/lib/supabase/client';
 import { SEGMENT_KEYS, RUNGS } from '@/lib/domain/rungs';
 import type { SegmentKey, Rung } from '@/lib/domain/rungs';
 import { QUESTIONS } from '@/lib/domain/questions';
-import { CountrySelector, ProgressRingCompact } from '@/components/ui';
+import { CountrySelector, ProgressRingCompact, GalleryEditor, TeamEditor } from '@/components/ui';
 import { VideoPlayer } from '@/components/ui/VideoPlayerLazy';
 import { VideoUploader } from '@/components/ui/VideoUploader';
 import { calculateCompletion, REQUIREMENT_LABELS, REQUIREMENT_ACTIONS, type PublishingRequirements } from '@/lib/domain/standards';
 import { INDUSTRIES, INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 
 const SEGMENT_LABELS: Record<string, string> = {
-  pitch: 'Elevator Pitch',
+  pitch: 'The Problem',
   spark: 'The Spark',
   validation: 'Validation',
-  audience: 'Building Audience',
   proto: 'First Prototype',
+  audience: 'Building Audience',
   build: 'The Build',
   beta: 'Beta Testing',
   gtm: 'Go-to-Market',
   launch: 'Launch',
+  firstuser: 'First Real User',
   first: 'First Dollar',
   channel: 'Finding Channels',
   trouble: 'Trouble',
   money: 'Money',
   team: 'Team',
-  scale: 'Scale',
+  retention: 'Keeping Them',
   next: 'What Next',
+  pivot: 'The Pivot',
+  shutdown: 'Shutting Down',
 };
 
 const SEGMENT_PROMPTS: Record<string, string> = {
-  pitch: 'You have 30 seconds with an investor. What\'s the problem, your solution, and why now? Include traction if you have it.',
+  pitch: 'What problem are you solving? Who experiences this problem? How are you fixing it differently?',
   spark: 'The moment that made you say "I have to build this." The frustration, the gap you saw, the personal pain that started it all.',
   validation: 'How did you prove people actually want this? Customer interviews, landing page signups, LOIs, waitlists, pre-sales - what evidence do you have?',
-  audience: 'Who are your first 100 users and how are you reaching them? Community building, content, ads, partnerships?',
   proto: 'What did v0.1 look like? The embarrassing first version. Screenshots welcome. What did you learn from putting it in front of people?',
+  audience: 'Who are your first 100 users and how are you reaching them? Community building, content, ads, partnerships?',
   build: 'The technical and product journey. Stack decisions, pivots, features that worked, features you killed. The real story of building.',
   beta: 'Early users and their unfiltered feedback. The praise that kept you going. The criticism that made you better. Specific quotes help.',
   gtm: 'Your go-to-market strategy. Launch channels, pricing decisions, positioning. Or if you\'re still figuring it out, what you\'re testing.',
   launch: 'The launch story. Where you launched, what happened, the numbers. First day, first week. The high and the reality check after.',
+  firstuser: 'The first person who used your product without being asked. How did they find you? What did they do? What did they say?',
   first: 'Your first paying customer. How you found them, what convinced them, what they paid. The moment it became a real business.',
   channel: 'What acquisition channels are working? CAC, conversion rates, what you\'ve tried. The path to repeatable growth.',
   trouble: 'The setbacks, failures, and near-death moments. What went wrong and what you learned. Founders respect honesty here.',
   money: 'Revenue, costs, runway, fundraising. The financial reality. What you\'ve raised, what you\'re raising, or why you\'re bootstrapping.',
   team: 'Solo or team? Co-founders, first hires, advisors. How you found them, equity splits, what you\'re looking for next.',
-  scale: 'Growing beyond early traction. Systems, processes, hiring, expanding markets. The challenges of scaling.',
+  retention: 'How do you keep users coming back? What makes them stick? What you learned about retention vs acquisition.',
   next: 'The roadmap. What you\'re building next, where you\'re heading, the vision. What would make this a massive success?',
+  pivot: 'When did you change direction? What triggered it? What did you pivot from, and to? What did you learn?',
+  shutdown: 'How did it end? What led to the decision? What would you do differently? What did you learn that others should know?',
 };
 
 // Segment phases for the sidebar
@@ -61,22 +67,32 @@ const SEGMENT_PHASES = {
   building: {
     label: 'Building',
     description: 'From idea to product',
-    segments: ['proto', 'build', 'beta'],
+    segments: ['proto', 'audience', 'build', 'beta', 'gtm'],
   },
-  launch: {
-    label: 'Launch',
-    description: 'Going to market',
-    segments: ['gtm', 'launch', 'first'],
+  live: {
+    label: 'Live',
+    description: 'Out in the world',
+    segments: ['launch', 'firstuser'],
   },
-  growth: {
-    label: 'Growth',
+  firstdollar: {
+    label: 'First Dollar',
+    description: 'Making money',
+    segments: ['first', 'channel'],
+  },
+  growing: {
+    label: 'Growing',
     description: 'Finding traction',
-    segments: ['audience', 'channel', 'scale'],
+    segments: ['trouble', 'money', 'team', 'retention'],
   },
-  reality: {
-    label: 'The Real Stuff',
-    description: 'The unglamorous truth',
-    segments: ['trouble', 'money', 'team', 'next'],
+  now: {
+    label: 'Now',
+    description: 'Where this is heading',
+    segments: ['next'],
+  },
+  universal: {
+    label: 'Anytime',
+    description: 'Can happen at any stage',
+    segments: ['pivot', 'shutdown'],
   },
 };
 
@@ -85,22 +101,25 @@ const REQUIRED_SEGMENTS = ['pitch', 'spark'];
 
 // Plan prompts - what to write if you haven't done this yet
 const PLAN_PROMPTS: Record<string, string> = {
-  pitch: 'Draft your elevator pitch. Even if it\'s rough, writing it down helps clarify your thinking.',
+  pitch: 'Describe the problem you\'re solving, who has this problem, and your approach to fixing it.',
   spark: 'What problem are you trying to solve? Why does it matter to you personally?',
   validation: 'How will you validate this idea? Who will you talk to? What signals will convince you people want this?',
-  audience: 'Who is your ideal first customer? Where do they hang out? How will you reach them?',
   proto: 'What will your MVP look like? What\'s the simplest version you could build to test the idea?',
+  audience: 'Who is your ideal first customer? Where do they hang out? How will you reach them?',
   build: 'What tech stack are you considering? What are the key features for v1?',
   beta: 'How will you find beta testers? What feedback are you hoping to get?',
   gtm: 'What\'s your launch plan? Where will you announce? What\'s your pricing strategy?',
   launch: 'When do you plan to launch? What does success look like on day one?',
+  firstuser: 'How will you get your first organic user? Someone who finds you without being asked?',
   first: 'How will you get your first paying customer? What will you charge?',
   channel: 'What acquisition channels will you try? Paid ads, content, partnerships, word of mouth?',
   trouble: 'What keeps you up at night? What could go wrong? Planning for trouble helps you avoid it.',
   money: 'What\'s your runway? Will you bootstrap or raise? What are your costs?',
   team: 'Will you build this solo or with others? What skills do you need to hire for?',
-  scale: 'What will break first when you grow? What systems do you need to build?',
+  retention: 'How will you keep users coming back? What features or habits will drive repeat usage?',
   next: 'Where is this heading? What\'s the big vision? What milestones are you aiming for?',
+  pivot: 'Are you considering a pivot? What signals would tell you it\'s time to change direction?',
+  shutdown: 'What would make you decide to shut down? What would a graceful exit look like?',
 };
 
 interface Clip {
@@ -119,6 +138,7 @@ interface Venture {
   slug: string;
   name: string;
   pitch: string;
+  tagline?: string;  // Short one-liner for cover images
   brand: string;
   glyph: string;
   rung: Rung;
@@ -137,6 +157,7 @@ interface Venture {
     tiktok?: string;
     linkedin?: string;
     poster?: string;
+    gallery?: string[];
   };
 }
 
@@ -160,12 +181,12 @@ export default function EditVenturePage() {
   // Form state
   const [name, setName] = useState('');
   const [pitch, setPitch] = useState('');
+  const [tagline, setTagline] = useState('');
   const [country, setCountry] = useState<string | null>(null);
   const [categories, setCategories] = useState<Industry[]>([]);
   const [poster, setPoster] = useState<string | null>(null);
+  const [gallery, setGallery] = useState<string[]>([]);
   const [problem, setProblem] = useState('');
-  const [who, setWho] = useState('');
-  const [why, setWhy] = useState('');
   const [rung, setRung] = useState<Rung>('idea');
   const [segmentBody, setSegmentBody] = useState('');
   const [segmentHappenedAt, setSegmentHappenedAt] = useState('');
@@ -174,8 +195,6 @@ export default function EditVenturePage() {
   const [linkedin, setLinkedin] = useState('');
   const [tiktok, setTiktok] = useState('');
   const [x, setX] = useState('');
-  const [uploadingPoster, setUploadingPoster] = useState(false);
-  const [posterStatus, setPosterStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showChecklist, setShowChecklist] = useState(false);
   const [justSavedSegment, setJustSavedSegment] = useState<string | null>(null);
   const [segmentIsCompleted, setSegmentIsCompleted] = useState(true); // true = happened, false = planning
@@ -184,11 +203,10 @@ export default function EditVenturePage() {
   const hasBasicsChanges = venture && (
     name !== venture.name ||
     pitch !== venture.pitch ||
+    tagline !== (venture.tagline || '') ||
     country !== (venture.country || null) ||
     JSON.stringify(categories) !== JSON.stringify(venture.categories || []) ||
     problem !== (venture.problem || '') ||
-    who !== (venture.who || '') ||
-    why !== (venture.why || '') ||
     rung !== venture.rung ||
     site !== (venture.links?.site || '') ||
     ig !== (venture.links?.ig || '') ||
@@ -239,12 +257,12 @@ export default function EditVenturePage() {
           setVenture(matchingVenture);
           setName(matchingVenture.name);
           setPitch(matchingVenture.pitch);
+          setTagline(matchingVenture.tagline || '');
           setCountry(matchingVenture.country || null);
           setCategories(matchingVenture.categories || []);
           setPoster(matchingVenture.links?.poster || null);
+          setGallery(matchingVenture.links?.gallery || []);
           setProblem(matchingVenture.problem || '');
-          setWho(matchingVenture.who || '');
-          setWhy(matchingVenture.why || '');
           setRung(matchingVenture.rung);
           setSite(matchingVenture.links?.site || '');
           setIg(matchingVenture.links?.ig || '');
@@ -322,12 +340,13 @@ export default function EditVenturePage() {
         return `https://${trimmed}`;
       };
 
-      const updateData: Record<string, unknown> = { name, pitch, country, categories, problem, who, why, rung };
+      const updateData: Record<string, unknown> = { name, pitch, tagline: tagline || null, country, categories, problem, rung };
 
       // Always update links to include social links (with normalized URLs)
       updateData.links = {
         ...venture.links,
         poster,
+        gallery,
         site: normalizeUrl(site),
         ig: normalizeUrl(ig),
         linkedin: normalizeUrl(linkedin),
@@ -346,15 +365,15 @@ export default function EditVenturePage() {
           ...venture,
           name,
           pitch,
+          tagline: tagline || undefined,
           country: country || undefined,
           categories,
           problem,
-          who,
-          why,
           rung,
           links: {
             ...venture.links,
             poster: poster || undefined,
+            gallery: gallery.length > 0 ? gallery : undefined,
             site: site || undefined,
             ig: ig || undefined,
             linkedin: linkedin || undefined,
@@ -372,123 +391,42 @@ export default function EditVenturePage() {
     }
   };
 
-  // Compress image using canvas
-  const compressImage = (file: File, maxWidth: number, quality: number): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          // Scale down if wider than maxWidth
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Failed to get canvas context'));
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-          resolve(compressedBase64);
-        };
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-  };
-
-  // Handle poster image upload - auto-saves immediately
-  const handlePosterUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !venture) return;
-
-    // Check file size (max 5MB original)
-    if (file.size > 5 * 1024 * 1024) {
-      setPosterStatus({ type: 'error', message: 'Image must be under 5MB' });
-      setTimeout(() => setPosterStatus(null), 5000);
-      return;
-    }
-
-    setUploadingPoster(true);
-    setPosterStatus(null);
-
-    try {
-      // Compress image to max 1200px wide, 0.8 quality
-      const compressedImage = await compressImage(file, 1200, 0.8);
-
-      // Auto-save to API
-      const res = await fetch(`/api/ventures/${venture._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          links: { ...venture.links, poster: compressedImage }
-        }),
-      });
-
-      if (res.ok) {
-        setPoster(compressedImage);
-        setVenture({
-          ...venture,
-          links: { ...venture.links, poster: compressedImage }
-        });
-        setPosterStatus({ type: 'success', message: 'Cover image saved' });
-        setTimeout(() => setPosterStatus(null), 3000);
-      } else {
-        setPosterStatus({ type: 'error', message: 'Failed to save image. Try a smaller file.' });
-        setTimeout(() => setPosterStatus(null), 5000);
-      }
-    } catch {
-      setPosterStatus({ type: 'error', message: 'Failed to process image' });
-      setTimeout(() => setPosterStatus(null), 5000);
-    } finally {
-      setUploadingPoster(false);
-    }
-  };
-
-  // Handle poster removal
-  const handleRemovePoster = async () => {
+  // Handle gallery update from GalleryEditor - auto-saves to API
+  const handleGalleryUpdate = async (newPoster: string | null, newGallery: string[]) => {
     if (!venture) return;
 
-    setUploadingPoster(true);
-    setPosterStatus(null);
+    // Update local state immediately for responsive UI
+    setPoster(newPoster);
+    setGallery(newGallery);
 
+    // Auto-save to API
     try {
       const res = await fetch(`/api/ventures/${venture._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          links: { ...venture.links, poster: null }
+          links: {
+            ...venture.links,
+            poster: newPoster,
+            gallery: newGallery.length > 0 ? newGallery : undefined,
+          }
         }),
       });
 
       if (res.ok) {
-        setPoster(null);
         setVenture({
           ...venture,
-          links: { ...venture.links, poster: undefined }
+          links: {
+            ...venture.links,
+            poster: newPoster || undefined,
+            gallery: newGallery.length > 0 ? newGallery : undefined,
+          }
         });
-        setPosterStatus({ type: 'success', message: 'Cover image removed' });
-        setTimeout(() => setPosterStatus(null), 3000);
-      } else {
-        setPosterStatus({ type: 'error', message: 'Failed to remove image' });
+        setSaveSuccess('Photos saved');
+        setTimeout(() => setSaveSuccess(null), 2000);
       }
     } catch {
-      setPosterStatus({ type: 'error', message: 'Failed to remove image' });
-    } finally {
-      setUploadingPoster(false);
+      console.error('Failed to save gallery');
     }
   };
 
@@ -682,87 +620,14 @@ export default function EditVenturePage() {
             <h2 className="text-[20px] font-bold mb-6">Basic info</h2>
 
             <div className="space-y-5">
-              {/* Cover Image */}
+              {/* Photo Gallery */}
               <div id="field-poster" className={`p-3 -m-3 rounded-xl transition-colors ${focusField === 'poster' ? 'bg-go-tint ring-2 ring-go' : ''}`}>
-                <label className="block text-[13px] font-medium mb-2">
-                  Cover image
-                  <span className="text-ink-3 font-normal ml-2">Required</span>
-                </label>
-                <p className="text-[12px] text-ink-3 mb-3">
-                  This appears at the top of your venture page and in cards across the site.
-                </p>
-                {poster ? (
-                  <div className="relative">
-                    <img
-                      src={poster}
-                      alt="Cover"
-                      className="w-full h-40 object-cover rounded-xl border border-rule"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemovePoster}
-                      disabled={uploadingPoster}
-                      className="absolute top-2 right-2 p-1.5 bg-dead text-white rounded-full hover:bg-dead/90 disabled:opacity-50"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <label className={`block w-full py-8 border-2 border-dashed border-rule rounded-xl text-center transition-colors ${uploadingPoster ? '' : 'hover:border-ink/30 cursor-pointer'}`}>
-                    {uploadingPoster ? (
-                      <div className="flex items-center justify-center gap-2 text-ink-2">
-                        <div className="w-5 h-5 border-2 border-go border-t-transparent rounded-full animate-spin" />
-                        Uploading...
-                      </div>
-                    ) : (
-                      <>
-                        <svg
-                          width="32"
-                          height="32"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          className="mx-auto mb-2 text-ink-3"
-                        >
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                          <circle cx="8.5" cy="8.5" r="1.5" />
-                          <polyline points="21 15 16 10 5 21" />
-                        </svg>
-                        <span className="text-[13px] text-ink-2">Click to upload cover image</span>
-                        <span className="block text-[11px] text-ink-3 mt-1">Max 2MB, recommended 1200x600px</span>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePosterUpload}
-                      disabled={uploadingPoster}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-                {/* Status message */}
-                {posterStatus && (
-                  <div className={`mt-3 flex items-center gap-2 text-[13px] ${
-                    posterStatus.type === 'success' ? 'text-go-deep' : 'text-dead'
-                  }`}>
-                    {posterStatus.type === 'success' ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="8" x2="12" y2="12" />
-                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                      </svg>
-                    )}
-                    {posterStatus.message}
-                  </div>
-                )}
+                <GalleryEditor
+                  poster={poster}
+                  gallery={gallery}
+                  onUpdate={handleGalleryUpdate}
+                  maxImages={10}
+                />
               </div>
 
               <div id="field-name" className={`p-3 -m-3 rounded-xl transition-colors ${focusField === 'name' ? 'bg-go-tint ring-2 ring-go' : ''}`}>
@@ -789,6 +654,24 @@ export default function EditVenturePage() {
                   autoFocus={focusField === 'pitch'}
                   className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
                 />
+              </div>
+
+              <div id="field-tagline" className={`p-3 -m-3 rounded-xl transition-colors ${focusField === 'tagline' ? 'bg-go-tint ring-2 ring-go' : ''}`}>
+                <label className="block text-[13px] font-medium mb-2">
+                  Cover tagline
+                  <span className="text-ink-3 font-normal ml-1">(shown on card images)</span>
+                </label>
+                <input
+                  type="text"
+                  value={tagline}
+                  onChange={(e) => setTagline(e.target.value)}
+                  placeholder="The answers you seek are already inside you."
+                  maxLength={80}
+                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent"
+                />
+                <p className="text-[11px] text-ink-3 mt-1.5">
+                  A catchy phrase or brand message to capture curiosity. Displayed over your cover image on cards.
+                </p>
               </div>
 
               <div id="field-country" className={`p-3 -m-3 rounded-xl transition-colors ${focusField === 'country' ? 'bg-go-tint ring-2 ring-go' : ''}`}>
@@ -861,41 +744,29 @@ export default function EditVenturePage() {
                 </select>
               </div>
 
+              {/* Team Section */}
+              <div className="pt-4 mt-4 border-t border-rule">
+                <h3 className="text-[15px] font-semibold mb-2">Team</h3>
+                <p className="text-[12px] text-ink-3 mb-4">
+                  Add co-founders, partners, or team members. They&apos;ll appear on your venture page.
+                </p>
+                <TeamEditor ventureId={venture._id} />
+              </div>
+
               <div id="field-problem" className={`p-3 -m-3 rounded-xl transition-colors ${focusField === 'problem' ? 'bg-go-tint ring-2 ring-go' : ''}`}>
                 <label className="block text-[13px] font-medium mb-2">
-                  The problem you&apos;re solving
+                  Elevator Pitch
+                  <span className="text-ink-3 font-normal ml-1">(your full sales pitch)</span>
                 </label>
+                <p className="text-[12px] text-ink-3 mb-2">
+                  Explain what you&apos;re building, the problem you&apos;re solving, and why people should care. This appears on your venture page.
+                </p>
                 <textarea
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
                   autoFocus={focusField === 'problem'}
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent resize-none"
-                />
-              </div>
-
-              <div id="field-who" className={`p-3 -m-3 rounded-xl transition-colors ${focusField === 'who' ? 'bg-go-tint ring-2 ring-go' : ''}`}>
-                <label className="block text-[13px] font-medium mb-2">
-                  Who it&apos;s for
-                </label>
-                <textarea
-                  value={who}
-                  onChange={(e) => setWho(e.target.value)}
-                  autoFocus={focusField === 'who'}
-                  rows={2}
-                  className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent resize-none"
-                />
-              </div>
-
-              <div id="field-why" className={`p-3 -m-3 rounded-xl transition-colors ${focusField === 'why' ? 'bg-go-tint ring-2 ring-go' : ''}`}>
-                <label className="block text-[13px] font-medium mb-2">
-                  Why you&apos;re building this
-                </label>
-                <textarea
-                  value={why}
-                  onChange={(e) => setWhy(e.target.value)}
-                  autoFocus={focusField === 'why'}
-                  rows={2}
+                  placeholder="Other tools show what was spent. We find what's ongoing..."
+                  rows={6}
                   className="w-full px-4 py-3 rounded-xl border border-rule bg-page text-[15px] focus:outline-none focus:ring-2 focus:ring-go focus:border-transparent resize-none"
                 />
               </div>
@@ -1462,6 +1333,7 @@ export default function EditVenturePage() {
           </div>
         </div>
       )}
+
     </main>
   );
 }

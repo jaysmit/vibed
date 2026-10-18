@@ -120,7 +120,15 @@ NEXT_PUBLIC_APP_URL=https://vibed-hazel.vercel.app
 - **Flexible timeline**: Each segment has a "When did this happen?" date picker
 - **Retroactive documentation**: Established businesses can set past dates to tell their story
 - **Chronological display**: Journey accordion shows segments ordered by happenedAt date
-- **16 predefined segments**: pitch, spark, validation, audience, proto, build, beta, gtm, launch, first, channel, trouble, money, team, scale, next
+- **19 predefined segments** grouped by stage:
+  - **Idea**: spark, validation, naming (new)
+  - **Building**: proto, audience, build, beta, gtm
+  - **Live**: launch, firstuser (new)
+  - **First Dollar**: first, channel
+  - **Growing**: trouble, money, team, retention (new), whatbroke (renamed from scale)
+  - **Now**: next, pivot (new), shutdown (new)
+- **Elevator Pitch section**: 'pitch' segment pinned to header, not in timeline
+- **Request this chapter**: Non-owners see NudgeButton on empty segments to encourage founders to write
 
 ### Team System
 - Invite team members by email or search existing users
@@ -248,6 +256,78 @@ npm run lint       # Run ESLint
   - **Browser-level prerendering**: Added Speculation Rules API for `/v/*`, `/discover`, `/founder/*`
   - **Loading skeleton**: Added loading.tsx for venture page
   - **FollowButton self-fetches**: Follow state now fetched client-side, not blocking server render
+- **2026-09-13**: Image cropping for uploads:
+  - Created `ImageCropper` component (`components/ui/ImageCropper.tsx`) with drag-to-reposition, zoom slider, and base64 output
+  - Integrated into ProfileEditor for avatar uploads (1:1 square, 400px output)
+  - Integrated into venture edit page for cover images (16:9 landscape, 1200px output)
+  - Ensures all profile avatars are perfectly square (display as circles on cards)
+  - Ensures all venture covers are consistent 16:9 ratio
+- **2026-09-13 (PM)**: Venture photo gallery feature:
+  - Added `gallery?: string[]` to `VentureLinks` type for storing additional images
+  - Created `VentureGallery` component - displays main image with thumbnail strip below, click to open lightbox
+  - Created `GalleryViewer` lightbox - full-screen modal with navigation arrows, thumbnail strip, keyboard (arrows/ESC) and swipe support
+  - Created `GalleryEditor` component - drag-to-reorder grid, add/remove images, first image is main cover, max 10 images
+  - Replaced single cover image in venture edit page with GalleryEditor
+  - Replaced hero image section on venture page with VentureGallery
+  - No database migration needed - uses existing JSONB `links` field
+- **2026-09-13 (Evening)**: Journey steps restructure:
+  - Expanded from 16 to 19 journey segments with new stages: Idea, Building, Live, First Dollar, Growing, Now
+  - Added 5 new segments: naming, firstuser, retention, pivot, shutdown
+  - Renamed 'scale' segment to 'whatbroke' (more descriptive)
+  - Renamed 'alumni' stage to 'now' (clearer meaning)
+  - Removed 'pitch' from timeline (already displayed in Elevator Pitch section)
+  - Created `NudgeButton` component for non-owners to request specific chapters
+  - Non-owners see "Request this chapter" button on empty segments instead of just "Not written yet"
+  - Created `segment_nudges` table (migration 009) to track nudge requests
+  - Created `/api/ventures/[id]/nudges/[segment]` API for nudge GET/POST
+  - Updated all rung label maps across codebase (DiscoverFilters, RungLadder, TimelineProgress, PitchCard, etc.)
+  - Created migration script `scripts/migrate-scale-to-whatbroke.js` for existing data
+- **2026-09-13 (Night)**: Edit page team management, profile page fixes, gallery layout, landing cleanup:
+  - **TeamEditor component**: Full team management on venture edit page - add existing users, invite new people, change roles, remove members
+  - **VentureGallery layout update**: 1 image = full width, 2-3 images = main with +X green overlay, 4+ = grid layout. Clicking opens carousel (no longer links to website)
+  - **Profile page mobile fix**: Avatar now 80px (was 48px), name text 22px on mobile (was 32px), centered vertical layout on mobile
+  - **VentureCard 'use client' fix**: Added missing directive - components with onClick handlers MUST be client components
+  - **VentureCard fixed height**: 180px card body with line-clamp-3 and "See more" indicator
+  - **Avatar component**: Added '3xl' size (80px), increased 'profile' size to 80px
+  - **Cleaned up dummy ventures**: Soft-deleted 20 seed/dummy ventures from database, only real user ventures remain
+  - **Landing page sections**: Trending Ventures (real data), Trending Elevator Pitches (empty), pillar sections (empty with placeholders)
+  - **Fixed infinite scroll duplicates**: Added deduplication by slug in InfiniteScrollSection, fixed trending pagination to use offset instead of broken JSONB cursor, limited initial fetch to 4 items
+- **2026-10-18**: Landing page performance fix - page now loads in ~700ms:
+  - **Problem**: Only "Trending Ventures" loaded instantly, other sections made client-side API calls
+  - **First attempt**: 6 parallel queries with `Promise.all()` - caused 10s load times (cold start overhead)
+  - **Second attempt**: Single query but IntersectionObserver fired 6 API calls during page navigation
+  - **Final fix**:
+    - Single `getLandingPageVentures()` query fetches all data in 1 DB call
+    - Disabled IntersectionObserver auto-loading (was firing during navigation)
+    - Manual "Load more" button only - predictable, no surprise API calls
+    - Removed `/discover` from speculation rules prerender (was triggering extra loads)
+  - Slim column selection excludes `segments` JSONB (avoids 31MB page size)
+  - Created `docs/DATABASE-OPTIMIZATION-PATTERNS.md` documenting patterns
+
+---
+
+## Common Patterns & Gotchas
+
+### Pagination Strategies
+- **Cursor-based (preferred)**: Use `published_at` or other indexed timestamp field with `lt()` for older items
+- **Offset-based (for JSONB)**: Use `range(offset, offset + limit - 1)` when sorting by JSONB fields like `counters->followers`
+- **Always deduplicate**: In infinite scroll, track seen slugs with `Set` before appending new items
+
+### Client vs Server Components
+- Components with ANY event handlers (`onClick`, `onChange`, etc.) MUST have `'use client'`
+- Server Components can render Client Components but not vice versa
+- Error only shows in production - test with `vercel deploy --prod` not just localhost
+
+### Image/Avatar Sizing
+- Next.js Image needs BOTH `width/height` props AND inline `style={{ width, height }}`
+- Add `minWidth` and `maxWidth` for stubborn cases
+- Always use `flex-shrink-0` on fixed-size elements in flex containers
+
+### Mobile Responsive
+- Pattern: `flex-col sm:flex-row` for vertical mobile, horizontal desktop
+- Text: `text-[small] sm:text-[large]` e.g., `text-[22px] sm:text-[32px]`
+- Spacing: `gap-4 sm:gap-6`, `p-4 sm:p-6`
+- Test mobile view after every UI change
 
 ---
 

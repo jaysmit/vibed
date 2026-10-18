@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { getCurrentUserId } from '@/lib/supabase/auth';
 import { createPromise, completePromise } from '@/lib/services/ventures';
@@ -50,6 +51,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
+    // Revalidate cached venture data
+    revalidateTag('ventures');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error creating promise:', error);
@@ -87,6 +91,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         { status: 400 }
       );
     }
+
+    // Revalidate cached venture data
+    revalidateTag('ventures');
 
     return NextResponse.json({ success: true });
   } catch (error) {

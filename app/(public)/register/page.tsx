@@ -174,13 +174,17 @@ export default function RegisterPage() {
             <div className="relative">
               {avatar ? (
                 <img
+                  data-avatar="register-avatar-image"
                   src={avatar}
                   alt="Profile"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-rule"
+                  width={48}
+                  height={48}
+                  style={{ width: 48, height: 48, minWidth: 48, maxWidth: 48 }}
+                  className="rounded-full object-cover border-2 border-rule"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-soft flex items-center justify-center text-ink-3">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <div data-avatar="register-avatar-placeholder" style={{ width: 48, height: 48 }} className="rounded-full bg-soft flex items-center justify-center text-ink-3">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>

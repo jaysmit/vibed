@@ -1,4 +1,4 @@
-import { createAdminClient, createCachedAdminClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient, createCachedAdminClient } from '@/lib/supabase/server';
 import { unstable_cache } from 'next/cache';
 import type { Rung } from '@/lib/domain/rungs';
 import type { Industry } from '@/lib/supabase/types';
@@ -11,6 +11,7 @@ export interface VentureWithFounder {
   founder_id: string;
   name: string;
   pitch: string;
+  tagline?: string | null;
   brand: string;
   glyph: string;
   rung: Rung;
@@ -92,6 +93,7 @@ function mapVenture(v: Record<string, unknown>, founder: Record<string, unknown>
     founder_id: v.founder_id as string,
     name: v.name as string,
     pitch: v.pitch as string,
+    tagline: v.tagline as string | null | undefined,
     brand: v.brand as string,
     glyph: v.glyph as string,
     rung: v.rung as Rung,
@@ -150,11 +152,115 @@ export const getPublishedVentures = unstable_cache(
   { revalidate: 60, tags: ['ventures'] }
 );
 
-// Fast query for landing page - only fetches top N by followers (trending)
-async function _getTrendingVentures(limit: number = 8): Promise<VentureWithFounder[]> {
-  const supabase = createCachedAdminClient();
+// Slim columns for landing page cards (excludes segments which can be huge)
+const LANDING_CARD_COLUMNS_TOP = `
+  id, slug, slug_history, founder_id, name, pitch, tagline,
+  brand, glyph, rung, industry, country, categories, status,
+  links, counters, promise, promise_history, published_at,
+  deleted_at, created_at, updated_at,
+  founders(id, user_id, name, slug, headline, bio, location, links)
+`;
 
-  const { data: ventures } = await supabase
+// Pillar segment mapping (keep in sync with lib/supabase/types.ts)
+const PILLAR_SEGMENTS: Record<string, string[]> = {
+  the_idea: ['pitch', 'spark', 'validation'],
+  building_it: ['proto', 'build', 'beta', 'audience'],
+  getting_customers: ['gtm', 'launch', 'firstuser', 'channel', 'first', 'retention'],
+  hard_parts: ['trouble', 'money', 'team', 'pivot', 'shutdown'],
+};
+
+// Landing page data structure
+export interface LandingPageData {
+  trending: VentureWithFounder[];
+  recent: VentureWithFounder[];
+  the_idea: VentureWithFounder[];
+  building_it: VentureWithFounder[];
+  getting_customers: VentureWithFounder[];
+  hard_parts: VentureWithFounder[];
+}
+
+// SINGLE query for ALL landing page sections - avoids 6 separate DB calls
+async function _getLandingPageVentures(limitPerSection: number = 4): Promise<LandingPageData> {
+  // Use regular client (works with both anon and auth contexts)
+  const supabase = await createClient();
+
+  // Fetch enough ventures for all sections in ONE query
+  // Use same query format as working API route
+  const { data: ventures, error } = await supabase
+    .from('ventures')
+    .select('*, founders(*)')
+    .in('status', ['live', 'graduated', 'closed'])
+    .not('published_at', 'is', null)
+    .is('deleted_at', null)
+    .order('published_at', { ascending: false })
+    .limit(50); // Enough for all sections
+
+  // Log error if any (will appear in Vercel logs)
+  if (error) {
+    console.error('Landing page ventures error:', error);
+  }
+
+  if (!ventures || ventures.length === 0) {
+    return { trending: [], recent: [], the_idea: [], building_it: [], getting_customers: [], hard_parts: [] };
+  }
+
+  // Helper to map venture and strip segments
+  const mapAndStrip = (v: typeof ventures[0]): VentureWithFounder => {
+    const founder = Array.isArray(v.founders) ? v.founders[0] : v.founders;
+    const mapped = mapVenture(v as Record<string, unknown>, founder as Record<string, unknown>);
+    mapped.segments = {}; // Strip segments from response
+    return mapped;
+  };
+
+  // Sort by followers for trending (already have the data, just need to sort)
+  const byFollowers = [...ventures].sort((a, b) => {
+    const aFollowers = (a.counters as Record<string, number>)?.followers || 0;
+    const bFollowers = (b.counters as Record<string, number>)?.followers || 0;
+    return bFollowers - aFollowers;
+  });
+
+  // Recent is already sorted by published_at (from query)
+  const recent = ventures.slice(0, limitPerSection).map(mapAndStrip);
+  const trending = byFollowers.slice(0, limitPerSection).map(mapAndStrip);
+
+  // Filter ventures for each pillar
+  const filterByPillar = (pillar: string): VentureWithFounder[] => {
+    const pillarSegments = PILLAR_SEGMENTS[pillar];
+    if (!pillarSegments) return [];
+
+    const filtered = ventures.filter((v) => {
+      const segments = v.segments as Record<string, { body?: string }> | null;
+      if (!segments) return false;
+      return pillarSegments.some((key) => {
+        const segment = segments[key];
+        return segment && segment.body && segment.body.trim().length > 0;
+      });
+    });
+
+    return filtered.slice(0, limitPerSection).map(mapAndStrip);
+  };
+
+  return {
+    trending,
+    recent,
+    the_idea: filterByPillar('the_idea'),
+    building_it: filterByPillar('building_it'),
+    getting_customers: filterByPillar('getting_customers'),
+    hard_parts: filterByPillar('hard_parts'),
+  };
+}
+
+// Direct call - no unstable_cache since page is force-dynamic anyway
+// This avoids stale cache issues from build-time or failed requests
+export async function getLandingPageVentures(limit: number = 4): Promise<LandingPageData> {
+  return _getLandingPageVentures(limit);
+}
+
+// Direct call for trending ventures - no caching to avoid stale data
+export async function getTrendingVentures(limit: number = 8): Promise<VentureWithFounder[]> {
+  const supabase = await createClient();
+
+  const { data: ventures, error } = await supabase
     .from('ventures')
     .select('*, founders(*)')
     .in('status', ['live', 'graduated', 'closed'])
@@ -163,24 +269,34 @@ async function _getTrendingVentures(limit: number = 8): Promise<VentureWithFound
     .order('counters->followers', { ascending: false })
     .limit(limit);
 
+  if (error) {
+    console.error('getTrendingVentures error:', error);
+    return [];
+  }
+
   if (!ventures || ventures.length === 0) return [];
 
-  return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
+  return ventures.map((v) => {
+    const founder = Array.isArray(v.founders) ? v.founders[0] : v.founders;
+    const mapped = mapVenture(v as Record<string, unknown>, founder as Record<string, unknown>);
+    mapped.segments = {};
+    return mapped;
+  });
 }
 
-export const getTrendingVentures = unstable_cache(
-  _getTrendingVentures,
+// Keeping this for reference but not using it
+const _getTrendingVenturesCached = unstable_cache(
+  async (limit: number = 8) => getTrendingVentures(limit),
   ['trending-ventures'],
   { revalidate: 60, tags: ['ventures'] }
 );
 
-// Fast query for recent ventures
 async function _getRecentVentures(limit: number = 8): Promise<VentureWithFounder[]> {
   const supabase = createCachedAdminClient();
 
   const { data: ventures } = await supabase
     .from('ventures')
-    .select('*, founders(*)')
+    .select(LANDING_CARD_COLUMNS_TOP)
     .in('status', ['live', 'graduated', 'closed'])
     .not('published_at', 'is', null)
     .is('deleted_at', null)
@@ -189,12 +305,57 @@ async function _getRecentVentures(limit: number = 8): Promise<VentureWithFounder
 
   if (!ventures || ventures.length === 0) return [];
 
-  return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
+  return ventures.map((v) => {
+    const founder = Array.isArray(v.founders) ? v.founders[0] : v.founders;
+    const mapped = mapVenture(v as Record<string, unknown>, founder as Record<string, unknown>);
+    mapped.segments = {};
+    return mapped;
+  });
 }
 
 export const getRecentVentures = unstable_cache(
   _getRecentVentures,
   ['recent-ventures'],
+  { revalidate: 60, tags: ['ventures'] }
+);
+
+async function _getVenturesByPillar(pillar: string, limit: number = 8): Promise<VentureWithFounder[]> {
+  const supabase = createCachedAdminClient();
+  const pillarSegments = PILLAR_SEGMENTS[pillar];
+
+  if (!pillarSegments) return [];
+
+  const { data: ventures } = await supabase
+    .from('ventures')
+    .select(`${LANDING_CARD_COLUMNS_TOP}, segments`)
+    .in('status', ['live', 'graduated', 'closed'])
+    .not('published_at', 'is', null)
+    .is('deleted_at', null)
+    .order('published_at', { ascending: false })
+    .limit(limit * 3);
+
+  if (!ventures || ventures.length === 0) return [];
+
+  const filtered = ventures.filter((v) => {
+    const segments = v.segments as Record<string, { body?: string }> | null;
+    if (!segments) return false;
+    return pillarSegments.some((key) => {
+      const segment = segments[key];
+      return segment && segment.body && segment.body.trim().length > 0;
+    });
+  });
+
+  return filtered.slice(0, limit).map((v) => {
+    const founder = Array.isArray(v.founders) ? v.founders[0] : v.founders;
+    const mapped = mapVenture(v as Record<string, unknown>, founder as Record<string, unknown>);
+    mapped.segments = {};
+    return mapped;
+  });
+}
+
+export const getVenturesByPillar = unstable_cache(
+  _getVenturesByPillar,
+  ['ventures-by-pillar'],
   { revalidate: 60, tags: ['ventures'] }
 );
 

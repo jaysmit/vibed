@@ -11,6 +11,7 @@ type Venture = {
   slug: string;
   name: string;
   pitch: string;
+  tagline?: string | null;
   brand: string;
   glyph?: string;
   rung: string;
@@ -68,8 +69,10 @@ export function InfiniteScrollSection({
 }: InfiniteScrollSectionProps) {
   const [ventures, setVentures] = useState<Venture[]>(initialVentures);
   const [isLoading, setIsLoading] = useState(false);
+  // Assume there's more to load (user clicks "Load more" to fetch)
   const [hasMore, setHasMore] = useState(true);
   const [cursor, setCursor] = useState<string | null>(null);
+  const [offset, setOffset] = useState<number>(initialVentures.length); // For trending pagination
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -83,7 +86,10 @@ export function InfiniteScrollSection({
         pillar,
         limit: '6',
       });
-      if (cursor) {
+      // Use offset for trending, cursor for others
+      if (pillar === 'trending') {
+        params.set('offset', String(offset));
+      } else if (cursor) {
         params.set('cursor', cursor);
       }
 
@@ -93,8 +99,21 @@ export function InfiniteScrollSection({
       const data = await res.json();
 
       if (data.ventures.length > 0) {
-        setVentures((prev) => [...prev, ...data.ventures]);
+        // Deduplicate by slug to prevent duplicates
+        setVentures((prev) => {
+          const existingSlugs = new Set(prev.map((v) => v.slug));
+          const newVentures = data.ventures.filter((v: Venture) => !existingSlugs.has(v.slug));
+          if (newVentures.length === 0) {
+            // All returned ventures are duplicates, stop loading
+            setHasMore(false);
+            return prev;
+          }
+          return [...prev, ...newVentures];
+        });
         setCursor(data.nextCursor);
+        if (data.nextOffset !== null && data.nextOffset !== undefined) {
+          setOffset(data.nextOffset);
+        }
         setHasMore(data.hasMore);
       } else {
         setHasMore(false);
@@ -105,44 +124,38 @@ export function InfiniteScrollSection({
     } finally {
       setIsLoading(false);
     }
-  }, [pillar, cursor, isLoading, hasMore]);
+  }, [pillar, cursor, offset, isLoading, hasMore]);
 
-  // Set initial cursor from initial ventures
+  // Set initial cursor from initial ventures (not needed for trending - uses offset)
   useEffect(() => {
-    if (initialVentures.length > 0) {
-      const last = initialVentures[initialVentures.length - 1];
-      if (pillar === 'trending') {
-        setCursor(String(last.counters?.followers || 0));
-      }
-      // For other pillars, we need published_at which isn't in the data
-      // The API will handle it
+    if (initialVentures.length > 0 && pillar !== 'trending') {
+      // For other pillars, cursor will be set from API response
+      // Initial cursor is not set here since we don't have published_at in props
     }
   }, [initialVentures, pillar]);
 
-  // Intersection Observer for infinite scroll (horizontal scroll on mobile)
+  // DISABLED: IntersectionObserver was causing 6 API calls on page navigation
+  // Users can click "Load more" button instead. This is more predictable.
+
+  // Convert vertical mouse wheel to horizontal scroll when hovering
   useEffect(() => {
     const container = scrollContainerRef.current;
-    const loadMoreElement = loadMoreRef.current;
-    if (!container || !loadMoreElement) return;
+    if (!container) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting && hasMore && !isLoading) {
-          loadMore();
+    const handleWheel = (e: WheelEvent) => {
+      // Only intercept if there's vertical scroll and container can scroll horizontally
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        if (maxScroll > 0) {
+          e.preventDefault();
+          container.scrollLeft += e.deltaY;
         }
-      },
-      {
-        root: container,
-        rootMargin: '100px', // Start loading before reaching the end
-        threshold: 0.1,
       }
-    );
+    };
 
-    observer.observe(loadMoreElement);
-
-    return () => observer.disconnect();
-  }, [loadMore, hasMore, isLoading]);
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, []);
 
   return (
     <section className="py-3 sm:py-5 border-t border-rule">
@@ -170,9 +183,10 @@ export function InfiniteScrollSection({
                     slug={v.slug}
                     name={v.name}
                     pitch={v.pitch}
+                    tagline={v.tagline}
                     brand={v.brand}
                     poster={v.links?.poster}
-                    rung={v.rung as 'idea' | 'building' | 'live' | 'first' | 'growing' | 'alumni'}
+                    rung={v.rung as 'idea' | 'building' | 'live' | 'first' | 'growing' | 'now'}
                     industry={v.industry}
                     status={v.status as 'draft' | 'live' | 'graduated' | 'closed'}
                     founder={v.founder}
@@ -194,7 +208,7 @@ export function InfiniteScrollSection({
                     pitch={v.pitch}
                     brand={v.brand}
                     poster={v.links?.poster}
-                    rung={v.rung as 'idea' | 'building' | 'live' | 'first' | 'growing' | 'alumni'}
+                    rung={v.rung as 'idea' | 'building' | 'live' | 'first' | 'growing' | 'now'}
                     industry={v.industry}
                     status={v.status as 'draft' | 'live' | 'graduated' | 'closed'}
                     founder={v.founder}
@@ -205,7 +219,7 @@ export function InfiniteScrollSection({
               )
             )}
 
-            {/* Load more trigger */}
+            {/* Load more button - manual only, no auto-loading */}
             <div
               ref={loadMoreRef}
               className={`flex-shrink-0 flex items-center justify-center ${useFullCards ? 'w-[220px] sm:w-[300px]' : 'w-[160px] sm:w-[200px]'}`}
@@ -220,9 +234,9 @@ export function InfiniteScrollSection({
                   onClick={loadMore}
                   className="text-[12px] sm:text-[13px] text-go-deep hover:underline px-4 py-8"
                 >
-                  Load more
+                  {ventures.length === 0 ? 'Load content' : 'Load more'}
                 </button>
-              ) : ventures.length > 4 ? (
+              ) : ventures.length > 0 ? (
                 <span className="text-[11px] sm:text-[13px] text-ink-3 px-4">That&apos;s all!</span>
               ) : null}
             </div>
@@ -230,7 +244,7 @@ export function InfiniteScrollSection({
         </div>
       </div>
 
-      {ventures.length === 0 && (
+      {ventures.length === 0 && !hasMore && (
         <p className="text-ink-3 text-center py-6 sm:py-10">No content yet. Be the first!</p>
       )}
     </section>

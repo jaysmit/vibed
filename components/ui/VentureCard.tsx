@@ -1,10 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { RungTag } from './RungLadder';
-import { PromiseClock } from './PromiseClock';
 import type { Rung } from '@/lib/domain/rungs';
 import { INDUSTRY_LABELS, type Industry } from '@/lib/supabase/types';
 
@@ -16,6 +14,7 @@ interface VentureCardProps {
   slug: string;
   name: string;
   pitch: string;
+  tagline?: string | null;  // Short one-liner displayed on cover image
   brand: string;
   rung: Rung;
   industry?: Industry;
@@ -49,6 +48,7 @@ export function VentureCard({
   slug,
   name,
   pitch,
+  tagline,
   brand,
   rung,
   industry,
@@ -62,11 +62,8 @@ export function VentureCard({
   className = '',
   priority = false,
 }: VentureCardProps) {
-  const [expanded, setExpanded] = useState(false);
   const isDead = status === 'closed';
-  const keptHistory = promiseHistory.map((p) => p.kept);
-
-  // Check if pitch needs expansion (roughly more than 4 lines at ~45 chars per line)
+  // Show "See more" if pitch is roughly more than 4 lines (~180 chars)
   const needsExpansion = pitch.length > 180;
 
   return (
@@ -105,12 +102,12 @@ export function VentureCard({
             alt={name}
             fill
             sizes="(max-width: 680px) 100vw, (max-width: 1000px) 50vw, 33vw"
-            className="object-cover"
+            className="object-cover z-[1]"
             priority={priority}
           />
         ) : (
           <div
-            className="absolute inset-0 opacity-20"
+            className="absolute inset-0 opacity-20 z-[1]"
             style={{
               background: `linear-gradient(135deg, ${brand} 0%, transparent 60%)`,
             }}
@@ -135,10 +132,19 @@ export function VentureCard({
           <RungTag rung={rung} isDead={isDead} size="xs" />
         </div>
 
+        {/* Tagline overlay - compact, bottom of image */}
+        {tagline && (
+          <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/50 to-transparent pt-5 pb-1.5 px-2">
+            <p className="text-white text-[11px] sm:text-[12px] font-semibold leading-tight text-center"
+               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+              {tagline}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Card body */}
-      <div className="p-3">
+      {/* Card body - fixed height */}
+      <div className="p-3 flex flex-col h-[180px]">
         {/* Name & industry */}
         <div className="flex items-center gap-2">
           <h3 className="text-[16px] font-bold font-display truncate">{name}</h3>
@@ -147,41 +153,35 @@ export function VentureCard({
           )}
         </div>
 
-        {/* Description - fixed height for 4 lines with expandable see more */}
-        <div className="mt-1.5 relative">
-          {/* Fixed height container: 4 lines × 13px × 1.4 line-height = ~73px */}
-          <div className={`${expanded ? '' : 'h-[73px]'}`}>
-            <p className={`text-[13px] text-ink-2 leading-[1.4] ${expanded ? '' : 'line-clamp-4'}`}>
-              {pitch}
-            </p>
-          </div>
+        {/* Description - fixed height with see more */}
+        <div className="mt-1.5 flex-1 min-h-0 flex flex-col">
+          <p className="text-[13px] text-ink-2 leading-[1.4] line-clamp-3 flex-1">
+            {pitch}
+          </p>
           {needsExpansion && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                setExpanded(!expanded);
-              }}
-              className="text-[12px] font-medium text-go-deep hover:underline mt-0.5"
-            >
-              {expanded ? 'Show less' : 'See more'}
-            </button>
+            <span className="text-[12px] font-medium text-go-deep mt-0.5">
+              See more
+            </span>
           )}
         </div>
 
-        {/* Creator line */}
-        <div className="text-[12px] text-ink-3 mt-2 flex items-center gap-1.5">
+        {/* Creator line - pushed to bottom */}
+        <div className="text-[12px] text-ink-3 mt-auto pt-2 flex items-center gap-1.5">
           {founder.avatar ? (
             <Image
+              data-avatar="venturecard-avatar-image"
               src={founder.avatar}
               alt={founder.name}
               width={16}
               height={16}
+              style={{ width: 16, height: 16, minWidth: 16, maxWidth: 16 }}
               className="rounded-full object-cover"
             />
           ) : (
             <span
+              data-avatar="venturecard-avatar-initials"
               className="w-4 h-4 rounded-full grid place-items-center text-[8px] font-semibold text-white font-mono"
-              style={{ background: brand }}
+              style={{ background: brand, width: 16, height: 16, minWidth: 16, maxWidth: 16 }}
             >
               {founder.name
                 .split(' ')
@@ -192,20 +192,8 @@ export function VentureCard({
           <span className="truncate">{founder.name}</span>
         </div>
 
-        {/* Promise - compact */}
-        {promise && !isDead && (
-          <PromiseClock
-            text={promise.text}
-            dueAt={promise.dueAt}
-            createdAt={promise.createdAt}
-            keptHistory={keptHistory}
-            className="mt-2"
-            compact
-          />
-        )}
-
-        {/* Meta line - smaller */}
-        <div className="flex gap-3 mt-2 text-[10px] text-ink-3">
+        {/* Meta line */}
+        <div className="flex gap-3 text-[10px] text-ink-3">
           <span>
             Wk <b className="text-ink font-medium font-mono">{counters.weekNumber}</b>
           </span>
