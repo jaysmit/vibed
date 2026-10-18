@@ -92,11 +92,10 @@ Plain English, Australian spelling. Short sentences. Never "leverage", "empower"
 
 - **Plan before writing.** For anything beyond a single file, outline the change and wait for confirmation.
 - **One vertical slice at a time**, per `BUILD-PLAN.md`. Do not scaffold the whole app in one pass.
-- **COMMIT AFTER EVERY FEATURE/FIX — NON-NEGOTIABLE.** After completing any feature, fix, or meaningful change:
-  1. Run `git add <specific files>` (not -A unless necessary)
-  2. Run `git commit -m "Description"` with Co-Authored-By
-  3. Run `git push origin main`
-  This is not optional. Git history is useless without commits. Never let more than one feature go uncommitted.
+- **COMMIT AT END OF SESSION — NON-NEGOTIABLE.** Before the user logs off or ends a session:
+  1. Run `git add -A && git commit -m "Summary of changes" && git push origin main`
+  2. Update PROJECT_NOTES.md and CLAUDE.md session log
+  Never let a session end without committing. The user must be able to revert to any previous session.
 - **Run `npm run typecheck` before saying you are done.** Deploy with `vercel deploy --prod --yes`.
 - **Run database migrations yourself** — never ask the user to run SQL manually. Use `node scripts/migrate.js` which connects via DATABASE_URL.
 - If a requirement here conflicts with what I have asked for in chat, say so rather than silently picking one.
