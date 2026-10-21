@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { InfiniteScrollSection } from '@/components/ui';
 import {
   getTrendingVentures,
-  getLandingPageVentures,
   type VentureWithFounder,
 } from '@/lib/services/ventures-public';
 import {
@@ -38,9 +37,6 @@ export default async function HomePage() {
   // Fetch trending ventures for the main section (DO NOT TOUCH - working perfectly)
   const trendingVentures = await getTrendingVentures(4);
 
-  // Fetch data for other sections (single query for all)
-  const landingData = await getLandingPageVentures(4);
-
   return (
     <main className="max-w-[1180px] mx-auto px-4 sm:px-6">
       {/* Hero - client component handles auth check */}
@@ -56,13 +52,14 @@ export default async function HomePage() {
         useFullCards
       />
 
-      {/* First 3 sections load with SSR data (4 cards each) */}
+      {/* Other sections load when scrolled into view */}
       <InfiniteScrollSection
         title="Trending Elevator Pitches"
         description="The best pitches right now"
         linkHref="/discover"
         pillar="recent"
-        initialVentures={landingData.recent.map(transformVenture)}
+        initialVentures={[]}
+        autoLoadOnVisible
       />
 
       <InfiniteScrollSection
@@ -70,7 +67,8 @@ export default async function HomePage() {
         description={PILLAR_DESCRIPTIONS.the_idea}
         linkHref="/discover?pillar=the_idea"
         pillar="the_idea"
-        initialVentures={landingData.the_idea.map(transformVenture)}
+        initialVentures={[]}
+        autoLoadOnVisible
       />
 
       <InfiniteScrollSection
@@ -78,16 +76,17 @@ export default async function HomePage() {
         description={PILLAR_DESCRIPTIONS.building_it}
         linkHref="/discover?pillar=building_it"
         pillar="building_it"
-        initialVentures={landingData.building_it.map(transformVenture)}
+        initialVentures={[]}
+        autoLoadOnVisible
       />
 
-      {/* Remaining sections load on demand */}
       <InfiniteScrollSection
         title={PILLAR_LABELS.getting_customers}
         description={PILLAR_DESCRIPTIONS.getting_customers}
         linkHref="/discover?pillar=getting_customers"
         pillar="getting_customers"
         initialVentures={[]}
+        autoLoadOnVisible
       />
 
       <InfiniteScrollSection
@@ -96,6 +95,7 @@ export default async function HomePage() {
         linkHref="/discover?pillar=hard_parts"
         pillar="hard_parts"
         initialVentures={[]}
+        autoLoadOnVisible
       />
 
       {/* CTA */}

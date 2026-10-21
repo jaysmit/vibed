@@ -57,6 +57,7 @@ interface InfiniteScrollSectionProps {
   pillar: Exclude<Pillar, 'featured'> | 'trending' | 'recent';
   initialVentures: Venture[];
   useFullCards?: boolean;
+  autoLoadOnVisible?: boolean; // Load data when section scrolls into view
 }
 
 export function InfiniteScrollSection({
@@ -66,13 +67,16 @@ export function InfiniteScrollSection({
   pillar,
   initialVentures,
   useFullCards = false,
+  autoLoadOnVisible = false,
 }: InfiniteScrollSectionProps) {
   const [ventures, setVentures] = useState<Venture[]>(initialVentures);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(initialVentures.length > 0);
   // Assume there's more to load (user clicks "Load more" to fetch)
   const [hasMore, setHasMore] = useState(true);
   const [cursor, setCursor] = useState<string | null>(null);
   const [offset, setOffset] = useState<number>(initialVentures.length); // For trending pagination
+  const sectionRef = useRef<HTMLElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -87,9 +91,11 @@ export function InfiniteScrollSection({
 
     setIsLoading(true);
     try {
+      // Trending uses 4, others use 6
+      const limit = pillar === 'trending' ? '4' : '6';
       const params = new URLSearchParams({
         pillar,
-        limit: '4',
+        limit,
       });
       // Use offset for trending, cursor for others
       if (pillar === 'trending') {
@@ -147,6 +153,29 @@ export function InfiniteScrollSection({
     }
   }, [initialVentures, pillar]);
 
+  // Auto-load when section becomes visible (IntersectionObserver)
+  useEffect(() => {
+    if (!autoLoadOnVisible || hasLoadedInitial || initialVentures.length > 0) return;
+
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting && !hasLoadedInitial && !isLoading) {
+          console.log(`[${pillar}] Section visible, auto-loading`);
+          setHasLoadedInitial(true);
+          loadMore();
+        }
+      },
+      { rootMargin: '100px', threshold: 0 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [autoLoadOnVisible, hasLoadedInitial, initialVentures.length, isLoading, loadMore, pillar]);
+
   // Horizontal scroll detection - load more when user scrolls near the end
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -186,7 +215,7 @@ export function InfiniteScrollSection({
   }, []);
 
   return (
-    <section className="py-3 sm:py-5 border-t border-rule">
+    <section ref={sectionRef} className="py-3 sm:py-5 border-t border-rule">
       <div className="flex items-baseline justify-between mb-2 sm:mb-4">
         <div>
           <h2 className="text-[16px] sm:text-[22px] font-extrabold font-display">{title}</h2>

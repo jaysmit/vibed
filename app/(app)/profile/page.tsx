@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getCurrentUserId } from '@/lib/supabase/auth';
 import { createAdminClient } from '@/lib/supabase/server';
 import { Avatar, VentureCard, RungTag } from '@/components/ui';
+import { ProfileCacheSync } from './ProfileCacheSync';
 
 export default async function ProfilePage() {
   const userId = await getCurrentUserId();
@@ -112,6 +113,9 @@ export default async function ProfilePage() {
 
   return (
     <main className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      {/* Cache founder profile for instant loading on future visits */}
+      <ProfileCacheSync founder={founder} />
+
       {/* Profile header */}
       <div className="relative group flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-10 p-4 -m-4 rounded-2xl hover:bg-soft/50 transition-colors">
         {/* Edit button - shows on hover (desktop only) */}
