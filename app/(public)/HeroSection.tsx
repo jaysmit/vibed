@@ -1,6 +1,11 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
+
+// Tiny 10x10 dark gray placeholder for blur effect while loading
+// To use a custom low-res image, replace this with the base64 of your thumbnail
+const BLUR_PLACEHOLDER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFElEQVQoz2NgGD7g/4cP/xkoBQCqJA/h5DR4RAAAAABJRU5ErkJggg==';
 
 export function HeroSection() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -38,10 +43,15 @@ export function HeroSection() {
             />
           ) : (
             <div className="absolute inset-0 cursor-pointer group" onClick={handlePlay}>
-              <img
+              <Image
                 src="/hero-thumbnail.png"
                 alt="Vibed intro video"
-                className="absolute inset-0 w-full h-full object-cover"
+                fill
+                priority
+                sizes="100vw"
+                className="object-cover"
+                placeholder="blur"
+                blurDataURL={BLUR_PLACEHOLDER}
               />
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
@@ -87,10 +97,15 @@ export function HeroSection() {
                 />
               ) : (
                 <div className="absolute inset-0 cursor-pointer group" onClick={handlePlay}>
-                  <img
+                  <Image
                     src="/hero-thumbnail.png"
                     alt="Vibed intro video"
-                    className="absolute inset-0 w-full h-full object-cover"
+                    fill
+                    priority
+                    sizes="50vw"
+                    className="object-cover"
+                    placeholder="blur"
+                    blurDataURL={BLUR_PLACEHOLDER}
                   />
                   <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white">

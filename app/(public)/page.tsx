@@ -4,11 +4,8 @@ import {
   getTrendingVentures,
   type VentureWithFounder,
 } from '@/lib/services/ventures-public';
-import {
-  PILLAR_LABELS,
-  PILLAR_DESCRIPTIONS,
-} from '@/lib/domain/pillars';
 import { HeroSection } from './HeroSection';
+import { ElevatorPitchesSection } from './ElevatorPitchesSection';
 
 // Force dynamic rendering to avoid stale cache from build
 export const dynamic = 'force-dynamic';
@@ -52,51 +49,8 @@ export default async function HomePage() {
         useFullCards
       />
 
-      {/* Other sections load when scrolled into view */}
-      <InfiniteScrollSection
-        title="Trending Elevator Pitches"
-        description="The best pitches right now"
-        linkHref="/discover"
-        pillar="recent"
-        initialVentures={[]}
-        autoLoadOnVisible
-      />
-
-      <InfiniteScrollSection
-        title={PILLAR_LABELS.the_idea}
-        description={PILLAR_DESCRIPTIONS.the_idea}
-        linkHref="/discover?pillar=the_idea"
-        pillar="the_idea"
-        initialVentures={[]}
-        autoLoadOnVisible
-      />
-
-      <InfiniteScrollSection
-        title={PILLAR_LABELS.building_it}
-        description={PILLAR_DESCRIPTIONS.building_it}
-        linkHref="/discover?pillar=building_it"
-        pillar="building_it"
-        initialVentures={[]}
-        autoLoadOnVisible
-      />
-
-      <InfiniteScrollSection
-        title={PILLAR_LABELS.getting_customers}
-        description={PILLAR_DESCRIPTIONS.getting_customers}
-        linkHref="/discover?pillar=getting_customers"
-        pillar="getting_customers"
-        initialVentures={[]}
-        autoLoadOnVisible
-      />
-
-      <InfiniteScrollSection
-        title={PILLAR_LABELS.hard_parts}
-        description={PILLAR_DESCRIPTIONS.hard_parts}
-        linkHref="/discover?pillar=hard_parts"
-        pillar="hard_parts"
-        initialVentures={[]}
-        autoLoadOnVisible
-      />
+      {/* Trending Elevator Pitches - TikTok-style reel viewer */}
+      <ElevatorPitchesSection />
 
       {/* CTA */}
       <section className="bg-ink text-white rounded-xl sm:rounded-2xl p-5 sm:p-8 text-center mt-2 mb-2">
