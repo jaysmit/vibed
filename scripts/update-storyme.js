@@ -12,7 +12,7 @@ async function update() {
   const today = new Date().toISOString().split('T')[0];
 
   const updates = {
-    name: 'Once Upon a You',
+    name: 'Story-me',
     pitch: 'AI-powered picture books where your child is the hero — printed and delivered to your door.',
     country: 'AU',
     categories: ['consumer', 'ai'],
@@ -23,7 +23,7 @@ async function update() {
 
 Generic picture books are lovely, but they're someone else's adventure. Your child reads about Max or Sophie or whoever — never themselves. Their face lights up at stories, but they're always on the outside looking in.
 
-**Once Upon a You** changes that.
+**Story-me** changes that.
 
 Upload a photo of your child (or their siblings, friends, even grandparents). Our AI transforms them into beautiful storybook characters — in watercolour, classic fable style, or enchanted glow. Choose a world (enchanted forest, pirate seas, space odyssey), and we generate a fully illustrated picture book with YOUR child as the star.
 
@@ -41,7 +41,7 @@ Personalised books exist, but they're crude. Basic name insertion. Clipart chara
 
 **The Solution**
 
-Once Upon a You uses AI to transform real photos into stunning storybook illustrations. Upload a photo, choose an art style (watercolour, classic fable, enchanted glow), pick a world (enchanted forest, pirate adventure, space odyssey), and we generate a fully illustrated hardcover book with your child as the main character.
+Story-me uses AI to transform real photos into stunning storybook illustrations. Upload a photo, choose an art style (watercolour, classic fable, enchanted glow), pick a world (enchanted forest, pirate adventure, space odyssey), and we generate a fully illustrated hardcover book with your child as the main character.
 
 Not a name plastered on a template. A real illustrated character that looks like them, in their own adventure, printed on premium paper and delivered to your door.
 
