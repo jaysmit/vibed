@@ -14,6 +14,7 @@ import { calculateCompletion } from '@/lib/domain/standards';
 import { VentureContentTabs } from './VentureContentTabs';
 import { ElevatorPitchEditable } from './ElevatorPitchEditable';
 import { ClipsGrid } from './ClipsGrid';
+import { Timer } from '@/lib/utils/timing';
 
 // Segment definitions with stage groupings
 // Note: 'pitch' is excluded - it's displayed in the Elevator Pitch section, not the timeline
@@ -60,18 +61,26 @@ interface PageProps {
 }
 
 export default async function VentureProfilePage({ params }: PageProps) {
+  const pageTimer = new Timer('VentureProfilePage');
+
+  pageTimer.step('parseParams');
   const { slug } = await params;
 
   // Get userId first (fast local JWT check), then fetch venture with owner check
+  pageTimer.step('getCurrentUserIdFast');
   const userId = await getCurrentUserIdFast();
+
+  pageTimer.step('getVentureBySlug');
   const venture = await getVentureBySlug(slug, userId);
 
   if (!venture) {
+    pageTimer.end();
     notFound();
   }
 
   // Handle slug redirects
   if ('_redirect' in venture && venture._redirect) {
+    pageTimer.end();
     redirect(`/v/${venture._redirect}`);
   }
 
@@ -82,10 +91,14 @@ export default async function VentureProfilePage({ params }: PageProps) {
   const completion = isOwner ? calculateCompletion(venture) : null;
 
   // Fetch clips and team in parallel - follow status now fetched client-side by FollowButton
+  pageTimer.step('parallelFetch(clips+team)');
   const [allClips, teamMembers] = await Promise.all([
     getClipsByVenture(venture.id),
     getVentureTeam(venture.id),
   ]);
+
+  pageTimer.step('processData');
+  pageTimer.end();
 
   // Get pitch clip from allClips instead of separate query
   const pitchClip = allClips.find(clip => clip.segment_key === 'pitch') || null;

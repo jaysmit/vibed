@@ -6,6 +6,7 @@ import {
 } from '@/lib/services/ventures-public';
 import { HeroSection } from './HeroSection';
 import { ElevatorPitchesSection } from './ElevatorPitchesSection';
+import { Timer } from '@/lib/utils/timing';
 
 // Force dynamic rendering to avoid stale cache from build
 export const dynamic = 'force-dynamic';
@@ -31,8 +32,14 @@ function transformVenture(v: VentureWithFounder) {
 }
 
 export default async function HomePage() {
+  const pageTimer = new Timer('HomePage');
+
   // Fetch trending ventures for the main section (DO NOT TOUCH - working perfectly)
+  pageTimer.step('getTrendingVentures');
   const trendingVentures = await getTrendingVentures(4);
+
+  pageTimer.step('render');
+  pageTimer.end();
 
   return (
     <main className="max-w-[1180px] mx-auto px-4 sm:px-6">

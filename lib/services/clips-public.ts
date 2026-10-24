@@ -1,5 +1,6 @@
 import { createAdminClient, createCachedAdminClient } from '@/lib/supabase/server';
 import { unstable_cache } from 'next/cache';
+import { Timer } from '@/lib/utils/timing';
 
 export interface ClipWithContext {
   _id: string;
@@ -152,8 +153,12 @@ export const getClipByVentureAndSegment = unstable_cache(
 );
 
 async function _getClipsByVenture(ventureId: string): Promise<ClipWithContext[]> {
+  const timer = new Timer(`getClipsByVenture(${ventureId.slice(0, 8)})`);
+
+  timer.step('createClient');
   const supabase = createCachedAdminClient();
 
+  timer.step('query');
   const { data: clips } = await supabase
     .from('clips')
     .select('*, ventures(*), founders(*)')
@@ -162,9 +167,13 @@ async function _getClipsByVenture(ventureId: string): Promise<ClipWithContext[]>
     .is('deleted_at', null)
     .order('published_at', { ascending: false });
 
-  if (!clips || clips.length === 0) return [];
+  if (!clips || clips.length === 0) {
+    timer.end();
+    return [];
+  }
 
-  return clips.map((c) => {
+  timer.step('mapClips');
+  const result = clips.map((c) => {
     const venture = c.ventures as Record<string, unknown>;
     const founder = c.founders as Record<string, unknown>;
 
@@ -201,6 +210,9 @@ async function _getClipsByVenture(ventureId: string): Promise<ClipWithContext[]>
       },
     };
   });
+
+  timer.end();
+  return result;
 }
 
 // Cached - revalidates every 60 seconds

@@ -4,6 +4,7 @@ import { getPublishedVentures } from '@/lib/services/ventures-public';
 import { RUNGS, type Rung } from '@/lib/domain/rungs';
 import { INDUSTRIES, type Industry } from '@/lib/supabase/types';
 import { DiscoverFilters } from './DiscoverFilters';
+import { Timer } from '@/lib/utils/timing';
 
 interface PageProps {
   searchParams: Promise<{
@@ -19,6 +20,9 @@ interface PageProps {
 }
 
 export default async function DiscoverPage({ searchParams }: PageProps) {
+  const pageTimer = new Timer('DiscoverPage');
+
+  pageTimer.step('parseParams');
   const params = await searchParams;
   const currentSort = params.sort || 'trending';
   const currentRung = params.rung || 'all';
@@ -29,7 +33,10 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
   const currentMinStreak = params.minStreak || '';
   const currentMaxStreak = params.maxStreak || '';
 
+  pageTimer.step('getPublishedVentures');
   let ventures = await getPublishedVentures();
+
+  pageTimer.step('filterAndSort');
 
   // Filter by rung
   if (currentRung !== 'all' && RUNGS.includes(currentRung as Rung)) {
@@ -84,6 +91,9 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
   } else if (currentSort === 'trending') {
     ventures = [...ventures].sort((a, b) => (b.counters?.trendingScore || 0) - (a.counters?.trendingScore || 0));
   }
+
+  pageTimer.step('render');
+  pageTimer.end();
 
   return (
     <main className="max-w-[1180px] mx-auto px-4 sm:px-6 py-6 sm:py-10">

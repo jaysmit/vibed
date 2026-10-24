@@ -2,6 +2,7 @@ import { createClient, createAdminClient, createCachedAdminClient } from '@/lib/
 import { unstable_cache } from 'next/cache';
 import type { Rung } from '@/lib/domain/rungs';
 import type { Industry } from '@/lib/supabase/types';
+import { Timer } from '@/lib/utils/timing';
 
 export interface VentureWithFounder {
   _id: string;
@@ -130,8 +131,13 @@ function mapVenture(v: Record<string, unknown>, founder: Record<string, unknown>
 
 // Internal function that actually fetches (uses cookieless client for caching)
 async function _getPublishedVentures(): Promise<VentureWithFounder[]> {
+  const timer = new Timer('getPublishedVentures');
+
+  timer.step('createClient');
   const supabase = createCachedAdminClient();
 
+  timer.step('query');
+  // Fetch all columns but strip segments after to reduce serialization overhead
   const { data: ventures } = await supabase
     .from('ventures')
     .select('*, founders(*)')
@@ -140,9 +146,21 @@ async function _getPublishedVentures(): Promise<VentureWithFounder[]> {
     .is('deleted_at', null)
     .order('published_at', { ascending: false });
 
-  if (!ventures || ventures.length === 0) return [];
+  timer.step('process');
+  if (!ventures || ventures.length === 0) {
+    timer.end();
+    return [];
+  }
 
-  return ventures.map((v) => mapVenture(v, v.founders as Record<string, unknown>));
+  const result = ventures.map((v) => {
+    const founder = Array.isArray(v.founders) ? v.founders[0] : v.founders;
+    const mapped = mapVenture(v as Record<string, unknown>, founder as Record<string, unknown>);
+    mapped.segments = {}; // Strip segments to reduce serialization overhead
+    return mapped;
+  });
+
+  timer.end();
+  return result;
 }
 
 // Cached version - revalidates every 60 seconds
@@ -181,11 +199,15 @@ export interface LandingPageData {
 
 // SINGLE query for ALL landing page sections - avoids 6 separate DB calls
 async function _getLandingPageVentures(limitPerSection: number = 4): Promise<LandingPageData> {
+  const timer = new Timer('getLandingPageVentures');
+
+  timer.step('createClient');
   // Use regular client (works with both anon and auth contexts)
   const supabase = await createClient();
 
+  timer.step('query');
   // Fetch enough ventures for all sections in ONE query
-  // Use same query format as working API route
+  // Need segments for pillar filtering, but strip them from response
   const { data: ventures, error } = await supabase
     .from('ventures')
     .select('*, founders(*)')
@@ -194,6 +216,8 @@ async function _getLandingPageVentures(limitPerSection: number = 4): Promise<Lan
     .is('deleted_at', null)
     .order('published_at', { ascending: false })
     .limit(50); // Enough for all sections
+
+  timer.step('process');
 
   // Log error if any (will appear in Vercel logs)
   if (error) {
@@ -240,6 +264,8 @@ async function _getLandingPageVentures(limitPerSection: number = 4): Promise<Lan
     return filtered.slice(0, limitPerSection).map(mapAndStrip);
   };
 
+  timer.end();
+
   return {
     trending,
     recent,
@@ -258,8 +284,13 @@ export async function getLandingPageVentures(limit: number = 4): Promise<Landing
 
 // Direct call for trending ventures - no caching to avoid stale data
 export async function getTrendingVentures(limit: number = 8): Promise<VentureWithFounder[]> {
+  const timer = new Timer('getTrendingVentures');
+
+  timer.step('createClient');
   const supabase = await createClient();
 
+  timer.step('query');
+  // Fetch all columns but strip segments after to reduce serialization overhead
   const { data: ventures, error } = await supabase
     .from('ventures')
     .select('*, founders(*)')
@@ -269,19 +300,27 @@ export async function getTrendingVentures(limit: number = 8): Promise<VentureWit
     .order('counters->followers', { ascending: false })
     .limit(limit);
 
+  timer.step('process');
   if (error) {
     console.error('getTrendingVentures error:', error);
+    timer.end();
     return [];
   }
 
-  if (!ventures || ventures.length === 0) return [];
+  if (!ventures || ventures.length === 0) {
+    timer.end();
+    return [];
+  }
 
-  return ventures.map((v) => {
+  const result = ventures.map((v) => {
     const founder = Array.isArray(v.founders) ? v.founders[0] : v.founders;
     const mapped = mapVenture(v as Record<string, unknown>, founder as Record<string, unknown>);
-    mapped.segments = {};
+    mapped.segments = {}; // Strip segments to reduce serialization overhead
     return mapped;
   });
+
+  timer.end();
+  return result;
 }
 
 // Keeping this for reference but not using it
@@ -378,8 +417,12 @@ export async function getVenturesByRung(rung: Rung): Promise<VentureWithFounder[
 
 // Internal function for fetching venture by slug (uses cookieless client for caching)
 async function _getVentureBySlugInternal(slug: string): Promise<VentureWithFounder | null> {
+  const timer = new Timer(`getVentureBySlug(${slug})`);
+
+  timer.step('createClient');
   const supabase = createCachedAdminClient();
 
+  timer.step('queryBySlug');
   // Try by slug first
   const { data: venture } = await supabase
     .from('ventures')
@@ -390,6 +433,7 @@ async function _getVentureBySlugInternal(slug: string): Promise<VentureWithFound
 
   // If not found, try slug_history
   if (!venture) {
+    timer.step('queryByHistory');
     const { data: ventureByHistory } = await supabase
       .from('ventures')
       .select('*, founders(*)')
@@ -398,16 +442,22 @@ async function _getVentureBySlugInternal(slug: string): Promise<VentureWithFound
       .single();
 
     if (ventureByHistory) {
-      // Redirect to current slug
-      return {
+      timer.step('mapVenture');
+      const result = {
         ...mapVenture(ventureByHistory, ventureByHistory.founders as Record<string, unknown>),
         _redirect: ventureByHistory.slug,
       };
+      timer.end();
+      return result;
     }
+    timer.end();
     return null;
   }
 
-  return mapVenture(venture, venture.founders as Record<string, unknown>);
+  timer.step('mapVenture');
+  const result = mapVenture(venture, venture.founders as Record<string, unknown>);
+  timer.end();
+  return result;
 }
 
 // Cached venture fetch - revalidates every 30 seconds
@@ -520,9 +570,13 @@ export interface TeamMemberWithProfile {
 }
 
 async function _getVentureTeam(ventureId: string): Promise<TeamMemberWithProfile[]> {
+  const timer = new Timer(`getVentureTeam(${ventureId.slice(0, 8)})`);
+
+  timer.step('createClient');
   const supabase = createCachedAdminClient();
 
   try {
+    timer.step('query');
     // Get team members for this venture
     const { data: members } = await supabase
       .from('venture_members')
@@ -532,9 +586,13 @@ async function _getVentureTeam(ventureId: string): Promise<TeamMemberWithProfile
       .order('is_master', { ascending: false })
       .order('created_at', { ascending: true });
 
-    if (!members || members.length === 0) return [];
+    if (!members || members.length === 0) {
+      timer.end();
+      return [];
+    }
 
-    return members.map((m) => {
+    timer.step('mapMembers');
+    const result = members.map((m) => {
       const founder = m.founders as Record<string, unknown> | null;
       return {
         id: m.id,
@@ -554,7 +612,11 @@ async function _getVentureTeam(ventureId: string): Promise<TeamMemberWithProfile
         } : null,
       };
     });
+
+    timer.end();
+    return result;
   } catch {
+    timer.end();
     // Table might not exist yet
     return [];
   }
